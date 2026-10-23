@@ -1053,3 +1053,34 @@ test('multi-cursor rich numbered lists keep selected text and HTML safety',async
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue('Entry\n\nEntry');
 });
+
+
+test('multi-cursor list tools format selected lines and undo atomically',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('Apple\nBanana\nCherry');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+Alt+ArrowDown');
+ await page.locator('[data-action="task"]').click();
+ await expect(input).toHaveValue('- [ ] Apple\n- [ ] Banana\nCherry');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('Apple\nBanana\nCherry');
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue('- [ ] Apple\n- [ ] Banana\nCherry');
+});
+
+test('multi-cursor ordered lists renumber chosen lines without duplicating markers',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('- Apple\n- Banana\nOther');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+Alt+ArrowDown');
+ await page.locator('[data-action="ol"]').click();
+ await expect(input).toHaveValue('1. Apple\n2. Banana\nOther');
+ await page.locator('[data-action="ul"]').click();
+ await expect(input).toHaveValue('- Apple\n- Banana\nOther');
+});
