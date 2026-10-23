@@ -55,6 +55,7 @@ for(const lang of LANGUAGES){
  }
  const first=lesson(0,lang,lessonTranslations);
  assert.equal(first.tasks.length,6);
+ assert(first.initial.includes('######'), 'H6 missing from first-lesson instructions: '+lang);
  assert(first.tasks.every(t=>t.check(first.hint)),'Missing localized heading solution: '+lang);
 }
 const wrong='### Heading 3';
@@ -73,4 +74,5 @@ assert(!verifyLesson(table,table.hint,'original').some(t=>t.passed));
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 for(let h=1;h<=6;h++)assert(html.includes('data-action="h'+h+'"'));
 assert(html.includes('id="dialect-selector"'));
+assert(html.includes('id="active-dialect-status"'));
 console.log('PASS: three dialects, six heading levels, 8 lessons x 5 languages, GFM extensions, 21 syntax examples');

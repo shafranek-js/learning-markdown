@@ -47,8 +47,8 @@ export const lessonText = {
                     title: "Headings & Document Hierarchy",
                     subtitle: "Structuring text and AI prompts with # symbols",
                     theory: `<p>Headings organize your documents and AI prompts into clear sections. The level (<code>H1</code> to <code>H6</code>) corresponds to the number of hash marks <code>#</code> at the start of a line followed by a space:</p>
-                    <p>Try typing <code>#</code>, <code>##</code>, and <code>###</code> in the editor or use the <strong>H1</strong>, <strong>H2</strong>, <strong>H3</strong> toolbar buttons.</p>`,
-                    initial: "# LinkedIn Video Prompt\n\nAdd a level 2 (##) and level 3 (###) heading below:\n\n",
+                    <p>Practice all six levels: <code>#</code>, <code>##</code>, <code>###</code>, <code>####</code>, <code>#####</code>, and <code>######</code>. Use the <strong>H1–H6</strong> toolbar buttons or <strong>Ctrl+1…Ctrl+6</strong>.</p>`,
+                    initial: "# LinkedIn Video Prompt\n\nAdd headings H2 through H6 below (##, ###, ####, #####, ######):\n\n",
                     hint: "# LinkedIn Video Prompt\n\n## Before You Start\n\n### Workflow & Collaboration",
                     tasks: ["Create a Level 1 Heading (`# Title`)", "Add a Level 2 Heading (`## Section`)", "Add a Level 3 Heading (`### Subsection`)"]
                 },

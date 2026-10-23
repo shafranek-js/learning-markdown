@@ -22,6 +22,7 @@ const DIALECT_NAMES={gfm:'GFM',commonmark:'CommonMark',original:'Original · Leg
 function renderDialectUI(){
  const el=$('dialect-selector'),locale=DIALECT_UI[state.lang]||DIALECT_UI.en;
  el.value=state.dialect;el.title=locale.title;el.setAttribute('aria-label',locale.title);
+ $('active-dialect-status').textContent=DIALECT_NAMES[state.dialect];
  document.querySelector('[data-i18n="dialectLabel"]').textContent=locale.label;
  $('preview-pane-title').textContent=ui(state.lang).previewHeader.replace(/\s*\(GFM\)/i,'')+' ('+DIALECT_NAMES[state.dialect]+')';
 }

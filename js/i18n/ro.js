@@ -47,7 +47,7 @@ export const lessonText = {
                     title: "Titluri și ierarhia documentului",
                     subtitle: "Structurarea textului cu simbolul #",
                     theory: `<p>Titlurile definesc structura oricărui document. Nivelul titlului (1–6) este dat de numărul de simboluri <code>#</code> la începutul rândului, urmate de un spațiu.</p>`,
-                    initial: "# Ghid Markdown\n\nAdăugați mai jos un titlu de nivelul 2 (##) și nivelul 3 (###):\n\n",
+                    initial: "# Ghid Markdown\n\nAdăugați mai jos titluri de la H2 la H6 (##, ###, ####, #####, ######):\n\n",
                     hint: "# Ghid Markdown\n\n## Avantaje principale\n\n### Scriere rapidă",
                     tasks: ["Creați un titlu de nivelul 1 (`# Text`)", "Adăugați un titlu de nivelul 2 (`## Text`)", "Adăugați un titlu de nivelul 3 (`### Text`)"]
                 },

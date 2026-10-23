@@ -47,7 +47,7 @@ export const lessonText = {
                     title: "Nadpisy a hierarchie dokumentu",
                     subtitle: "Strukturování textu pomocí symbolů #",
                     theory: `<p>Nadpisy určují strukturu každého dokumentu nebo AI promptu. Úroveň nadpisu (1 až 6) je dána počtem křížků <code>#</code> na začátku řádku následovaných mezerou.</p>`,
-                    initial: "# Průvodce Markdownem\n\nNíže napište nadpis druhé (##) a třetí (###) úrovně:\n\n",
+                    initial: "# Průvodce Markdownem\n\nNíže doplňte nadpisy úrovní H2 až H6 (##, ###, ####, #####, ######):\n\n",
                     hint: "# Průvodce Markdownem\n\n## Hlavní výhody\n\n### Rychlé psaní",
                     tasks: ["Vytvořte nadpis 1. úrovně (`# Text`)", "Přidejte nadpis 2. úrovně (`## Text`)", "Přidejte nadpis 3. úrovně (`### Text`)"]
                 },
