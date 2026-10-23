@@ -67,13 +67,13 @@ test('Cheat Sheet insert is labeled and modal closes after insertion',async({pag
  await expect(button).toHaveAttribute('aria-label',/Insert:/);
  await button.click();
  await expect(page.locator('#cheatsheet-modal')).toHaveClass(/hidden/);
- await expect(page.locator('#markdown-input')).toContainText('Heading');
+ await expect(page.locator('#markdown-input')).toHaveValue(/Heading/);
 });
 
 test('narrow viewport keeps editor navigation available',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
  await expect(page.locator('#mobile-tabs')).toBeVisible();
- await page.locator('[data-mobile-tab="editor"]').click();
+ await page.locator('#mobile-tabs button[data-mobile-tab="editor"]').click();
  await expect(page.locator('#markdown-input')).toBeVisible();
 });
