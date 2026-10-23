@@ -57,6 +57,7 @@ assert.equal(findEditableTables(html)[0].type,'html');
 const safe=apply(html,'merge',select(0,0,{row:1,col:1}));
 assert(safe.text.includes('rowspan="2"')&&safe.text.includes('colspan="2"'));
 const bg=apply(html,'cell-sand');
+console.log('TABLE_BG_DEBUG',JSON.stringify(bg.text));
 assert(bg.text.includes('af-cell-sand')&&!bg.text.includes('af-cell-mint'));
 const malicious=apply('<table><tr><td onclick="alert(1)">Hello</td><td><img src=x onerror="alert(1)"></td></tr></table>','merge-right',select(0,0));
 assert(malicious&& !/onclick=|onerror=|<script/i.test(malicious.text));
