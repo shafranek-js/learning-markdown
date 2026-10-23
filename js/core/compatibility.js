@@ -5,9 +5,9 @@ import {markdownToHTML} from '../ui/preview.js';
 // examples cannot be mistaken for active formatting.
 export function inspectPortability(source){
  const input=String(source??'');
- const rendered=markdownToHTML(input,'gfm');
- const common=markdownToHTML(input,'commonmark');
- const legacy=markdownToHTML(input,'original');
+ const rendered=markdownToHTML(input,'gfm',{extensions:false});
+ const common=markdownToHTML(input,'commonmark',{extensions:false});
+ const legacy=markdownToHTML(input,'original',{extensions:false});
  const documentHTML=new DOMParser().parseFromString(rendered,'text/html');
  const advanced=Boolean(documentHTML.querySelector(
   'u,sup,sub,mark,details,summary,div[id],span[class^="af-"],div[class^="af-"],table[class^="af-"],td[class^="af-"],th[class^="af-"],td[colspan],td[rowspan],th[colspan],th[rowspan],ol[type="a"],ol[type="A"],ol[type="i"],ol[type="I"]'
