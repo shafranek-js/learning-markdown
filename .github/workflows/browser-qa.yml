@@ -7,6 +7,8 @@ on:
       - 'js/**'
       - 'css/**'
       - 'tests/browser/**'
+      - 'sw.js'
+      - 'scripts/postbuild.mjs'
       - 'playwright.config.js'
       - '.github/workflows/browser-qa.yml'
 permissions:
