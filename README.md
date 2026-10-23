@@ -268,3 +268,12 @@ The `.github/workflows/browser-tests.yml` workflow runs the Playwright Chromium 
 ### Bulk selection shortcuts
 
 **Ctrl+Shift+L** (Cmd+Shift+L on macOS) selects every occurrence of the currently selected text; combine it with typing or a toolbar command to edit all matches simultaneously. **Esc** collapses all selections to the main caret without changing the document. **Ctrl+D** still selects the next occurrence, and **Shift+Alt+I** creates a cursor at the end of each selected line. These commands are available only when Multi-cursor mode is active. The cursor count is announced as an accessible status, and shortcut hints are translated into all five supported languages.
+
+
+### Large-selection performance and list safety
+
+Moving multi-cursors without editing text no longer triggers redundant synchronous draft writes to `localStorage`. A text change still persists the draft as before. Sequential heading/list formatting has browser coverage for cursor-count preservation and independent Undo/Redo steps.
+
+Reapplying the Task List command preserves completed `[x]` markers instead of resetting them to `[ ]`. Numbering applied to disjoint line groups starts at `1.` for each group rather than numbering unrelated lines as a continuous list. Dedicated Playwright cases protect both behaviors.
+
+Both GitHub Actions workflows (Pages deployment and browser regression CI) use Node 24-compatible GitHub action releases. The project application itself continues building on Node 22.
