@@ -1697,3 +1697,93 @@ test('issue #11 MD export warns for non-GFM footnotes and leaves source intact',
  expect(messages).toHaveLength(1);
  expect(messages[0]).toContain('GitHub.com');
 });
+
+
+test('issue #12 safe heading IDs and live TOC across three Markdown dialects',async({page})=>{
+ await page.goto('/');
+ const source='# Intro\n\n## Details\n\n## Details\n\n### Привет, мир!\n\n#### 42 steps\n\n##### !!!';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ const expected=['intro','details','details-2','привет-мир','section-42-steps','section'];
+ for(const mode of ['gfm','commonmark','original']){
+  await page.locator('#dialect-selector').selectOption(mode);
+  expect(await page.locator('#markdown-preview :is(h1,h2,h3,h4,h5,h6)').evaluateAll(els=>els.map(el=>el.id))).toEqual(expected);
+ }
+ await page.locator('#toc-panel summary').click();
+ await expect(page.locator('#toc-list a')).toHaveCount(6);
+ await page.locator('#toc-depth').selectOption('2');
+ await expect(page.locator('#toc-list a')).toHaveCount(3);
+ await expect(page.locator('#toc-list a').nth(2)).toHaveAttribute('href','#details-2');
+ await expect(input).toHaveValue(source);
+ await page.locator('#toc-insert').click();
+ await expect(input).toHaveValue(/- \[Intro\]\(#intro\)/);
+ await expect(input).toHaveValue(/- \[Details\]\(#details-2\)/);
+ await expect(page.locator('#toc-list a')).toHaveCount(3);
+});
+
+test('issue #12 TOC keyboard navigation preserves lesson hash even with Unicode headings',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('# Start\n\n## Next\n\n## Next\n\n### 中文标题');
+ await page.locator('#toc-panel summary').click();
+ const hash=await page.evaluate(()=>location.hash);
+ await page.locator('#toc-list a[href="#next-2"]').click();
+ expect(await page.evaluate(()=>location.hash)).toBe(hash);
+ await page.locator('#toc-list a[href="#中文标题"]').focus();
+ await page.keyboard.press('Enter');
+ expect(await page.evaluate(()=>location.hash)).toBe(hash);
+ await expect(page.locator('#toc-list a')).toHaveCount(4);
+ await page.reload();
+ await expect(page.locator('#toc-panel')).toHaveAttribute('open','');
+ await expect(page.locator('#toc-depth')).toHaveValue('6');
+});
+
+test('issue #12 opt-in custom heading IDs stay isolated and survive HTML export and print',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='# Title {#chosen-id}\n\n## Another {#chosen-id}\n\n## Защита {#безопасно}';
+ await input.fill(source);
+ await page.locator('#compatibility-panel summary').click();
+ const toggle=page.locator('#extension-headingids-toggle');
+ await expect(toggle).toHaveValue('off');
+ await expect(page.locator('#markdown-preview h1')).not.toHaveAttribute('id','chosen-id');
+ await toggle.selectOption('on');
+ await expect(page.locator('#markdown-preview h1')).toHaveAttribute('id','chosen-id');
+ await expect(page.locator('#markdown-preview h2').first()).toHaveAttribute('id','chosen-id-2');
+ await expect(page.locator('#markdown-preview h2').nth(1)).toHaveAttribute('id','безопасно');
+ await expect(input).toHaveValue(source);
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await expect(toggle).toBeDisabled();
+ await expect(page.locator('#markdown-preview h1')).not.toHaveAttribute('id','chosen-id');
+ await page.locator('#dialect-selector').selectOption('gfm');
+ await expect(toggle).toBeEnabled();
+ await expect(toggle).toHaveValue('on');
+ const downloaded=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await downloaded;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await file.path(),'utf8');
+ for(const id of ['chosen-id','chosen-id-2','безопасно'])expect(html).toContain('id="'+id+'"');
+ await page.setContent(html);
+ await expect(page.locator('main h1#chosen-id')).toHaveCount(1);
+ await page.emulateMedia({media:'print'});
+ await expect(page.locator('main h2#chosen-id-2')).toHaveCount(1);
+});
+
+test('issue #12 mobile and 150-heading outline remains usable',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ const source=Array.from({length:150},(_,i)=>'## Chapter '+(i+1)).join('\n\n');
+ await page.locator('#markdown-input').fill(source);
+ await page.locator('[data-mobile-tab="preview"]').click();
+ await page.locator('#toc-panel summary').click();
+ await expect(page.locator('#toc-list a')).toHaveCount(150);
+ const ids=await page.locator('#markdown-preview h2').evaluateAll(els=>els.map(el=>el.id));
+ expect(new Set(ids).size).toBe(150);
+ await page.locator('#toc-depth').selectOption('1');
+ await expect(page.locator('#toc-list a')).toHaveCount(0);
+ await expect(page.locator('#toc-empty')).toBeVisible();
+ await page.locator('#toc-depth').selectOption('2');
+ await expect(page.locator('#toc-list a')).toHaveCount(150);
+ await page.locator('#toc-example').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(/# Introduction/);
+});
