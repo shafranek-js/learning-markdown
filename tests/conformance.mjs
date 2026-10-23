@@ -84,7 +84,12 @@ import {compareHtml,CATEGORIES} from './html-compare.mjs';
   const sections=x.sections.map(s=>({...s,diff:s.total-s.passed})).sort((a,b)=>b.diff-a.diff).slice(0,7);
   console.log('TOP SECTIONS '+x.name+' '+sections.map(s=>s.name+':'+s.diff+'/'+s.total).join('; '));
   for(const category of CATEGORIES.filter(x=>x!=='exact')){
-   for(const f of x.failures.filter(y=>y.category===category).slice(0,2))console.log('SAMPLE '+x.name+' '+category+' #'+f.number+' '+f.section+': '+JSON.stringify(f.markdown.slice(0,75)));
+   for(const f of x.failures.filter(y=>y.category===category).slice(0,3)){
+    console.log('SAMPLE '+x.name+' '+category+' #'+f.number+' '+f.section+': '+JSON.stringify(f.markdown.slice(0,75)));
+    if(['structure','text','attributes'].includes(category)){
+     console.log('DETAIL '+x.name+' '+category+' #'+f.number+' expected='+JSON.stringify(f.expected.slice(0,280))+' actual='+JSON.stringify(f.actual.slice(0,280)));
+    }
+   }
   }
  }
  console.log('Full details: conformance-report/report.json');
