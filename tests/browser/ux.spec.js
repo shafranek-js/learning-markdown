@@ -841,8 +841,8 @@ test('custom ordered-list types are case-sensitive in Preview and downloaded HTM
  const file=await pending;
  const {readFile}=await import('node:fs/promises');
  const html=await readFile(await file.path(),'utf8');
- expect(html).toContain('ol[type="a" s]');
- expect(html).toContain('ol[type="A" s]');
+ expect(html).toContain('class="af-list-lower-alpha"');
+ expect(html).toContain('class="af-list-upper-alpha"');
  await page.setContent(html);
  const exported=page.locator('main.md-preview ol');
  await expect(exported).toHaveCount(types.length);
