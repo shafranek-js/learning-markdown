@@ -60,12 +60,12 @@ function canonicalizeFootnotes(raw,labels){
  }
  return parsed.body.innerHTML;
 }
-export function renderFootnotedMarkdown(source,options,language='en'){
+export function renderFootnotedMarkdown(source,options,language='en',extraExtensions=[]){
  const labels=footnoteText(language);
  // Never mutate the shared Marked instance. Plugin state is document-scoped.
  const parser=new Marked(markedFootnote({
   description:labels.heading,backRefLabel:labels.back,
   prefixId:'footnote-',sectionClass:'footnotes'
- }));
+ }),...extraExtensions);
  return canonicalizeFootnotes(parser.parse(source,options),labels);
 }

@@ -1,6 +1,7 @@
 import {sanitizeHTML} from '../core/sanitize.js';
 import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
 import {renderFootnotedMarkdown} from '../core/footnotes.js';
+import {definitionListExtension,renderDefinitionLists} from '../core/definition-lists.js';
 import {addHeadingAnchors} from '../core/heading-anchors.js';
 import {renderTOC} from './toc.js';
 import {extensionEnabled} from '../core/extensions.js';
@@ -19,8 +20,11 @@ export const DIALECT_OPTIONS={
 export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  const base=DIALECT_OPTIONS[dialect]||DIALECT_OPTIONS.gfm;
  const options=extensions?{...base,...parserExtensionOptions(state.extensionSettingsByDocument,docKey(),dialect)}:base;
- const raw=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'footnotes')
-  ?renderFootnotedMarkdown(text,options,state.lang):marked.parse(text,options);
+ const footnotes=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'footnotes');
+ const definitions=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'definitionLists');
+ const raw=footnotes
+  ?renderFootnotedMarkdown(text,options,state.lang,definitions?[definitionListExtension()]:[])
+  :definitions?renderDefinitionLists(text,options):marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
  const safe=highlightCodeBlocks(sanitizeHTML(raw));
  return addHeadingAnchors(safe,{

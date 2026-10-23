@@ -1,6 +1,6 @@
 import {filterAdvancedClasses} from './advanced-presets.js';
 // Strict browser-DOM sanitizer for Markdown preview and exported HTML.
-const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 section figure figcaption strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
+const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 section figure figcaption strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li dl dt dd input a img table thead tbody tfoot tr th td hr span div'.split(' '));
 const DROP=new Set('script style iframe object embed svg math form button textarea select link meta base template noscript audio video canvas'.split(' '));
 const VOID=new Set(['br','hr','img','input']);
 // Strict Unicode-aware ID shape for safe multilingual heading anchors.
@@ -76,6 +76,7 @@ export function sanitizeHTML(html){
    if(SAFE_ID.test(id)&&id===id.toLocaleLowerCase('en')&&!usedIds.has(id)){el.id=id;usedIds.add(id);}
   }
   if(tag==='section'&&node.getAttribute('class')==='md-footnotes')el.className='md-footnotes';
+  if(tag==='dl'&&node.getAttribute('class')==='md-definition-list')el.className='md-definition-list';
   if(tag==='figure'){
    const classes=(node.getAttribute('class')||'').split(/\s+/);
    if(classes.includes('af-figure'))

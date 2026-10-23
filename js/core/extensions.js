@@ -2,7 +2,8 @@
 export const EXTENSIONS=Object.freeze({
  softbreaks:Object.freeze({id:'softbreaks',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({breaks:true})}),
  footnotes:Object.freeze({id:'footnotes',category:'github-platform',modes:Object.freeze(['gfm']),option:Object.freeze({})}),
- headingIds:Object.freeze({id:'headingIds',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})})
+ headingIds:Object.freeze({id:'headingIds',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})}),
+ definitionLists:Object.freeze({id:'definitionLists',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})})
 });
 const LANG='en|cs|uk|ro|ru';
 export const validDocumentKey=key=>new RegExp('^(?:sandbox|lesson_[1-8]|advanced_[1-7])_(?:'+LANG+')$').test(key);
@@ -15,6 +16,7 @@ export function normalizeExtensionSettings(data){
   if(options.softbreaks===true)selected.softbreaks=true;
   if(options.footnotes===true)selected.footnotes=true;
   if(options.headingIds===true)selected.headingIds=true;
+  if(options.definitionLists===true)selected.definitionLists=true;
   if(Object.keys(selected).length)out[key]=selected;
  }
  return out;
@@ -63,3 +65,13 @@ export const FOOTNOTE_TEXT={
   warning:'Документ использует дополнительные сноски. GitHub.com их поддерживает, базовые GFM/CommonMark — нет. Исходный .md не меняется. Скачать?'}
 };
 export const footnoteText=lang=>FOOTNOTE_TEXT[lang]||FOOTNOTE_TEXT.en;
+
+
+export const DEFINITION_TEXT={
+ en:{label:'Definition lists (app-only, opt-in)',note:'Not normative GFM or CommonMark; enabled only in GFM. Basic HTML definition lists work in every mode.',sample:'Insert Markdown definition example',html:'Insert semantic HTML list',practice:'Practice: term and two definitions',done:'Complete',pending:'Add a term and at least two definitions.',warning:'This document uses an app-specific definition list syntax. Other Markdown processors may display the colon lines literally. Original .md source is preserved. Download anyway?',htmlWarning:'Some Markdown platforms filter semantic HTML definition lists.'},
+ cs:{label:'Seznam definic (jen aplikace, volitelně)',note:'Není součástí GFM nebo CommonMark. Funguje jen v GFM; HTML seznamy fungují všude.',sample:'Vložit příklad Markdown definic',html:'Vložit sémantický HTML seznam',practice:'Cvičení: termín a dvě definice',done:'Hotovo',pending:'Přidejte termín a dvě definice.',warning:'Dokument používá vlastní syntaxi definic. Jiné procesory mohou řádky s dvojtečkou zobrazovat doslova. Zdroj .md se nemění. Stáhnout?',htmlWarning:'Některé platformy filtrují sémantický HTML seznam definic.'},
+ uk:{label:'Списки визначень (лише застосунок)',note:'Не входять у GFM/CommonMark. Доступні лише у GFM; HTML-списки працюють у всіх режимах.',sample:'Вставити приклад Markdown',html:'Вставити семантичний HTML-список',practice:'Вправа: термін і два визначення',done:'Виконано',pending:'Додайте термін та два визначення.',warning:'Документ використовує додатковий синтаксис списків визначень. Інші процесори можуть показати двокрапку як текст. Завантажити?',htmlWarning:'Деякі платформи фільтрують семантичні HTML-списки.'},
+ ro:{label:'Liste de definiții (doar aplicația)',note:'Nu sunt GFM/CommonMark normativ. Disponibile doar în GFM; HTML funcționează în orice mod.',sample:'Inserează exemplu Markdown',html:'Inserează listă HTML semantică',practice:'Exercițiu: termen și două definiții',done:'Complet',pending:'Adăugați un termen și două definiții.',warning:'Documentul folosește sintaxă de definiții specifică aplicației. Alte procesoare pot afișa liniile cu două puncte literal. Descărcați?',htmlWarning:'Unele platforme filtrează listele HTML semantice.'},
+ ru:{label:'Списки определений (только приложение)',note:'Не часть стандартов GFM и CommonMark. Markdown-синтаксис работает только в режиме GFM; HTML-список доступен во всех режимах.',sample:'Вставить пример Markdown',html:'Вставить семантический HTML-список',practice:'Упражнение: термин и два определения',done:'Выполнено',pending:'Добавьте термин и два определения.',warning:'Документ использует нестандартный синтаксис списков определений. Другие Markdown-процессоры могут отображать строки с двоеточием как текст. Скачать .md?',htmlWarning:'Некоторые Markdown-платформы могут удалять HTML-списки определений.'}
+};
+export const definitionText=lang=>DEFINITION_TEXT[lang]||DEFINITION_TEXT.en;
