@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Eight-lesson interactive Markdown course with five languages.",
   "scripts": {
+    "test": "node tests/smoke.mjs",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build --base ./",
     "preview": "vite preview --host 0.0.0.0",

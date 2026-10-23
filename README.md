@@ -73,3 +73,37 @@ For a security-critical public release, replace the fallback sanitizer with a pi
 ### Licenses
 
 Application source: copyright and license retained by the project owner (no license chosen here). Bundled `vendor/marked.js`: Marked (MIT), copyright retained in that file. Tailwind-derived CSS utilities: Tailwind CSS (MIT), compiled during project preparation. No Google Fonts or external CDNs are required for core use.
+
+
+## Markdown syntax profiles (v1.1)
+
+The toolbar provides **H1–H6** (Ctrl+1 through Ctrl+6) and a **Standard** selector.
+The selected profile is saved locally and added to the shareable URL fragment.
+Switching modes immediately re-renders the same Markdown document **without modifying the text**.
+
+- **GFM · GitHub** (default): CommonMark-style Markdown with GitHub tables, task lists,
+  strikethrough and extended autolinks. The default uses `breaks: false`,
+  matching Markdown-file soft breaks, not GitHub comment formatting.
+- **CommonMark**: `marked` with `gfm: false, pedantic: false`. No GFM-specific
+  tables, task list checkboxes or strikethrough. It is a CommonMark-compatible
+  learning preview, **not** a certification of exact spec compliance.
+- **Original · Legacy**: `marked` with `pedantic: true` and GFM disabled.
+  This is approximate compatibility with John Gruber's original `markdown.pl`,
+  **not** the original parser or an independent normative standard.
+
+All profiles use the same HTML sanitization policy. Raw HTML is deliberately restricted
+for security and may differ from unfiltered Markdown interpreters.
+
+The built-in 8-lesson curriculum teaches some GFM-only features (strikethrough,
+tables and task lists). Those checks require GFM; other profiles display an
+explanation rather than incorrectly marking unsupported constructs as complete.
+The first lesson now practices all six ATX heading levels.
+
+Further reference:
+- [Markdown Guide Basic Syntax](https://www.markdownguide.org/basic-syntax/)
+- [CommonMark specification](https://spec.commonmark.org/)
+- [GitHub Flavored Markdown specification](https://github.github.com/gfm/)
+- [Original Markdown syntax](https://daringfireball.net/projects/markdown/syntax)
+
+The included `npm test` script checks dialect differences, all six heading levels,
+localized lesson solutions and cheat-sheet coverage. GitHub Actions runs it before building.

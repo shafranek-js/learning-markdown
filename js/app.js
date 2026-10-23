@@ -11,6 +11,20 @@ import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
 const $=id=>document.getElementById(id);
 let currentChecks=[];
+const DIALECT_UI={
+ en:{label:'Standard',title:'Markdown parsing dialect',warning:'This lesson uses GFM-only syntax. Select GFM to complete these checks.'},
+ cs:{label:'Standard',title:'Varianta Markdownu',warning:'Tato lekce používá syntaxi pouze pro GFM. K dokončení přepněte na GFM.'},
+ uk:{label:'Стандарт',title:'Діалект Markdown',warning:'Цей урок використовує синтаксис лише GFM. Для виконання перевірок виберіть GFM.'},
+ ro:{label:'Standard',title:'Dialect Markdown',warning:'Această lecție folosește sintaxă exclusiv GFM. Selectați GFM pentru a finaliza verificările.'},
+ ru:{label:'Стандарт',title:'Диалект Markdown',warning:'Этот урок использует конструкции, поддерживаемые только GFM. Для завершения заданий выберите GFM.'}
+};
+const DIALECT_NAMES={gfm:'GFM',commonmark:'CommonMark',original:'Original · Legacy'};
+function renderDialectUI(){
+ const el=$('dialect-selector'),locale=DIALECT_UI[state.lang]||DIALECT_UI.en;
+ el.value=state.dialect;el.title=locale.title;el.setAttribute('aria-label',locale.title);
+ document.querySelector('[data-i18n="dialectLabel"]').textContent=locale.label;
+ $('preview-pane-title').textContent=ui(state.lang).previewHeader.replace(/\s*\(GFM\)/i,'')+' ('+DIALECT_NAMES[state.dialect]+')';
+}
 const getLesson=i=>lesson(i,state.lang,lessonTranslations);
 const escapeHTML=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 function progress(){const strings=ui(state.lang),done=state.completedLessons.length,pct=Math.round(done/8*100);
@@ -29,11 +43,11 @@ function renderLocalization(){const strings=ui(state.lang);document.documentElem
  $('download-html-btn').title=t(state.lang,'exportHTML');$('print-cert-btn').textContent=t(state.lang,'print');$('student-name-input').placeholder=t(state.lang,'name');
  document.querySelector('[data-mobile-tab="guide"]').textContent=t(state.lang,'guide');document.querySelector('[data-mobile-tab="editor"]').textContent=t(state.lang,'editor');document.querySelector('[data-mobile-tab="preview"]').textContent=strings.previewView;
  const tip={
- en:['Undo','Redo','Heading 1','Heading 2','Heading 3','Bold','Italic','Strikethrough','Quote','Bullet list','Numbered list','Task list','Inline code','Code block','Link','Image','Table','Divider'],
- cs:['Zpět','Znovu','Nadpis 1','Nadpis 2','Nadpis 3','Tučné','Kurzíva','Přeškrtnutí','Citace','Odrážky','Číslovaný seznam','Úkoly','Kód v řádku','Blok kódu','Odkaz','Obrázek','Tabulka','Oddělovač'],
- uk:['Скасувати','Повторити','Заголовок 1','Заголовок 2','Заголовок 3','Жирний','Курсив','Закреслення','Цитата','Маркований список','Нумерований список','Завдання','Рядковий код','Блок коду','Посилання','Зображення','Таблиця','Роздільник'],
- ro:['Anulare','Refacere','Titlu 1','Titlu 2','Titlu 3','Aldin','Cursiv','Tăiat','Citat','Marcatori','Listă numerotată','Sarcini','Cod inline','Bloc de cod','Legătură','Imagine','Tabel','Separator'],
- ru:['Отменить','Повторить','Заголовок 1','Заголовок 2','Заголовок 3','Жирный','Курсив','Зачёркнутый','Цитата','Маркеры','Нумерованный список','Список задач','Строчный код','Блок кода','Ссылка','Изображение','Таблица','Разделитель']};
+ en:['Undo','Redo','Heading 1','Heading 2','Heading 3','Heading 4','Heading 5','Heading 6','Bold','Italic','Strikethrough','Quote','Bullet list','Numbered list','Task list','Inline code','Code block','Link','Image','Table','Divider'],
+ cs:['Zpět','Znovu','Nadpis 1','Nadpis 2','Nadpis 3','Nadpis 4','Nadpis 5','Nadpis 6','Tučné','Kurzíva','Přeškrtnutí','Citace','Odrážky','Číslovaný seznam','Úkoly','Kód v řádku','Blok kódu','Odkaz','Obrázek','Tabulka','Oddělovač'],
+ uk:['Скасувати','Повторити','Заголовок 1','Заголовок 2','Заголовок 3','Заголовок 4','Заголовок 5','Заголовок 6','Жирний','Курсив','Закреслення','Цитата','Маркований список','Нумерований список','Завдання','Рядковий код','Блок коду','Посилання','Зображення','Таблиця','Роздільник'],
+ ro:['Anulare','Refacere','Titlu 1','Titlu 2','Titlu 3','Titlu 4','Titlu 5','Titlu 6','Aldin','Cursiv','Tăiat','Citat','Marcatori','Listă numerotată','Sarcini','Cod inline','Bloc de cod','Legătură','Imagine','Tabel','Separator'],
+ ru:['Отменить','Повторить','Заголовок 1','Заголовок 2','Заголовок 3','Заголовок 4','Заголовок 5','Заголовок 6','Жирный','Курсив','Зачёркнутый','Цитата','Маркеры','Нумерованный список','Список задач','Строчный код','Блок кода','Ссылка','Изображение','Таблица','Разделитель']};
  [$('undo-btn'),$('redo-btn'),...document.querySelectorAll('.toolbar-btn')].forEach((e,i)=>{const shortcut=e.title.match(/(Ctrl\+[^)]*|Cmd\+[^)]*)/i)?.[1];e.title=(tip[state.lang]?.[i]??tip.en[i])+(shortcut?` (${shortcut})`:'');});
  const titles={
  en:['Toggle course contents','Show or hide lesson guide','Drag to resize lesson guide','Drag to resize editor and preview; double-click for equal widths','Reset current lesson','Decrease font size','Increase font size'],
@@ -42,7 +56,7 @@ function renderLocalization(){const strings=ui(state.lang);document.documentElem
  ro:['Deschide cuprinsul','Arată sau ascunde ghidul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
  ru:['Открыть содержание курса','Показать или скрыть гид урока','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
  ['contents-toggle-btn','theory-pane-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
- renderCheats();
+ renderCheats();renderDialectUI();
 }
 function selectLesson(index,{route=true,scroll=true}={}){
  if(index<-1||index>=LESSON_CORE.length)return;state.currentLessonIndex=index;save();if(route)syncRoute(state,{push:true});
@@ -61,7 +75,8 @@ function selectLesson(index,{route=true,scroll=true}={}){
 }
 function evaluate(text){updatePreview(text);
  if(state.currentLessonIndex===-1){$('lesson-complete-banner').classList.add('hidden');return;}
- const l=getLesson(state.currentLessonIndex),checks=verifyLesson(l,text);currentChecks=checks;
+ const l=getLesson(state.currentLessonIndex),checks=verifyLesson(l,text,state.dialect);currentChecks=checks;
+ const warning=$('dialect-warning');warning.classList.toggle('hidden',state.dialect==='gfm'||![2,7,8].includes(l.id));warning.textContent=(DIALECT_UI[state.lang]||DIALECT_UI.en).warning;
  const list=$('task-checklist');list.replaceChildren();let done=0;
  for(const c of checks){if(c.passed)done++;const item=document.createElement('li');item.className=`p-2 rounded-lg border text-xs flex items-start gap-2 transition ${c.passed?'bg-emerald-500/15 border-emerald-500/40 text-emerald-300':'theme-panel border-transparent'}`;
  const mark=document.createElement('span');mark.className='w-4 h-4 rounded shrink-0 font-semibold';mark.textContent=c.passed?'✓':'○';
@@ -71,18 +86,20 @@ function evaluate(text){updatePreview(text);
  pill.textContent=completed||state.completedLessons.includes(l.id)?ui(state.lang).statusDone:ui(state.lang).statusInProgress;
  if(completed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();drawContents();progress();}
 }
+function setDialect(mode){if(!['gfm','commonmark','original'].includes(mode))return;state.dialect=mode;save();renderDialectUI();syncRoute(state);evaluate(area().value);}
 function setTheme(theme){state.theme=theme;document.documentElement.dataset.theme=theme;save();syncRoute(state);}
 function setLanguage(lang){state.lang=lang;save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false,scroll:false});syncRoute(state);}
 function download(text,name,mime){const url=URL.createObjectURL(new Blob([text],{type:mime}));const a=document.createElement('a');a.href=url;a.download=name;a.style.display='none';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);}
 async function copy(text){try{await navigator.clipboard.writeText(text);}catch{const temp=document.createElement('textarea');temp.value=text;document.body.append(temp);temp.select();document.execCommand('copy');temp.remove();}}
 function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang!==state.lang){state.lang=r.lang;rerender=true;}if(r.theme&&r.theme!==state.theme){state.theme=r.theme;document.documentElement.dataset.theme=state.theme;rerender=true;}
+ if(r.dialect&&r.dialect!==state.dialect){state.dialect=r.dialect;rerender=true;}
  if(r.index!==null&&r.index!==state.currentLessonIndex){state.currentLessonIndex=r.index;rerender=true;}
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
-function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.index!==null)state.currentLessonIndex=route.index;
+function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
  initEditor(evaluate);initToolbar();initResizers();initModals();renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
  selectLesson(state.currentLessonIndex,{route:false});syncRoute(state);onRouteChange(setFromRoute);
- $('theme-selector').addEventListener('change',e=>setTheme(e.target.value));$('lang-selector').addEventListener('change',e=>setLanguage(e.target.value));
+ $('theme-selector').addEventListener('change',e=>setTheme(e.target.value));$('dialect-selector').addEventListener('change',e=>setDialect(e.target.value));$('lang-selector').addEventListener('change',e=>setLanguage(e.target.value));
  $('theory-pane-toggle-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1){selectLesson(0);return;}state.guideVisible=!state.guideVisible;showGuide(state.guideVisible);save();});
  $('sandbox-mode-btn').addEventListener('click',()=>{selectLesson(state.currentLessonIndex===-1?0:-1);if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');});
  $('toggle-hint-btn').addEventListener('click',()=>$('hint-box').classList.toggle('hidden'));

@@ -10,7 +10,7 @@ function wrap(prefix,suffix=prefix,placeholder='text'){const a=area(),s=a.select
  const next=v.slice(0,s)+prefix+selection+suffix+v.slice(e);applyEdit(next,s+prefix.length,s+prefix.length+selection.length);
 }
 export function toolbarAction(action){switch(action){
- case 'h1':case 'h2':case 'h3':setHeading(Number(action[1]));break;
+ case 'h1':case 'h2':case 'h3':case 'h4':case 'h5':case 'h6':setHeading(Number(action[1]));break;
  case 'bold':wrap('**','**','bold text');break;case 'italic':wrap('_','_','italic text');break;
  case 'strike':wrap('~~','~~','strikethrough');break;case 'quote':insertSnippet('> Blockquote text\n');break;
  case 'ul':insertSnippet('- List item\n');break;case 'ol':insertSnippet('1. First step\n2. Second step\n');break;
@@ -23,7 +23,7 @@ export function toolbarAction(action){switch(action){
 export function initToolbar(){document.querySelectorAll('.toolbar-btn').forEach(button=>button.addEventListener('click',()=>toolbarAction(button.dataset.action)));
  document.getElementById('undo-btn').addEventListener('click',()=>undoOrRedo(-1));document.getElementById('redo-btn').addEventListener('click',()=>undoOrRedo(1));
  area().addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;if(!mod||e.altKey||e.shiftKey)return;
- const key=e.code,shortcuts={Digit1:'h1',Digit2:'h2',Digit3:'h3',KeyB:'bold',KeyI:'italic',KeyK:'link'};
+ const key=e.code,shortcuts={Digit1:'h1',Digit2:'h2',Digit3:'h3',Digit4:'h4',Digit5:'h5',Digit6:'h6',KeyB:'bold',KeyI:'italic',KeyK:'link'};
  if(shortcuts[key]){e.preventDefault();toolbarAction(shortcuts[key]);}
  });
 }

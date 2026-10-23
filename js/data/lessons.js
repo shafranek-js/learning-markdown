@@ -57,9 +57,23 @@ export const LESSON_CORE = [
                     { label: "Insert Full LinkedIn Prompt", code: LINKEDIN_PROMPT_SAMPLE + "\nRun `npx studio` and visit [Docs](https://commonmark.org)." }
                 ], checks: checks[7] }
 ];
+const headingExamples={
+ en:['Details','Examples','Footnotes'],cs:['Podrobnosti','Příklady','Poznámky'],uk:['Деталі','Приклади','Примітки'],
+ ro:['Detalii','Exemple','Note'],ru:['Детали','Примеры','Примечания']
+};
+const headingTips={
+ en:'All six heading levels (H1–H6) use 1–6 # symbols followed by a space.',
+ cs:'Všech šest úrovní nadpisů (H1–H6) používá 1–6 znaků # následovaných mezerou.',
+ uk:'Усі шість рівнів заголовків (H1–H6) використовують 1–6 символів # із пробілом.',
+ ro:'Toate cele șase niveluri de titlu (H1–H6) folosesc 1–6 simboluri # urmate de spațiu.',
+ ru:'Все шесть уровней заголовков (H1–H6) используют от 1 до 6 символов # с пробелом.'
+};
 export function lesson(index, lang, translations){
  const core=LESSON_CORE[index];
  if(!core)return null;
  const tr=translations[core.id]?.[lang] || translations[core.id]?.en;
- return { ...tr, hint: core.id===4 ? tr.hint + '\n\n>> Nested quote with **emphasis**\n' : core.id===8 ? tr.hint + '\n\n```javascript\nconsole.log(\"Markdown capstone\");\n```\n\n- [x] Final README prepared\n- [ ] Review the result\n' : tr.hint, id:core.id, tab:core.tab, examples:core.examples, tasks:core.checks.map((check,i)=>({id:core.id+'_'+i, check, text:getTaskDescriptions(core.id,lang,tr.tasks)[i]||''})) };
+ const extra=headingExamples[lang]||headingExamples.en;
+ const headingSuffix=extra.map((text,i)=>'#'.repeat(i+4)+' '+text).join('\n');
+ const headingSnippets=extra.map((text,i)=>({label:'#'.repeat(i+4)+' '+text,code:'#'.repeat(i+4)+' '+text}));
+ return { ...tr, theory:core.id===1?tr.theory+'<p>'+headingTips[lang]+'</p>':tr.theory, examples:core.id===1?[...core.examples,...headingSnippets]:core.examples, hint: core.id===1 ? tr.hint+'\n\n'+headingSuffix : core.id===4 ? tr.hint + '\n\n>> Nested quote with **emphasis**\n' : core.id===8 ? tr.hint + '\n\n```javascript\nconsole.log(\"Markdown capstone\");\n```\n\n- [x] Final README prepared\n- [ ] Review the result\n' : tr.hint, id:core.id, tab:core.tab, tasks:core.checks.map((check,i)=>({id:core.id+'_'+i, check, text:getTaskDescriptions(core.id,lang,tr.tasks)[i]||''})) };
 }

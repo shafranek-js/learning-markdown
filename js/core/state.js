@@ -1,7 +1,8 @@
 export const STORAGE_KEY='md_course_state_v1';
 const LEGACY_KEY='learning_markdown_studio_v3';
-export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,layoutMode:'split',mobileTab:'editor',name:''};
+export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,dialect:'gfm',layoutMode:'split',mobileTab:'editor',name:''};
 const LANGS=new Set(['en','cs','uk','ro','ru']);
+export const DIALECTS=new Set(['gfm','commonmark','original']);
 const THEMES=new Set(['codepen','midnight','daylight','dracula','nord','solarized']);
 function fromStorage(){
  try {
@@ -9,7 +10,7 @@ function fromStorage(){
   const saved=raw?JSON.parse(raw):{};
   return {
    ...defaults,...saved,
-   lang:LANGS.has(saved.lang)?saved.lang:'en',theme:THEMES.has(saved.theme)?saved.theme:'codepen',
+   lang:LANGS.has(saved.lang)?saved.lang:'en',theme:THEMES.has(saved.theme)?saved.theme:'codepen',dialect:DIALECTS.has(saved.dialect)?saved.dialect:'gfm',
    currentLessonIndex:Number.isInteger(saved.currentLessonIndex)&&saved.currentLessonIndex>=-1&&saved.currentLessonIndex<8?saved.currentLessonIndex:0,
    completedLessons:Array.isArray(saved.completedLessons)?[...new Set(saved.completedLessons.filter(v=>Number.isInteger(v)&&v>=1&&v<=8))]:[],
    savedDrafts:saved.savedDrafts&&typeof saved.savedDrafts==='object'&&!Array.isArray(saved.savedDrafts)?saved.savedDrafts:{},

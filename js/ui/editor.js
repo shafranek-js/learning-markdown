@@ -12,7 +12,9 @@ function tokenize(line){
   if(match){parts.push(`<span class="${match[0]}">${escapeHTML(match[1])}</span>`);pos+=match[1].length;}else{parts.push(escapeHTML(line[pos]));pos++;}}
  return parts.join('');
 }
-export function highlightMarkdown(raw){return raw.split('\n').map(line=>{
+export function highlightMarkdown(raw){return raw.split('\n').map((line,index,lines)=>{
+  // Setext headings: their marker line follows the heading text without a blank line.
+  if(index>0 && lines[index-1].trim() && /^(?:={1,}|-{1,})[ \\t]*$/.test(line))return `<span class="tok-h">${escapeHTML(line)}</span>`;
   const heading=line.match(/^(#{1,6}[ \t]+)(.*)$/);if(heading)return `<span class="tok-h">${escapeHTML(heading[1])}${tokenize(heading[2])}</span>`;
   const quote=line.match(/^(>+[ \t]*)(.*)$/);if(quote)return `<span class="tok-quote-mark">${escapeHTML(quote[1])}</span><span class="tok-quote">${tokenize(quote[2])}</span>`;
   const list=line.match(/^([ \t]*(?:[-*+]|\d+\.)[ \t]+(?:\[[ xX]\][ \t]+)?)(.*)$/);if(list)return `<span class="tok-list">${escapeHTML(list[1])}</span>${tokenize(list[2])}`;

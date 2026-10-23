@@ -141,7 +141,10 @@
             <div class="inline-flex items-center theme-panel-alt p-0.5 rounded-lg border theme-border gap-0.5">
                 <button type="button" data-action="h1" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 1 (#) — Ctrl+1">H1</button>
                 <button type="button" data-action="h2" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 2 (##) — Ctrl+2">H2</button>
-                <button type="button" data-action="h3" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" style="color: var(--accent)" title="Heading 3 (###) — Ctrl+3">H3</button>
+                <button type="button" data-action="h3" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 3 (###) — Ctrl+3">H3</button>
+                <button type="button" data-action="h4" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 4 (####) — Ctrl+4">H4</button>
+                <button type="button" data-action="h5" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 5 (#####) — Ctrl+5">H5</button>
+                <button type="button" data-action="h6" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 6 (######) — Ctrl+6">H6</button>
                 <span class="w-px h-3.5 bg-white/15 mx-0.5"></span>
                 <button type="button" data-action="bold" class="toolbar-btn px-2 py-0.5 rounded text-xs font-extrabold hover:bg-white/10 transition" title="Bold (**text**) — Ctrl+B">B</button>
                 <button type="button" data-action="italic" class="toolbar-btn px-2 py-0.5 rounded text-xs italic font-serif font-bold hover:bg-white/10 transition" title="Italic (*text*) — Ctrl+I">I</button>
@@ -161,8 +164,14 @@
             </div>
         </div>
 
-        <!-- Right: Splitter Reset & View Modes -->
+        <!-- Right: Markdown profile, splitter reset & view modes -->
         <div class="flex items-center gap-2 shrink-0">
+            <label for="dialect-selector" class="text-[11px] theme-muted font-semibold hidden lg:inline" data-i18n="dialectLabel">Standard</label>
+            <select id="dialect-selector" aria-label="Markdown standard" title="Markdown parsing dialect" class="theme-panel-alt border theme-border rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer focus:outline-none">
+                <option value="gfm">GFM · GitHub</option>
+                <option value="commonmark">CommonMark</option>
+                <option value="original">Original · Legacy</option>
+            </select>
             <button id="reset-split-btn" type="button" class="hidden md:inline-flex px-2 py-1 rounded text-[11px] font-mono theme-panel-alt border theme-border hover:opacity-90 transition" title="Reset panel widths (Double-click splitter)">
                 ⇄ 50:50
             </button>
@@ -242,6 +251,7 @@
                     <p id="lesson-goal-desc" class="text-[11px] theme-muted mb-2.5" data-i18n="tasksSubtitle">
                         Write Markdown in the editor — tasks verify automatically:
                     </p>
+                    <p id="dialect-warning" class="hidden text-[11px] mt-2 mb-2 px-2 py-1.5 rounded-lg border border-amber-500/30 text-amber-400" role="status"></p>
                     <ul id="task-checklist" aria-live="polite" class="space-y-1.5"></ul>
 
                     <!-- Hint & Solution Box -->
