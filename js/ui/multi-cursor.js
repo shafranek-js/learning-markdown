@@ -1,7 +1,7 @@
 import {EditorState,EditorSelection} from '@codemirror/state';
 import {EditorView,keymap,lineNumbers,drawSelection,rectangularSelection,highlightActiveLine,highlightSpecialChars} from '@codemirror/view';
 import {history,historyKeymap,defaultKeymap,undo,redo,undoDepth,redoDepth,isolateHistory,addCursorAbove,addCursorBelow} from '@codemirror/commands';
-import {selectNextOccurrence} from '@codemirror/search';
+import {selectNextOccurrence,selectSelectionMatches} from '@codemirror/search';
 import {markdown} from '@codemirror/lang-markdown';
 import {syntaxHighlighting,defaultHighlightStyle} from '@codemirror/language';
 import {state,save,docKey} from '../core/state.js';
@@ -51,6 +51,15 @@ export function insertCursorsAtLineEnds(editor){
  return true;
 }
 
+// Escape collapses multiple cursors to one at the main selection head.
+// The document and native undo history remain untouched.
+export function collapseToSingleCursor(editor){
+ const selection=editor.state.selection;
+ if(selection.ranges.length===1&&selection.main.empty)return false;
+ editor.dispatch({selection:EditorSelection.cursor(selection.main.head),scrollIntoView:true});
+ return true;
+}
+
 // Indent the union of selected lines once, preserving multiple carets.
 // With a single empty caret, Tab inserts two spaces at that caret.
 export function multiCursorIndent(editor,outdent=false){
@@ -86,6 +95,8 @@ function extensions(){
   markdown(),
   keymap.of([
    {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
+   {key:'Mod-Shift-l',run:selectSelectionMatches,preventDefault:true},
+   {key:'Escape',run:collapseToSingleCursor,preventDefault:true},
    {key:'Tab',run:editor=>multiCursorIndent(editor),preventDefault:true},
    {key:'Shift-Tab',run:editor=>multiCursorIndent(editor,true),preventDefault:true},
    {key:'Shift-Alt-i',run:insertCursorsAtLineEnds,preventDefault:true},
