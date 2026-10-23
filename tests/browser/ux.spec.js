@@ -747,3 +747,57 @@ test('Existing table edit menu localizes and remains reachable on mobile',async(
  await page.locator('#table-edit-close').click();
  await expect(page.locator('#table-edit-bar')).toBeHidden();
 });
+
+
+test('editing an existing GFM table cell remains GFM, supports Undo/Redo and exports',async({page})=>{
+ await page.goto('/');
+ const source='Before\n\n| A | B |\n| --- | --- |\n| Alpha | Beta |\n\nAfter';
+ await page.locator('#markdown-input').fill(source);
+ await page.locator('#markdown-preview tbody td').first().click();
+ await expect(page.locator('#table-edit-content-input')).toHaveValue('Alpha');
+ await page.locator('#table-edit-content-input').fill('Changed | value <script>');
+ await page.locator('#table-edit-content-save').click();
+ const updated=await page.locator('#markdown-input').inputValue();
+ expect(updated).toContain('Changed \\| value &lt;script&gt;');
+ expect(updated).not.toContain('<table');
+ expect(updated).toContain('Before');
+ expect(updated).toContain('After');
+ await expect(page.locator('#markdown-preview tbody td').first()).toHaveText('Changed | value <script>');
+ await page.locator('#undo-btn').click();
+ await expect(page.locator('#markdown-preview tbody td').first()).toHaveText('Alpha');
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview tbody td').first()).toHaveText('Changed | value <script>');
+ const pending=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await pending;
+ const {readFile}=await import('node:fs/promises');
+ const output=await readFile(await file.path(),'utf8');
+ expect(output).not.toContain('<script>');
+ expect(output).toContain('Changed');
+});
+test('editing a merged HTML cell retains rowspan/colspan and escapes entered HTML',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('<table class="af-table-outline"><tr><td colspan="2">Combined</td></tr><tr><td>Left</td><td>Right</td></tr></table>');
+ await page.locator('#markdown-preview td[colspan="2"]').click();
+ await expect(page.locator('#table-edit-content-input')).toHaveValue('Combined');
+ await page.locator('#table-edit-content-input').fill('Safe <img onerror="alert(1)">');
+ await page.locator('#table-edit-content-save').click();
+ await expect(page.locator('#markdown-preview td[colspan="2"]')).toHaveText('Safe <img onerror="alert(1)">');
+ const text=await page.locator('#markdown-input').inputValue();
+ expect(text).toContain('colspan="2"');
+ expect(text).toContain('&lt;img');
+ expect(text).not.toContain('<img');
+ await expect(page.locator('#markdown-preview tbody td')).toHaveCount(3);
+});
+test('table cell content editor works in Russian mobile Preview',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#markdown-input').fill('| A |\n| --- |\n| Original |');
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview tbody td').click();
+ await expect(page.locator('#table-edit-content-save')).toHaveText('Сохранить ячейку');
+ await page.locator('#table-edit-content-input').fill('Изменено');
+ await page.locator('#table-edit-content-input').press('Enter');
+ await expect(page.locator('#markdown-preview tbody td')).toHaveText('Изменено');
+});

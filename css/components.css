@@ -111,3 +111,14 @@
  cursor:crosshair}
 .md-preview table th:focus-visible,.md-preview table td:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 @media(max-width:600px){.table-edit-bar{bottom:54px;padding:8px}.table-edit-actions select{min-width:110px}}
+
+/* Editing an existing table cell uses the same undoable source model as the editor. */
+.table-edit-content-form{display:flex;gap:8px;align-items:center;margin-top:7px;min-width:0}
+.table-edit-content-form label{font-size:11px;white-space:nowrap;font-weight:600}
+.table-edit-content-form input{flex:1;min-width:0;padding:6px 8px;font-size:12px;color:var(--text-ui);
+ background:var(--bg-panel-alt);border:1px solid var(--border-ui);border-radius:6px}
+.table-edit-content-form button{flex:none;padding:6px 10px;font-size:11px;font-weight:700;
+ background:var(--accent);color:white;border-radius:6px}
+.table-edit-content-form button:disabled{opacity:.5;cursor:not-allowed}
+#table-edit-content-warning{color:var(--text-ui-muted);font-size:10px;margin-top:3px}
+@media(max-width:480px){.table-edit-content-form{flex-wrap:wrap}.table-edit-content-form input{min-width:55%}}

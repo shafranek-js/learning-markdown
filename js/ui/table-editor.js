@@ -1,6 +1,6 @@
 import {state,docKey} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
-import {findEditableTables,editTableAt,previewTableCoordinates} from '../core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText} from '../core/table-operations.js';
 
 const $=id=>document.getElementById(id);
 const UI={
@@ -25,6 +25,13 @@ const UI={
   select:'Shift+клик по другой ячейке выделяет прямоугольную область.',
   ops:['Строка выше','Строка ниже','Удалить строку','Столбец слева','Столбец справа','Удалить столбец','Объединить выделение','Объединить вправо','Объединить вниз','Разделить ячейку','Синяя ячейка','Мятная ячейка','Жёлтая ячейка','Без границ','Границы']}
 };
+const CONTENT_TEXT={
+ en:['Cell text','Save cell','Text only; existing markup is replaced.','Edit cell content'],
+ cs:['Text buňky','Uložit buňku','Pouze text; původní formátování bude nahrazeno.','Upravit obsah buňky'],
+ uk:['Текст клітинки','Зберегти клітинку','Лише текст; попередню розмітку буде замінено.','Редагувати вміст клітинки'],
+ ro:['Textul celulei','Salvează celula','Doar text; formatarea anterioară se înlocuiește.','Editează conținutul'],
+ ru:['Текст ячейки','Сохранить ячейку','Только текст; прежняя разметка ячейки будет заменена.','Изменить содержимое ячейки']
+};
 const GROUPS=[
  {key:'rows',items:['row-above','row-below','delete-row']},
  {key:'cols',items:['column-left','column-right','delete-column']},
@@ -37,6 +44,27 @@ function clearSelection(){
  selected=null;
  $('table-edit-bar').hidden=true;
  document.querySelectorAll('#markdown-preview .table-edit-selected').forEach(c=>c.classList.remove('table-edit-selected'));
+}
+function refreshCellText(){
+ if(!selected)return;
+ const text=getTableCellText(area().value,selected.tableIndex,selected.row,selected.col);
+ $('table-edit-content-input').value=text??'';
+ $('table-edit-content-input').disabled=text===null;
+ $('table-edit-content-save').disabled=text===null;
+}
+function saveCell(){
+ if(!selected)return;
+ const before=findEditableTables(area().value)[selected.tableIndex];
+ if(!before||before.raw!==selected.raw){clearSelection();return;}
+ const value=$('table-edit-content-input').value;
+ const current=getTableCellText(area().value,selected.tableIndex,selected.row,selected.col);
+ if(value===current)return;
+ const edit=setTableCellText(area().value,selected.tableIndex,selected.row,selected.col,value);
+ if(!edit){$('table-edit-message').textContent=labels().invalid;return;}
+ selected.raw=findEditableTables(edit.text)[selected.tableIndex]?.raw||'';
+ $('table-edit-message').textContent='';
+ applyEdit(edit.text,edit.start,edit.start,{focus:false});
+ syncTableEditorPreview();
 }
 function highlight(){
  const preview=$('markdown-preview');
@@ -79,6 +107,7 @@ function chooseCell(event){
   selected.other={row:coords.row,col:coords.col};
  }else selected={tableIndex:index,doc:docKey(),row:coords.row,col:coords.col,other:null,raw:sourceTables[index].raw};
  highlight();
+ refreshCellText();
 }
 function applyOperation(op){
  if(!selected)return;
@@ -92,12 +121,18 @@ function applyOperation(op){
  $('table-edit-message').textContent='';
  applyEdit(edit.text,caret,caret,{focus:false});
  syncTableEditorPreview();
+ refreshCellText();
 }
 export function renderTableEditorLanguage(){
  const l=labels(),bar=$('table-edit-bar');if(!bar)return;
  $('table-edit-title').textContent=l.title;
  $('table-edit-close').setAttribute('aria-label',l.close);
  $('table-edit-hint').textContent=l.select;
+ const content=CONTENT_TEXT[state.lang]||CONTENT_TEXT.en;
+ $('table-edit-content-label').textContent=content[0];
+ $('table-edit-content-save').textContent=content[1];
+ $('table-edit-content-warning').textContent=content[2];
+ $('table-edit-content-input').setAttribute('aria-label',content[3]);
  GROUPS.forEach(({key,items})=>{
   const select=$('table-edit-'+key);
   const prior=select.value;
@@ -115,7 +150,9 @@ export function initTableEditor(){
  bar.setAttribute('role','toolbar');bar.setAttribute('aria-label','Edit table');
  bar.innerHTML='<div class="table-edit-heading"><strong id="table-edit-title"></strong>'
   +'<span id="table-edit-status" aria-live="polite"></span><button id="table-edit-close" type="button">✕</button></div>'
-  +'<div class="table-edit-actions"></div><p id="table-edit-hint"></p><p id="table-edit-message" role="status" aria-live="polite"></p>';
+  +'<div class="table-edit-actions"></div>'
+  +'<form id="table-edit-content-form" class="table-edit-content-form"><label id="table-edit-content-label" for="table-edit-content-input"></label><input id="table-edit-content-input" type="text" maxlength="2000" autocomplete="off"><button id="table-edit-content-save" type="submit"></button></form>'
+  +'<p id="table-edit-content-warning"></p><p id="table-edit-hint"></p><p id="table-edit-message" role="status" aria-live="polite"></p>';
  const actions=bar.querySelector('.table-edit-actions');
  for(const {key} of GROUPS){
   const select=document.createElement('select');select.id='table-edit-'+key;
@@ -126,10 +163,12 @@ export function initTableEditor(){
  }
  document.body.append(bar);
  $('table-edit-close').addEventListener('click',clearSelection);
+ $('table-edit-content-form').addEventListener('submit',e=>{e.preventDefault();saveCell();});
  $('markdown-preview').addEventListener('click',chooseCell);
  $('markdown-preview').addEventListener('keydown',e=>{
   if((e.key==='Enter'||e.key===' ')&&/^(TD|TH)$/.test(e.target.tagName)){
    e.preventDefault();chooseCell({target:e.target,shiftKey:e.shiftKey});
+   if(e.key==='Enter')$('table-edit-content-input').focus();
   }
  });
  renderTableEditorLanguage();

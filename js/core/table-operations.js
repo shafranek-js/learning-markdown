@@ -209,6 +209,45 @@ export function editTableAt(source,index,operation,selection){
  return {text:source.slice(0,table.start)+updated+source.slice(table.end),
   start:table.start,end:table.end,kind:updated.trimStart().startsWith('<table')?'html':'gfm'};
 }
+// Editing a cell never requires an HTML conversion for GFM tables. For
+// advanced tables the selected span owner is edited as escaped plain text.
+const escapeText=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+export function getTableCellText(source,index,row,col){
+ const table=findEditableTables(source)[index];
+ if(!table||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ if(table.type==='gfm'){
+  const rows=[table.token.header,...table.token.rows];
+  return rows[row]?.[col]?.text??null;
+ }
+ const model=modelFromHTML(table.raw);
+ if(!model||row<0||row>=model.rows||col<0||col>=model.cols)return null;
+ const owner=cellsAt(model,row,col);
+ if(!owner)return null;
+ const doc=new DOMParser().parseFromString(owner.html,'text/html');
+ return doc.body.textContent||'';
+}
+export function setTableCellText(source,index,row,col,value){
+ if(typeof value!=='string'||value.length>2000||/[\r\n]/.test(value))return null;
+ const table=findEditableTables(source)[index];
+ if(!table||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ let updated;
+ if(table.type==='gfm'){
+  const matrix=gfmMatrix(table.token);
+  if(row<0||row>=matrix.rows.length||col<0||col>=matrix.rows[0].length)return null;
+  matrix.rows[row][col]=escapeText(value).replaceAll('|','\\|');
+  updated=serializeGFM(matrix);
+ }else{
+  const model=modelFromHTML(table.raw);
+  if(!model||row<0||row>=model.rows||col<0||col>=model.cols)return null;
+  const owner=cellsAt(model,row,col);
+  if(!owner)return null;
+  owner.html=escapeText(value);
+  updated=serializeHTML(model);
+ }
+ if(!updated||updated===table.raw)return null;
+ return {text:source.slice(0,table.start)+updated+source.slice(table.end),
+  start:table.start,end:table.end,kind:table.type};
+}
 const previewCache=new WeakMap();
 export function previewTableCoordinates(table,cell){
  const rows=[...table.querySelectorAll('tr')],row=rows.indexOf(cell.closest('tr'));

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {findEditableTables,editTableAt,previewTableCoordinates} from '../js/core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText} from '../js/core/table-operations.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
@@ -66,4 +66,20 @@ const mixed='| H |\n| --- |\n\n<table><tr><td>B</td></tr></table>';
 assert.equal(findEditableTables(mixed).length,2);
 const second=editTableAt(mixed,1,'cell-blue',select(0,0));
 assert(second&&second.text.includes('af-cell-blue')&&second.text.startsWith('| H |'));
+
+const editSource='Before\n\n| Product | Qty |\n| --- | --- |\n| Widget | 2 |\n\nAfter';
+assert.equal(getTableCellText(editSource,0,1,0),'Widget');
+const updatedCell=setTableCellText(editSource,0,1,0,'A | <script>');
+assert(updatedCell.text.includes('A \\| &lt;script&gt;')&&!updatedCell.text.includes('<table'));
+assert(updatedCell.text.startsWith('Before')&&updatedCell.text.endsWith('After'));
+assert.equal(getTableCellText(updatedCell.text,0,1,0),'A | &lt;script&gt;');
+assert.equal(setTableCellText(editSource,0,1,1,'Bad\nvalue'),null);
+assert.equal(setTableCellText(editSource,0,10,0,'Bad'),null);
+const mergedText='<table><tbody><tr><td colspan="2"><strong>Rich</strong></td></tr><tr><td>One</td><td>Two</td></tr></tbody></table>';
+assert.equal(getTableCellText(mergedText,0,0,0),'Rich');
+const changedMerged=setTableCellText(mergedText,0,0,0,'Safe <img onerror="go()">');
+assert(changedMerged.text.includes('colspan="2"'));
+assert(changedMerged.text.includes('&lt;img')&&!changedMerged.text.includes('<img'));
+assert(changedMerged.text.includes('One')&&changedMerged.text.includes('Two'));
+
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
