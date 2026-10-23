@@ -2,7 +2,7 @@
 // sanitizer. This is output decoration, never a mutation of Markdown source.
 const SAFE_ID=/^\p{L}[\p{L}\p{M}\p{N}_-]{0,63}$/u;
 const MAX_BASE=52;
-export const isSafeHeadingId=id=>typeof id==='string'&&SAFE_ID.test(id);
+export const isSafeHeadingId=id=>typeof id==='string'&&SAFE_ID.test(id)&&id===id.toLocaleLowerCase('en');
 
 export function headingSlug(text){
  const normalized=String(text||'').normalize('NFKC').toLocaleLowerCase('en');
