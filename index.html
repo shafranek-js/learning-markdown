@@ -389,11 +389,27 @@
                         <span id="preview-pane-title" class="font-semibold" data-i18n="previewHeader">Live Preview (GFM)</span>
                     </div>
                     <div class="flex items-center gap-3">
+                        <button id="print-document-btn" type="button" class="hover:opacity-80 transition" title="Print / PDF">🖨 PDF</button>
                         <button id="download-html-btn" type="button" class="hover:opacity-80 transition" title="Export HTML">↓ .HTML</button>
                         <button id="download-md-btn" type="button" class="hover:opacity-80 transition">↓ .MD</button>
                         <button id="copy-md-btn" type="button" class="hover:opacity-80 transition" data-i18n="copyBtn">Copy</button>
                     </div>
                 </div>
+
+                <details id="compatibility-panel" class="shrink-0 border-b theme-border theme-panel-alt text-xs">
+                    <summary class="px-3 py-2 cursor-pointer font-semibold"><span id="compatibility-title">Compatibility &amp; export</span></summary>
+                    <div class="px-3 pb-3 space-y-2">
+                        <p id="compatibility-description" class="theme-muted text-[11px]"></p>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                            <span id="compatibility-core"></span><strong id="compatibility-core-status"></strong>
+                            <span id="compatibility-gfm"></span><strong id="compatibility-gfm-status"></strong>
+                            <span id="compatibility-advanced"></span><strong id="compatibility-advanced-status"></strong>
+                            <span id="compatibility-html"></span><strong id="compatibility-html-status"></strong>
+                        </div>
+                        <p id="compatibility-footnote" class="text-[10px] theme-muted"></p>
+                        <p id="compatibility-external" class="text-[10px] theme-muted"></p>
+                    </div>
+                </details>
 
                 <!-- Rendered Output Scroll Area -->
                 <div class="flex-1 p-6 sm:p-8 overflow-y-auto">

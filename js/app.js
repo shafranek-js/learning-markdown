@@ -11,6 +11,7 @@ import {renderPractice} from './ui/deep-practice.js';
 import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
 import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
 import {standaloneHTML} from './core/export-html.js';
+import {renderPortability,portabilityStatus,portabilityLabels} from './ui/compatibility.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
 import {initAdvancedCertificate,renderAdvancedCertificate,openAdvancedCertificate} from './ui/advanced-certificate.js';
@@ -72,7 +73,7 @@ function renderLocalization(){const strings=ui(state.lang);document.documentElem
  ro:['Deschide cuprinsul','Arată sau ascunde ghidul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
  ru:['Открыть содержание курса','Показать или скрыть гид урока','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
  ['contents-toggle-btn','theory-pane-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
- renderCheats();renderDialectUI();renderAdvancedUI();
+ renderCheats();renderDialectUI();renderAdvancedUI();renderPortability(area().value);
 }
 function selectLesson(index,{route=true,scroll=true}={}){
  if(index<-1||index>=LESSON_CORE.length+ADVANCED_IDS.length)return;state.currentLessonIndex=index;
@@ -104,7 +105,7 @@ function selectLesson(index,{route=true,scroll=true}={}){
  setEditorContent(content);drawContents();progress();
  if(scroll){$('theory-panel').querySelector('.overflow-y-auto')?.scrollTo(0,0);}
 }
-function evaluate(text){updatePreview(text);
+function evaluate(text){updatePreview(text);renderPortability(text);
  if(state.currentLessonIndex>=0&&!isAdvanced(state.currentLessonIndex))renderPractice(state.currentLessonIndex+1,text,currentHtml());
  if(state.currentLessonIndex===-1){$('lesson-complete-banner').classList.add('hidden');return;}
  const l=getLesson(state.currentLessonIndex),advanced=isAdvanced(state.currentLessonIndex);
@@ -152,8 +153,18 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
  $('font-dec-btn').addEventListener('click',()=>{state.fontSize=Math.max(12,state.fontSize-1);document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);refreshEditor({notify:false});save();});
  $('font-inc-btn').addEventListener('click',()=>{state.fontSize=Math.min(22,state.fontSize+1);document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);refreshEditor({notify:false});save();});
  $('copy-md-btn').addEventListener('click',()=>copy(area().value));
- $('download-md-btn').addEventListener('click',()=>download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8'));
+ $('download-md-btn').addEventListener('click',()=>{
+  if(portabilityStatus()?.advanced && !confirm(portabilityLabels(state.lang).mdWarning))return;
+  download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8');
+ });
  $('download-html-btn').addEventListener('click',()=>download(standaloneHTML(currentHtml(),state.lang),'markdown-export.html','text/html;charset=utf-8'));
+ $('print-document-btn').addEventListener('click',()=>{
+  const content=standaloneHTML(currentHtml(),state.lang);
+  const url=URL.createObjectURL(new Blob([content],{type:'text/html;charset=utf-8'}));
+  window.open(url,'_blank','noopener');
+  // New tab displays the printable document; Ctrl+P opens the native PDF dialog.
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ });
  $('reset-course-btn').addEventListener('click',()=>{if(!confirm(t(state.lang,'confirmReset')))return;resetCourse();clearHistory();selectLesson(0,{route:false});syncRoute(state);toggleContents(false);});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.activeElement!==area())area().blur();});
  if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));

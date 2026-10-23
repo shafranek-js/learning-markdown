@@ -203,3 +203,27 @@ at 7/7 and can be printed to PDF with Ctrl+P in the browser; recipient names
 are HTML-escaped. It is a course-generated completion certificate, not an
 external professional accreditation. Both course and certificate use all
 five supported interface languages.
+
+## Issue #5 — portability and secure export
+
+The Preview pane contains a localized **Compatibility & export** panel. Its
+indicators inspect sanitized rendered output (not raw code in fenced blocks),
+compare GFM with the CommonMark and legacy parser modes, and flag app-specific
+HTML/CSS. This is a warning system, *not* normative compliance certification.
+When the active document includes advanced markup, downloading `.md` first
+explains that the source remains intact but other platforms may strip HTML
+or ignore preset classes. The warning can be dismissed to continue.
+
+**HTML** export applies the strict sanitizer again (defense in depth), embeds
+both preview and advanced CSS, and includes a restrictive document CSP:
+no JavaScript, objects, connections, forms or remote fonts. HTTPS images remain
+permitted and naturally require an internet connection; embedded CSS is
+self-contained. The new **Print / PDF** button opens the standalone printable
+HTML in another tab; browser Ctrl+P produces a PDF. Print-specific page breaks
+are included in the HTML export and tested in Chromium. This is a browser print
+workflow rather than an in-app PDF generator.
+
+The existing app CSP still permits inline **styles** for its current UI
+architecture, but scripts are restricted to same-origin resources. The
+offline-first Vite build generates content-hashed service-worker precache
+entries in the postbuild step; this is tested separately in Chromium.
