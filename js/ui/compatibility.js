@@ -1,5 +1,6 @@
 import {inspectPortability} from '../core/compatibility.js';
-import {state} from '../core/state.js';
+import {state,docKey,save} from '../core/state.js';
+import {extensionEnabled,changeExtension,extensionText} from '../core/extensions.js';
 export const PORTABILITY_TEXT={
   "en": {
     "title": "Compatibility & export",
@@ -91,9 +92,51 @@ export const portabilityLabels=lang=>PORTABILITY_TEXT[lang]||PORTABILITY_TEXT.en
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 let last=null;
+export function initExtensionSettings(onChange){
+ $('extension-softbreaks-toggle').addEventListener('change',event=>{
+  if(state.dialect!=='gfm')return;
+  state.extensionSettingsByDocument=changeExtension(
+   state.extensionSettingsByDocument,docKey(),'softbreaks',event.target.value==='on');
+  save();onChange();
+ });
+}
+function renderExtensionMatrix(w,enabled){
+ const toggle=$('extension-softbreaks-toggle');
+ toggle.disabled=state.dialect!=='gfm';
+ toggle.value=enabled?'on':'off';
+ $('optional-extension-title').textContent=w.title;
+ $('extension-softbreaks-label').textContent=w.label;
+ toggle.options[0].textContent=w.off;
+ toggle.options[1].textContent=w.on;
+ $('extension-softbreaks-note').textContent=toggle.disabled?w.unavailable:w.note;
+ $('extension-matrix-title').textContent=w.matrix;
+ $('extension-matrix').setAttribute('aria-label',w.matrix);
+ for(const [col,id] of Object.entries({feature:'ext-col-feature',core:'ext-col-core',gfm:'ext-col-gfm',github:'ext-col-github',app:'ext-col-app'}))
+  $(id).textContent=w[col];
+ const rows=[
+  [w.headings,w.yes,w.yes,w.yes,w.yes],
+  [w.tables,w.no,w.yes,w.yes,w.yes],
+  [w.breaks,w.no,w.no,w.varies,enabled?w.yes:w.no],
+  [w.html,w.varies,w.varies,w.varies,w.yes],
+  [w.footnotes,w.no,w.no,w.yes,w.planned]
+ ];
+ const tbody=$('extension-matrix-body');tbody.replaceChildren();
+ for(const cells of rows){
+  const tr=document.createElement('tr');
+  cells.forEach((value,i)=>{
+   const cell=document.createElement(i?'td':'th');
+   if(!i)cell.scope='row';
+   cell.textContent=value;
+   cell.className='px-1 py-1 border-b theme-border';
+   tr.append(cell);
+  });tbody.append(tr);
+ }
+}
 export function renderPortability(source){
  const words=portabilityLabels(state.lang);
- last=inspectPortability(source);
+ const enabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'softbreaks');
+ last={...inspectPortability(source),extensionActive:enabled};
+ renderExtensionMatrix(extensionText(state.lang),enabled);
  set('compatibility-title',words.title);
  set('compatibility-description',words.summary);
  set('compatibility-core',words.core);
