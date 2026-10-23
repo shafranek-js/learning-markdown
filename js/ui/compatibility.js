@@ -1,6 +1,6 @@
 import {inspectPortability} from '../core/compatibility.js';
 import {state,docKey,save} from '../core/state.js';
-import {extensionEnabled,changeExtension,extensionText} from '../core/extensions.js';
+import {extensionEnabled,changeExtension,extensionText,footnoteText} from '../core/extensions.js';
 export const PORTABILITY_TEXT={
   "en": {
     "title": "Compatibility & export",
@@ -92,15 +92,25 @@ export const portabilityLabels=lang=>PORTABILITY_TEXT[lang]||PORTABILITY_TEXT.en
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 let last=null;
-export function initExtensionSettings(onChange){
+export function initExtensionSettings(onChange,onInsertFootnoteExample){
  $('extension-softbreaks-toggle').addEventListener('change',event=>{
   if(state.dialect!=='gfm')return;
   state.extensionSettingsByDocument=changeExtension(
    state.extensionSettingsByDocument,docKey(),'softbreaks',event.target.value==='on');
   save();onChange();
  });
+ $('extension-footnotes-toggle').addEventListener('change',event=>{
+  if(state.dialect!=='gfm')return;
+  state.extensionSettingsByDocument=changeExtension(
+   state.extensionSettingsByDocument,docKey(),'footnotes',event.target.value==='on');
+  save();onChange();
+ });
+ $('extension-footnote-demo').addEventListener('click',()=>{
+  if(!extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'footnotes'))return;
+  onInsertFootnoteExample();
+ });
 }
-function renderExtensionMatrix(w,enabled){
+function renderExtensionMatrix(w,enabled,footnoteOn){
  const toggle=$('extension-softbreaks-toggle');
  toggle.disabled=state.dialect!=='gfm';
  toggle.value=enabled?'on':'off';
@@ -118,7 +128,7 @@ function renderExtensionMatrix(w,enabled){
   [w.tables,w.no,w.yes,w.yes,w.yes],
   [w.breaks,w.no,w.no,w.varies,enabled?w.yes:w.no],
   [w.html,w.varies,w.varies,w.varies,w.yes],
-  [w.footnotes,w.no,w.no,w.yes,w.planned]
+  [w.footnotes,w.no,w.no,w.yes,footnoteOn?w.yes:w.no]
  ];
  const tbody=$('extension-matrix-body');tbody.replaceChildren();
  for(const cells of rows){
@@ -135,8 +145,20 @@ function renderExtensionMatrix(w,enabled){
 export function renderPortability(source){
  const words=portabilityLabels(state.lang);
  const enabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'softbreaks');
- last={...inspectPortability(source),extensionActive:enabled};
- renderExtensionMatrix(extensionText(state.lang),enabled);
+ const notesEnabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'footnotes');
+ const labels=extensionText(state.lang),notes=footnoteText(state.lang);
+ const control=$('extension-footnotes-toggle');
+ control.disabled=state.dialect!=='gfm';
+ control.value=notesEnabled?'on':'off';
+ control.options[0].textContent=labels.off;
+ control.options[1].textContent=labels.on;
+ $('extension-footnotes-label').textContent=notes.label;
+ $('extension-footnotes-note').textContent=control.disabled?labels.unavailable:notes.note;
+ $('extension-footnote-demo').textContent=notes.sample;
+ $('extension-footnote-demo').disabled=!notesEnabled;
+ $('extension-footnote-demo').hidden=!notesEnabled;
+ last={...inspectPortability(source),extensionActive:enabled,footnotesActive:notesEnabled};
+ renderExtensionMatrix(labels,enabled,notesEnabled);
  set('compatibility-title',words.title);
  set('compatibility-description',words.summary);
  set('compatibility-core',words.core);

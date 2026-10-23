@@ -15,7 +15,7 @@ import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
 import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
 import {standaloneHTML} from './core/export-html.js';
 import {renderPortability,portabilityStatus,portabilityLabels,initExtensionSettings} from './ui/compatibility.js';
-import {extensionText} from './core/extensions.js';
+import {extensionText,footnoteText} from './core/extensions.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
 import {initAdvancedCertificate,renderAdvancedCertificate,openAdvancedCertificate} from './ui/advanced-certificate.js';
@@ -137,7 +137,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initExtensionSettings(()=>evaluate(area().value));
+ initEditor(evaluate);initToolbar();initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source].\n\n[^source]: Add your source here.\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
@@ -160,6 +160,7 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
  $('download-md-btn').addEventListener('click',()=>{
   if(portabilityStatus()?.advanced && !confirm(portabilityLabels(state.lang).mdWarning))return;
   if(portabilityStatus()?.extensionActive && !confirm(extensionText(state.lang).warning))return;
+  if(portabilityStatus()?.footnotesActive && !confirm(footnoteText(state.lang).warning))return;
   download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8');
  });
  $('download-html-btn').addEventListener('click',()=>download(standaloneHTML(currentHtml(),state.lang),'markdown-export.html','text/html;charset=utf-8'));
