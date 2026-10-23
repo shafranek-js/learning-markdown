@@ -119,3 +119,10 @@ images with alt/title and safe inline HTML.
 These drills are verified against actual rendered Markdown HTML. They work in the **same editor**, have
 an insertable example, and do not change the original eight-lesson certificate or previously saved progress.
 The expanded/collapsed state is persisted locally.
+
+## Curated CommonMark/GFM regression corpus
+
+`npm test` runs both the course exercises and a curated suite of 30 syntax examples
+covering CommonMark 0.31.2 and GFM features. These are intentionally targeted smoke/regression
+examples, not the complete official specification fixture suite. Future compatibility claims
+must distinguish best-effort rendering via `marked` from exact spec conformance.
