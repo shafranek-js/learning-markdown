@@ -1586,13 +1586,13 @@ test('issue #10 warns about nonstandard MD export without modifying Markdown',as
  await input.fill(source);
  await page.locator('#compatibility-panel summary').click();
  await page.locator('#extension-softbreaks-toggle').selectOption('on');
- const dialogPromise=page.waitForEvent('dialog');
- await page.locator('#download-md-btn').click();
- const confirm=await dialogPromise;
- expect(confirm.message()).toContain('single newlines');
+ const messages=[];
+ page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
  const downloadPromise=page.waitForEvent('download');
- await confirm.accept();
+ await page.locator('#download-md-btn').click();
  const file=await downloadPromise;
+ expect(messages).toHaveLength(1);
+ expect(messages[0]).toContain('single newlines');
  const {readFile}=await import('node:fs/promises');
  expect(await readFile(await file.path(),'utf8')).toBe(source);
  const htmlPromise=page.waitForEvent('download');
