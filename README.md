@@ -262,7 +262,7 @@ In Multi-cursor mode, select any set of lines and press **Shift+Alt+I** to creat
 
 The CodeMirror editor preserves all cursors when returning from textarea mode **as long as the document content is unchanged**. Editing the document in the textarea resets stale CodeMirror selections and history when re-enabled, rather than allowing Undo to resurrect old content. Line indentation, headings and list formatting preserve cursor positions after their inserted prefixes. Manual formatting commands are isolated as separate Undo/Redo steps, and Undo/Redo buttons restore focus to the editing surface.
 
-The `.github/workflows/browser-tests.yml` workflow runs the Playwright Chromium suite on each `main` push and pull request (and manually via **workflow_dispatch**), independent of Pages deployment. It checks 100-cursor line and inline formatting, multi-cursor Undo/Redo, real tab outdenting, and editor mode switching. Failed runs upload the Playwright report as an artifact.
+Chromium checks run on `main` via `.github/workflows/browser-qa.yml`; `.github/workflows/browser-tests.yml` runs on pull requests and manually via **workflow_dispatch**. This avoids running the complete Playwright suite twice on every push. It checks 100-cursor line and inline formatting, multi-cursor Undo/Redo, real tab outdenting, and editor mode switching. Failed runs upload the Playwright report as an artifact.
 
 
 ### Bulk selection shortcuts
