@@ -1150,3 +1150,109 @@ test('multi-cursor partial selection indents only touched lines and excludes bou
  await page.keyboard.press('Shift+Tab');
  await expect(input).toHaveValue('One\nTwo\nThree');
 });
+
+
+test('100 line toolbar formatting retains carets across undo and redo',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const lines=Array.from({length:100},(_,i)=>'Topic '+(i+1));
+ const original=lines.join('\n');
+ const headed=lines.map(line=>'## '+line).join('\n');
+ await input.fill(original);
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.locator('[data-action="h2"]').click();
+ await expect(input).toHaveValue(headed);
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(original);
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue(headed);
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.keyboard.type('!');
+ await expect(input).toHaveValue(lines.map(line=>'## '+line+'!').join('\n'));
+});
+
+test('separate multi-cursor formatting actions have separate undo steps',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const original='Alpha\nBeta\nGamma',headings='## Alpha\n## Beta\n## Gamma';
+ const numbered='1. ## Alpha\n2. ## Beta\n3. ## Gamma';
+ await input.fill(original);
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await page.locator('[data-action="h2"]').click();
+ await expect(input).toHaveValue(headings);
+ await page.locator('[data-action="ol"]').click();
+ await expect(input).toHaveValue(numbered);
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(headings);
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(original);
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue(headings);
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue(numbered);
+ await expect(page.locator('#multi-cursor-count')).toContainText('3');
+});
+
+test('switching to the textarea and back keeps unchanged multi-cursor session',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('First\nSecond\nThird');
+ const toggle=page.locator('#multi-cursor-toggle');
+ await toggle.click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+Alt+ArrowDown');
+ await expect(page.locator('#multi-cursor-count')).toContainText('2');
+ await toggle.click();
+ await expect(input).toBeVisible();
+ await toggle.click();
+ await expect(page.locator('#multi-cursor-count')).toContainText('2');
+ await page.keyboard.insertText('!');
+ await expect(input).toHaveValue('!First\n!Second\nThird');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('First\nSecond\nThird');
+});
+
+test('textarea edits invalidate stale CodeMirror history when switching back',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input'),toggle=page.locator('#multi-cursor-toggle');
+ await input.fill('Old\nOld');
+ await toggle.click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+Alt+ArrowDown');
+ await page.keyboard.insertText('!');
+ await expect(input).toHaveValue('!Old\n!Old');
+ await toggle.click();
+ await input.fill('New content');
+ await toggle.click();
+ await expect(input).toHaveValue('New content');
+ await expect(page.locator('#multi-cursor-count')).toContainText('1');
+ await expect(page.locator('#undo-btn')).toBeDisabled();
+});
+
+test('Shift+Tab removes real leading tab characters on multiple lines',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('\tAlpha\n\tBeta\nGamma');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+Alt+ArrowDown');
+ await page.keyboard.press('Shift+Tab');
+ await expect(input).toHaveValue('Alpha\nBeta\nGamma');
+ await expect(page.locator('#multi-cursor-count')).toContainText('2');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('\tAlpha\n\tBeta\nGamma');
+});
