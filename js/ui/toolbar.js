@@ -1,4 +1,4 @@
-import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiHeading,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
+import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 const FENCE='```';
@@ -36,7 +36,7 @@ export function insertRichContent(group,id){
 export function insertAdvancedPageBreak(){
  insertSnippet('\n<div class="af-page-break"></div>\n',true);
 }
-export function toolbarAction(action){switch(action){
+export function toolbarAction(action){if(['ul','ol','task','quote'].includes(action)&&multiLineFormat(action))return;switch(action){
  case 'h1':case 'h2':case 'h3':case 'h4':case 'h5':case 'h6':setHeading(Number(action[1]));break;
  case 'bold':wrap('**','**','bold text');break;case 'italic':wrap('_','_','italic text');break;
  case 'strike':wrap('~~','~~','strikethrough');break;case 'quote':insertSnippet('> Blockquote text\n');break;
