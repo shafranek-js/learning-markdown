@@ -235,3 +235,35 @@
  .md-preview .md-footnotes{break-inside:avoid-page}
  .md-preview .fn-ref,.md-preview .fn-backref{color:#1d4ed8!important}
 }
+
+
+/* #13: bounded, semantic figures. Styled equally in Preview and standalone HTML. */
+.md-preview figure.af-figure{
+ display:table;max-width:100%;margin:1.25rem auto;
+ break-inside:avoid;page-break-inside:avoid;
+}
+.md-preview figure.af-figure img{
+ display:block;max-width:100%;width:auto;height:auto;
+ object-fit:contain;margin:0 auto;border-radius:.45rem;
+}
+.md-preview figure.af-figure-fixed img{
+ /* The sanitizer generates the only height style from a safe 1–1600 integer. */
+ object-fit:contain;max-height:70vh;
+}
+.md-preview figure.af-figure figcaption{
+ display:table-caption;caption-side:bottom;max-width:100%;
+ font-size:.87rem;line-height:1.45;color:var(--preview-text);
+ opacity:.78;text-align:center;padding:.45rem .5rem .15rem;
+ overflow-wrap:anywhere;
+}
+@media(max-width:600px){
+ .md-preview figure.af-figure{display:block;width:100%}
+ .md-preview figure.af-figure img{max-width:100%!important}
+ .md-preview figure.af-figure-fixed img{max-height:55vh}
+ .md-preview figure.af-figure figcaption{display:block}
+}
+@media print{
+ .md-preview figure.af-figure{break-inside:avoid-page;page-break-inside:avoid}
+ .md-preview figure.af-figure figcaption{color:#334155!important;opacity:1}
+ .md-preview figure.af-figure-fixed img{max-height:20cm}
+}
