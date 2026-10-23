@@ -553,3 +553,62 @@ test('Offline reload uses the versioned service-worker shell and still renders M
   await expect(page.locator('#markdown-preview h1')).toHaveText('Offline heading');
  }finally{await context.setOffline(false);}
 });
+
+
+test('GFM checklist shows checked state and Preview clicks edit source with Undo/Redo',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ await editor.fill('- [x] Completed task\n- [ ] Open task');
+ const boxes=page.locator('#markdown-preview li input[type="checkbox"]');
+ await expect(boxes).toHaveCount(2);
+ await expect(boxes.first()).toBeChecked();
+ await expect(boxes.nth(1)).not.toBeChecked();
+ await expect(boxes.first()).toBeEnabled();
+ await boxes.nth(1).check();
+ await expect(editor).toHaveValue('- [x] Completed task\n- [x] Open task');
+ await expect(boxes.nth(1)).toBeChecked();
+ await boxes.first().uncheck();
+ await expect(editor).toHaveValue('- [ ] Completed task\n- [x] Open task');
+ await page.locator('#undo-btn').click();
+ await expect(boxes.first()).toBeChecked();
+ await page.locator('#redo-btn').click();
+ await expect(boxes.first()).not.toBeChecked();
+ await page.reload();
+ await expect(boxes.first()).not.toBeChecked();
+ await expect(boxes.nth(1)).toBeChecked();
+});
+
+test('GFM task clicks preserve nested lists and fenced-code examples',async({page})=>{
+ await page.goto('/');
+ const source='- [x] Same\n  - [ ] Same\n- [x] Same\n\n~~~md\n- [ ] Code only\n~~~';
+ await page.locator('#markdown-input').fill(source);
+ const boxes=page.locator('#markdown-preview input[data-task-index]');
+ await expect(boxes).toHaveCount(3);
+ await boxes.nth(1).check();
+ await expect(page.locator('#markdown-input')).toHaveValue(source.replace('  - [ ] Same','  - [x] Same'));
+ await expect(boxes.nth(0)).toBeChecked();
+ await expect(boxes.nth(2)).toBeChecked();
+});
+
+test('exported checkboxes retain checked and disabled attributes while remaining safe',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('- [x] Done\n- [ ] Pending\n\n<input type="checkbox" onclick="alert(1)" checked>');
+ const boxes=page.locator('#markdown-preview li input');
+ await expect(boxes).toHaveCount(2);
+ await expect(boxes.first()).toBeDisabled();
+ const promise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await promise;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await file.path(),'utf8');
+ expect(html).toContain('checked=""');
+ expect(html).toContain('disabled=""');
+ expect(html).not.toContain('onclick=');
+});
+
+test('CommonMark treats GFM task markers as text, not interactive checkboxes',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('- [x] Done\n- [ ] Pending');
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await expect(page.locator('#markdown-preview input[type="checkbox"]')).toHaveCount(0);
+});

@@ -20,7 +20,12 @@ export function sanitizeHTML(html){
    if(!href.startsWith('#')){el.setAttribute('rel','noopener noreferrer');el.setAttribute('target','_blank');}
   }
   if(tag==='img'&&urlOK(node.getAttribute('src'),true)){el.setAttribute('src',node.getAttribute('src'));el.setAttribute('loading','lazy');el.setAttribute('alt',node.getAttribute('alt')||'');}
-  if(tag==='input'){if(node.getAttribute('type')!=='checkbox')return;el.setAttribute('type','checkbox');el.disabled=true;if(node.checked)el.checked=true;}
+  if(tag==='input'){
+   if(node.getAttribute('type')!=='checkbox')return;
+   el.setAttribute('type','checkbox');
+   el.setAttribute('disabled','');
+   if(node.hasAttribute('checked'))el.setAttribute('checked','');
+  }
   if(['td','th'].includes(tag)){
    for(const name of ['colspan','rowspan']){
     const raw=node.getAttribute(name)||'';

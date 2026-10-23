@@ -227,3 +227,7 @@ The existing app CSP still permits inline **styles** for its current UI
 architecture, but scripts are restricted to same-origin resources. The
 offline-first Vite build generates content-hashed service-worker precache
 entries in the postbuild step; this is tested separately in Chromium.
+
+## Interactive GFM task checkboxes
+
+GFM task lists display checked/unchecked values correctly in Preview. Clicking an editable checkbox toggles only its corresponding Markdown `[x]`/`[ ]` marker and records an Undo/Redo step; draft changes persist across reloads. The editor enables preview checkboxes only when rendered tasks and source markers agree one-to-one, avoiding potentially destructive edits for ambiguous HTML, code fences or unsupported formats. Standalone HTML exports preserve checked states as disabled static checkboxes. CommonMark and Original parsing modes remain unaffected.

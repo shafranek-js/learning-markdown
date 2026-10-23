@@ -35,7 +35,7 @@ export function refreshEditor({notify=true}={}){
  if(notify)onChange(text);
 }
 export function setEditorContent(value,{resetSelection=true}={}){const a=area();a.value=value;if(resetSelection)a.setSelectionRange(value.length,value.length);ensureHistory(docKey(),value);refreshEditor();}
-export function applyEdit(text,start,end){const a=area();record(docKey(),a.value,a.selectionStart,a.selectionEnd,{force:true});a.value=text;a.focus();a.setSelectionRange(start,end);record(docKey(),text,start,end,{force:true});refreshEditor();}
+export function applyEdit(text,start,end,{focus=true}={}){const a=area();record(docKey(),a.value,a.selectionStart,a.selectionEnd,{force:true});a.value=text;if(focus)a.focus();a.setSelectionRange(start,end);record(docKey(),text,start,end,{force:true});refreshEditor();}
 export function undoOrRedo(direction){const snap=step(docKey(),direction);if(!snap)return;const a=area();a.value=snap.text;a.focus();a.setSelectionRange(snap.start,snap.end);refreshEditor();}
 export function initEditor(listener){onChange=listener;const a=area(),backdrop=el('editor-highlight-backdrop'),gutter=el('line-gutter');let scheduled=false;
  a.addEventListener('scroll',()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{backdrop.scrollTop=a.scrollTop;backdrop.scrollLeft=a.scrollLeft;gutter.scrollTop=a.scrollTop;scheduled=false;});});
