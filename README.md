@@ -251,3 +251,8 @@ Select **Multi-cursor** in the Editor header to enable CodeMirror 6 (bundled wit
 ### Advanced multi-selection formatting
 
 While **Multi-cursor** is active, Advanced HTML inline presets (color, background, font, size) and paragraph presets (alignment, indent, line spacing) apply to every selected range as a single CodeMirror transaction. HTML underline/subscript/superscript/highlight, page breaks, rich table templates, callouts, ordered-list numbering, internal anchors, spoiler/details blocks and headings H1–H6 are multi-range aware. Internal anchors automatically allocate distinct IDs for multiple selections. One Undo reverses the whole operation; regular single-cursor textarea mode keeps its previous behavior and Markdown source / sanitized Preview remain synchronized. Rich HTML examples deliberately insert trusted predefined templates (not arbitrary HTML).
+
+
+### Line-end cursors and indentation
+
+In Multi-cursor mode, select any set of lines and press **Shift+Alt+I** to create a caret at the end of each selected line (for the whole document, use **Ctrl+A** first). A selection ending at the beginning of the following line excludes that following line. Press **Tab** to add two spaces to each selected line, or **Shift+Tab** to remove up to two spaces (or one leading tab). With one empty selection, Tab inserts two spaces at the caret. Changes to multiple lines are grouped into a single history transaction and preserve the multi-cursor selection.
