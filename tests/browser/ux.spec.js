@@ -1412,3 +1412,58 @@ test('numbering restarts for independently selected nonadjacent lines',async({pa
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue('Same\nMiddle\nSame');
 });
+
+
+test('issue #8 GFM alignment survives live Preview, standalone HTML and print',async({page})=>{
+ await page.goto('/');
+ const source='| Product | Quantity | Price |\n| :--- | :---: | ---: |\n| Box | 12 | 99.50 |';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ const expected=['left','center','right'];
+ for(const scope of ['thead th','tbody td']){
+  const cells=page.locator('#markdown-preview '+scope);
+  await expect(cells).toHaveCount(3);
+  for(let i=0;i<3;i++){
+   await expect(cells.nth(i)).toHaveAttribute('align',expected[i]);
+   expect(await cells.nth(i).evaluate(el=>getComputedStyle(el).textAlign)).toBe(expected[i]);
+  }
+ }
+ const downloadPromise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const download=await downloadPromise;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await download.path(),'utf8');
+ for(const align of expected)expect(html).toContain('align="'+align+'"');
+ expect(html).toContain('.md-preview td[align="center"]');
+ expect(html).not.toContain('<script');
+ await page.setContent(html);
+ for(const scope of ['thead th','tbody td']){
+  for(let i=0;i<3;i++){
+   expect(await page.locator('main.md-preview '+scope).nth(i)
+    .evaluate(el=>getComputedStyle(el).textAlign)).toBe(expected[i]);
+  }
+ }
+ await page.emulateMedia({media:'print'});
+ for(let i=0;i<3;i++)
+  expect(await page.locator('main.md-preview tbody td').nth(i)
+   .evaluate(el=>getComputedStyle(el).textAlign)).toBe(expected[i]);
+});
+
+test('issue #8 sanitizer rejects injected alignment and styling',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='<table><tr><td align="right" onclick="alert(1)" style="text-align:left">OK</td>'
+ +'<td align="center;position:fixed" style="color:red">Bad</td></tr></table>';
+ await input.fill(source);
+ const cells=page.locator('#markdown-preview td');
+ await expect(cells).toHaveCount(2);
+ await expect(cells.first()).toHaveAttribute('align','right');
+ await expect(cells.first()).not.toHaveAttribute('onclick',/./);
+ await expect(cells.first()).not.toHaveAttribute('style',/./);
+ await expect(cells.nth(1)).not.toHaveAttribute('align',/./);
+ await expect(cells.nth(1)).not.toHaveAttribute('style',/./);
+ await expect(input).toHaveValue(source);
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await input.fill('| A | B |\n| :--- | ---: |\n| x | y |');
+ await expect(page.locator('#markdown-preview table')).toHaveCount(0);
+});
