@@ -157,6 +157,12 @@ export function renderPortability(source){
  $('extension-footnote-demo').textContent=notes.sample;
  $('extension-footnote-demo').disabled=!notesEnabled;
  $('extension-footnote-demo').hidden=!notesEnabled;
+ const practice=$('extension-footnote-practice');
+ practice.hidden=!notesEnabled;
+ const refs=[...document.querySelectorAll('#markdown-preview a.fn-ref[href]')];
+ const targets=refs.map(el=>el.getAttribute('href'));
+ const repeated=targets.some((href,i)=>targets.indexOf(href)<i);
+ practice.textContent=notes.exercise+' — '+(repeated?notes.done:notes.pending);
  last={...inspectPortability(source),extensionActive:enabled,footnotesActive:notesEnabled};
  renderExtensionMatrix(labels,enabled,notesEnabled);
  set('compatibility-title',words.title);

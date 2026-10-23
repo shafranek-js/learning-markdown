@@ -2,8 +2,9 @@
 // CommonMark/GFM/Original renderer unchanged. Footnotes are NOT normative GFM.
 import {Marked} from 'marked';
 import markedFootnote from 'marked-footnote';
+import {footnoteText} from './extensions.js';
 
-function canonicalizeFootnotes(raw){
+function canonicalizeFootnotes(raw,labels){
  const parsed=new DOMParser().parseFromString(raw,'text/html');
  const section=parsed.querySelector('section[data-footnotes]');
  if(!section)return raw;
@@ -40,7 +41,7 @@ function canonicalizeFootnotes(raw){
   link.id=refId;
   link.href='#'+info.item.id;
   link.className='fn-ref';
-  link.setAttribute('aria-label','Footnote '+info.ordinal+', reference '+index);
+  link.setAttribute('aria-label',labels.ref+' '+info.ordinal+', '+index);
   link.removeAttribute('data-footnote-ref');
   link.removeAttribute('aria-describedby');
   info.refs.push(refId);
@@ -51,7 +52,7 @@ function canonicalizeFootnotes(raw){
    const back=backs[i]||parsed.createElement('a');
    back.className='fn-backref';
    back.setAttribute('href','#'+info.refs[i]);
-   back.setAttribute('aria-label','Back to reference '+(i+1)+' of footnote '+info.ordinal);
+   back.setAttribute('aria-label',labels.back+' '+(i+1)+' · '+labels.ref+' '+info.ordinal);
    back.removeAttribute('data-footnote-backref');
    if(!backs[i]){back.textContent=' ↩';info.item.append(back);}
   }
@@ -59,11 +60,12 @@ function canonicalizeFootnotes(raw){
  }
  return parsed.body.innerHTML;
 }
-export function renderFootnotedMarkdown(source,options){
+export function renderFootnotedMarkdown(source,options,language='en'){
+ const labels=footnoteText(language);
  // Never mutate the shared Marked instance. Plugin state is document-scoped.
  const parser=new Marked(markedFootnote({
-  description:'Footnotes',backRefLabel:'Return to reference',
+  description:labels.heading,backRefLabel:labels.back,
   prefixId:'footnote-',sectionClass:'footnotes'
  }));
- return canonicalizeFootnotes(parser.parse(source,options));
+ return canonicalizeFootnotes(parser.parse(source,options),labels);
 }

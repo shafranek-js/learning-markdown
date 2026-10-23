@@ -31,7 +31,7 @@ assert.equal(normalizeExtensionSettings({lesson_1_en:{footnotes:true}}).lesson_1
 assert(!Object.hasOwn(normalizeExtensionSettings({lesson_1_en:{footnotes:'true'}}),'lesson_1_en'));
 assert(!extensionEnabled(state.extensionSettingsByDocument,'lesson_1_en','commonmark','footnotes'));
 for(const lang of ['en','cs','uk','ro','ru']){
- assert(FOOTNOTE_TEXT[lang].label&&FOOTNOTE_TEXT[lang].warning&&FOOTNOTE_TEXT[lang].sample);
+ assert(FOOTNOTE_TEXT[lang].label&&FOOTNOTE_TEXT[lang].warning&&FOOTNOTE_TEXT[lang].sample&&FOOTNOTE_TEXT[lang].exercise);
 }
 const missing=markdownToHTML('Unresolved[^missing] without definition.','gfm');
 assert(!missing.includes('md-footnotes'));

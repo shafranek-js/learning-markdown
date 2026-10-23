@@ -137,7 +137,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source].\n\n[^source]: Add your source here.\n'));
+ initEditor(evaluate);initToolbar();initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');

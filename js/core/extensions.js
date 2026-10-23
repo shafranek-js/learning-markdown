@@ -44,19 +44,19 @@ export const extensionText=lang=>EXTENSION_TEXT[lang]||EXTENSION_TEXT.en;
 
 
 export const FOOTNOTE_TEXT={
- en:{label:'Footnotes (GitHub.com extension, opt-in)',sample:'Insert footnote example',
+ en:{heading:"Footnotes",ref:"Footnote",back:"Back to reference",exercise:"Practice: reference one note twice",pending:"Not yet complete",done:"Complete",label:'Footnotes (GitHub.com extension, opt-in)',sample:'Insert footnote example',
   note:'Not normative GFM. Numbered notes, repeated references, backlinks; only available in GFM.',
   warning:'This document uses opt-in footnotes. GitHub.com supports them, but plain GFM / CommonMark processors may not. The .md source remains unchanged. Download anyway?'},
- cs:{label:'Poznámky pod čarou (volitelně pro GitHub.com)',sample:'Vložit příklad poznámky',
+ cs:{heading:"Poznámky pod čarou",ref:"Poznámka",back:"Zpět na odkaz",exercise:"Cvičení: odkažte dvakrát na jednu poznámku",pending:"Ještě nesplněno",done:"Splněno",label:'Poznámky pod čarou (volitelně pro GitHub.com)',sample:'Vložit příklad poznámky',
   note:'Není součástí GFM. Číslované poznámky a zpětné odkazy pouze v režimu GFM.',
   warning:'Dokument obsahuje volitelné poznámky pod čarou. GitHub.com je podporuje, čisté GFM/CommonMark nikoli. Zdroj .md se nemění. Stáhnout?'},
- uk:{label:'Виноски (GitHub.com, необов’язково)',sample:'Додати приклад виноски',
+ uk:{heading:"Виноски",ref:"Виноска",back:"Назад до посилання",exercise:"Вправа: двічі послатися на jednu виноску",pending:"Ще не виконано",done:"Виконано",label:'Виноски (GitHub.com, необов’язково)',sample:'Додати приклад виноски',
   note:'Не входять до GFM. Нумерація та зворотні посилання лише у режимі GFM.',
   warning:'Документ містить додаткові виноски. GitHub.com підтримує їх, базові GFM/CommonMark — ні. Джерело .md не зміниться. Завантажити?'},
- ro:{label:'Note de subsol (GitHub.com, opțional)',sample:'Inserează un exemplu de notă',
+ ro:{heading:"Note de subsol",ref:"Nota",back:"Înapoi la referință",exercise:"Exercițiu: referiți aceeași notă de două ori",pending:"Încă incomplet",done:"Complet",label:'Note de subsol (GitHub.com, opțional)',sample:'Inserează un exemplu de notă',
   note:'Nu fac parte din GFM normativ. Numerotare și referințe înapoi doar în GFM.',
   warning:'Documentul folosește note de subsol opționale. GitHub.com le acceptă, GFM/CommonMark simplu nu. Sursa .md rămâne intactă. Descărcați?'},
- ru:{label:'Сноски (GitHub.com, по выбору)',sample:'Вставить пример сноски',
+ ru:{heading:"Сноски",ref:"Сноска",back:"Вернуться к упоминанию",exercise:"Упражнение: сослаться на одну сноску дважды",pending:"Не выполнено",done:"Выполнено",label:'Сноски (GitHub.com, по выбору)',sample:'Вставить пример сноски',
   note:'Не входят в стандарт GFM. Нумерация и обратные ссылки работают только в режиме GFM.',
   warning:'Документ использует дополнительные сноски. GitHub.com их поддерживает, базовые GFM/CommonMark — нет. Исходный .md не меняется. Скачать?'}
 };

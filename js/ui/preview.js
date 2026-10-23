@@ -18,7 +18,7 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  const base=DIALECT_OPTIONS[dialect]||DIALECT_OPTIONS.gfm;
  const options=extensions?{...base,...parserExtensionOptions(state.extensionSettingsByDocument,docKey(),dialect)}:base;
  const raw=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'footnotes')
-  ?renderFootnotedMarkdown(text,options):marked.parse(text,options);
+  ?renderFootnotedMarkdown(text,options,state.lang):marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
  return highlightCodeBlocks(sanitizeHTML(raw));
 }

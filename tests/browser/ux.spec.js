@@ -1654,8 +1654,9 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
  await input.fill('');
  await page.locator('#extension-footnote-demo').click();
  await expect(input).toContainText('A documented claim[^source]');
- await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(1);
- await expect(page.locator('#markdown-preview .fn-backref')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
+ await expect(page.locator('#markdown-preview .fn-backref')).toHaveCount(2);
+ await expect(page.locator('#extension-footnote-practice')).toContainText('Complete');
  await page.locator('#lang-selector').selectOption('ru');
  await expect(page.locator('#extension-footnotes-label')).toContainText('Сноски');
  await expect(toggle).toHaveValue('off'); // separate language document
