@@ -1380,3 +1380,35 @@ test('multi-cursor line transformations preserve cursor count through sequential
  await expect(input).toHaveValue('- ## One\n- ## Two\n- ## Three\n- ## Four');
  await expect(page.locator('#multi-cursor-count')).toContainText('4');
 });
+
+
+test('reapplying task-list format preserves completed checkboxes',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const markdown='- [x] Completed\n- [ ] Pending\n- [X] Also completed';
+ await input.fill(markdown);
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await page.locator('[data-action="task"]').click();
+ await expect(input).toHaveValue('- [x] Completed\n- [ ] Pending\n- [x] Also completed');
+ await expect(page.locator('#markdown-preview input[type="checkbox"]:checked')).toHaveCount(2);
+});
+
+test('numbering restarts for independently selected nonadjacent lines',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('Same\nMiddle\nSame');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+d');
+ await page.keyboard.press('Control+d');
+ await expect(page.locator('#multi-cursor-count')).toContainText('2');
+ await page.locator('[data-action="ol"]').click();
+ await expect(input).toHaveValue('1. Same\nMiddle\n1. Same');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('Same\nMiddle\nSame');
+});
