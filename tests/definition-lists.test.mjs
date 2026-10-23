@@ -19,6 +19,7 @@ assert(extensionEnabled(state.extensionSettingsByDocument,key,'gfm','definitionL
 assert(!extensionEnabled(state.extensionSettingsByDocument,key,'commonmark','definitionLists'));
 const html=render(sample);
 const dl=html.querySelector('dl.md-definition-list');
+console.log('Definition parse diagnostic:',html.body.innerHTML.slice(0,1600));
 assert(dl,'enabled grammar produces definition list');
 assert.equal(dl.querySelectorAll('dt').length,3);
 assert.equal(dl.querySelectorAll('dd').length,3);
