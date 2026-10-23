@@ -1866,6 +1866,8 @@ test('issue #13 figures survive standalone HTML and print, and portable Markdown
  await expect(page.locator('main.md-preview figure figcaption')).toHaveText('Simple caption');
  await page.emulateMedia({media:'print'});
  await expect(page.locator('main.md-preview figure img')).toHaveAttribute('width','640');
+ // Print media hides the app editor after navigating back to the SPA.
+ await page.emulateMedia({media:'screen'});
  await page.goto('/');
  await page.locator('#markdown-input').fill('');
  // Advanced mode is persisted: do not accidentally close an already open ribbon.
