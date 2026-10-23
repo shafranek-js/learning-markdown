@@ -458,11 +458,12 @@ test('Resetting core course preserves advanced completion and advanced drafts',a
  await page.locator('#toggle-hint-btn').click();
  await page.locator('#insert-solution-btn').click();
  await expect(page.locator('#advanced-progress-label')).toContainText('1 / 7');
+ const advancedDraft=await page.locator('#markdown-input').inputValue();
  await page.locator('#contents-toggle-btn').click();
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('#reset-course-btn').click();
  await expect(page.locator('#progress-label')).toContainText('0');
  await expect(page.locator('#advanced-progress-label')).toContainText('1 / 7');
  await page.locator('#advanced-course-btn').click();
- await expect(page.locator('#markdown-input')).toHaveValue(/Saved advanced draft/);
+ await expect(page.locator('#markdown-input')).toHaveValue(advancedDraft);
 });
