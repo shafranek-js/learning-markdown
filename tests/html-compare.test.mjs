@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {compareHtml,CATEGORIES} from './html-compare.mjs';
+assert.equal(CATEGORIES.length,7);
+assert.equal(compareHtml('<p>Hello</p>\n','<p>Hello</p>\n'),'exact');
+assert.equal(compareHtml('<p>&amp;</p>','<p>&#38;</p>'),'dom-equivalent');
+assert.equal(compareHtml('<p id="a" class="b">text</p>','<p class="b" id="a">text</p>'),'dom-equivalent');
+assert.equal(compareHtml('<p>Text<br></p>','<p>Text<br/></p>'),'dom-equivalent');
+assert.equal(compareHtml('<a href="https://example.org">X</a>','<a href="https://elsewhere.org">X</a>'),'attributes');
+assert.equal(compareHtml('<p>Hello</p>','<p>Goodbye</p>'),'text');
+assert.equal(compareHtml('<p>Hello world</p>','<p>Hello\nworld</p>'),'whitespace');
+assert.equal(compareHtml('<p>Hello</p>','<h1>Hello</h1>'),'structure');
+assert.equal(compareHtml('<p>Hello</p>','','SyntaxError'),'parser-error');
+console.log('PASS: HTML audit classification fixtures');

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Eight-lesson interactive Markdown course with five languages.",
   "scripts": {
-    "test": "node tests/smoke.mjs && node tests/spec-samples.mjs",
+    "test": "node tests/smoke.mjs && node tests/spec-samples.mjs && node tests/html-compare.test.mjs",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build --base ./",
     "preview": "vite preview --host 0.0.0.0",
@@ -15,7 +15,8 @@
   },
   "devDependencies": {
     "vite": "^7.1.0",
-    "@playwright/test": "1.64.1"
+    "@playwright/test": "1.64.1",
+    "parse5": "^7.3.0"
   },
   "license": "UNLICENSED"
 }

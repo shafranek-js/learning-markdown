@@ -5,6 +5,8 @@ on:
     paths:
       - 'vendor/marked.js'
       - 'tests/conformance.mjs'
+      - 'tests/html-compare.mjs'
+      - 'package.json'
       - '.github/workflows/conformance.yml'
 permissions:
   contents: read
@@ -17,6 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install audit dependencies
+        run: npm install --no-audit --no-fund
       - name: Compare against all official upstream examples
         run: node tests/conformance.mjs
       - uses: actions/upload-artifact@v4

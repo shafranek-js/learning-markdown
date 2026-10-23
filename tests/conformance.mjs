@@ -1,6 +1,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
 import {join} from 'node:path';
+import {compareHtml,CATEGORIES} from './html-compare.mjs';
 (async function audit() {
  const SOURCES=[
   {id:'commonmark',label:'CommonMark 0.31.2',url:'https://raw.githubusercontent.com/commonmark/commonmark-spec/0.31.2/spec.txt',gfm:false},
@@ -35,33 +36,56 @@ import {join} from 'node:path';
   const spec=await res.text();
   if(spec.length<100000||spec.length>2000000)throw Error('Unexpected upstream spec length');
   const cases=parseSpec(spec),failures=[],totalBySection=new Map(),passesBySection=new Map();
-  let passed=0;
+  let passed=0;const classified=Object.fromEntries(CATEGORIES.map(x=>[x,0]));
   for(const item of cases){
    let html='',error='';
    try{html=context.marked.parse(item.markdown,{gfm:source.gfm,pedantic:false,breaks:false,headerIds:false,mangle:false});}
    catch(e){error=String(e);}
-   const ok=!error&&html.replace(/\r\n?/g,'\n')===item.expected.replace(/\r\n?/g,'\n');
+   const category=compareHtml(item.expected,html,error);
+   classified[category]++;
+   const ok=category==='exact';
    totalBySection.set(item.section,(totalBySection.get(item.section)||0)+1);
    if(ok){passed++;passesBySection.set(item.section,(passesBySection.get(item.section)||0)+1);}
-   else failures.push({...item,actual:html,error});
+   else failures.push({...item,actual:html,error,category});
   }
   out.push({name:source.label,source:source.url,total:cases.length,passed,failed:failures.length,
    percent:Math.round(passed*10000/cases.length)/100,
+   categories:classified,
    sections:[...totalBySection].map(([name,total])=>({name,total,passed:passesBySection.get(name)||0})),failures});
  }
  const dir='conformance-report';await mkdir(dir,{recursive:true});
- const report={generatedAt:new Date().toISOString(),parser:'Bundled marked.js (without HTML sanitizer)',comparison:'Strict raw HTML equality (no HTML normalization)',note:'Informational only. Benign serialization differences also count as mismatches. Not a certification.',datasets:out};
+ const report={generatedAt:new Date().toISOString(),parser:'Bundled marked.js (without HTML sanitizer)',comparison:'Exact raw HTML plus parse5 browser-DOM categorization',note:'DOM-equivalent differences are serialization only. Attributes, whitespace, text and structural categories require interpretation; not certification.',datasets:out};
  await writeFile(join(dir,'report.json'),JSON.stringify(report,null,2));
- const md=['# Upstream Markdown specification audit','','**Informational, not a release gate.** Compares unsanitized parser HTML to official expected HTML; attribute/serialization differences count as mismatches.','','| Dataset | Exact matches | Total examples | Exact-match rate |','| --- | ---: | ---: | ---: |',
+ const md=['# Upstream Markdown specification audit','','**Informational, not a release gate.** Compares unsanitized parser HTML against official HTML, classifying DOM-equivalent serialization differences separately.','','| Dataset | Exact matches | Total examples | Exact-match rate |','| --- | ---: | ---: | ---: |',
  ...out.map(x=>'| '+x.name+' | '+x.passed+' | '+x.total+' | '+x.percent+'% |'),'','## Results by section',''];
+ md.push('## Mismatch classification','','| Dataset | Exact | DOM equivalent | Attributes | Whitespace | Text | Structure | Error |',
+  '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+  ...out.map(data=>'| '+data.name+' | '+CATEGORIES.map(k=>data.categories[k]).join(' | ')+' |'),'',
+  'DOM-equivalent means the parsed browser document trees are identical despite different HTML strings. Other categories are diagnostic, not automatically defects.','');
  for(const data of out){
   md.push('### '+data.name,'','| Section | Matched | Total |','| --- | ---: | ---: |',...data.sections.map(x=>'| '+x.name.replaceAll('|','\\|')+' | '+x.passed+' | '+x.total+' |'),'','First ten deviations:','');
   for(const f of data.failures.slice(0,10))md.push('- Example '+f.number+', '+f.section+', spec line '+f.startLine);
+  md.push('','### Largest mismatch sections','');
+  const sections=data.sections.map(s=>({...s,mismatches:s.total-s.passed})).sort((a,b)=>b.mismatches-a.mismatches).slice(0,12);
+  for(const section of sections)md.push('- '+section.name+': '+section.mismatches+'/'+section.total+' exact mismatches');
+  md.push('','### Representative non-identical examples','');
+  for(const kind of CATEGORIES.filter(x=>x!=='exact')){
+   const samples=data.failures.filter(f=>f.category===kind).slice(0,3);
+   for(const f of samples)md.push('- **'+kind+'** — example '+f.number+' ('+f.section+'); Markdown: '+JSON.stringify(f.markdown.slice(0,100)));
+  }
   md.push('');
  }
  const markdown=md.join('\n');
  await writeFile(join(dir,'report.md'),markdown);
  if(process.env.GITHUB_STEP_SUMMARY)await writeFile(process.env.GITHUB_STEP_SUMMARY,markdown+'\n',{flag:'a'});
- for(const x of out)console.log(x.name+': '+x.passed+'/'+x.total+' exact HTML matches ('+x.percent+'%)');
+ for(const x of out){
+  console.log(x.name+': '+x.passed+'/'+x.total+' exact HTML matches ('+x.percent+'%)');
+  console.log('AUDIT '+x.name+' '+CATEGORIES.map(k=>k+'='+x.categories[k]).join(', '));
+  const sections=x.sections.map(s=>({...s,diff:s.total-s.passed})).sort((a,b)=>b.diff-a.diff).slice(0,7);
+  console.log('TOP SECTIONS '+x.name+' '+sections.map(s=>s.name+':'+s.diff+'/'+s.total).join('; '));
+  for(const category of CATEGORIES.filter(x=>x!=='exact')){
+   for(const f of x.failures.filter(y=>y.category===category).slice(0,2))console.log('SAMPLE '+x.name+' '+category+' #'+f.number+' '+f.section+': '+JSON.stringify(f.markdown.slice(0,75)));
+  }
+ }
  console.log('Full details: conformance-report/report.json');
 })().catch(error=>{console.error(error);process.exitCode=1;});

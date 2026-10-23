@@ -134,3 +134,7 @@ An independent [GitHub Actions workflow](.github/workflows/conformance.yml) down
 ### Browser-level UX checks
 
 The independent `Markdown browser UX QA` workflow runs Playwright Chromium tests against the production Vite build: headings, table rendering, dialect changes, Insert snippet controls, undo/redo, language/theme persistence, optional practice, cheat sheet, and mobile navigation. Run locally with `npm install && npm run build && npx playwright install chromium && npm run test:e2e`. The workflow reports test results without blocking the main GitHub Pages deployment.
+
+### Conformance classification
+
+Official example audits now classify mismatches as exact HTML, DOM-equivalent markup, attribute differences, whitespace, textual differences, structural differences, and parser errors. DOM-equivalent comparisons use the HTML5 parser `parse5` and account for entity and attribute ordering normalization. **Other categories are diagnostic and may include false positives.** Summary and examples appear in the GitHub Actions log; exhaustive details are saved in the report artifact. The eight-lesson production smoke/browser tests remain the publication gate.
