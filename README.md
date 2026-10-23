@@ -292,3 +292,10 @@ The **Compatibility & Export** panel now contains an accessible, localized five-
 ### Opt-in GitHub.com-style footnotes (#11)
 
 Footnotes are **not part of the normative GFM 0.29 specification**. They are disabled by default and can be enabled for each GFM document under Compatibility & Export. A locally bundled, reviewed \`marked-footnote\` parser supports \`[^label]\` references, \`[^label]: definition\`, repeated backlinks and indented multi-paragraph definitions. Generated IDs and anchor links are canonicalized, allowlisted and sanitized before rendering or HTML export; Preview navigation leaves the lesson URL hash unchanged. A localized "Insert footnote example" button provides practical in-editor practice without changing the existing 8+7 course progress. Raw \`.md\` export preserves every character and warns about portability. CommonMark/Original modes retain their original grammar even when a document has saved footnote preferences.
+
+
+### Heading anchors and Document outline (#12)
+
+All three Markdown modes generate deterministic, collision-free heading IDs for H1–H6 after strict sanitization. This supports non-ASCII text and duplicates without changing Markdown source. A collapsible **Document outline** above Preview shows live headings with adjustable H1–H6 depth, keyboard navigation, an optional sample, and a command that inserts a **static Markdown TOC** at the editor caret. Links scroll within Preview without overwriting the course route. The generated heading IDs are embedded in standalone HTML and work with print/PDF.
+
+The optional **`{#custom-id}` heading suffix** is disabled by default and available per document through Compatibility & Export in GFM mode only. It is an app-specific extension—not normative GFM or CommonMark—and a portability warning accompanies Markdown export. Static TOC links also follow this app's slug conventions, which can differ from other Markdown processors.
