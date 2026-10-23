@@ -38,7 +38,8 @@ assert(hugeIds.every(isSafeHeadingId));
 assert.deepEqual(hugeIds.slice(0,3),['heading','heading-2','heading-3']);
 assert(headingSlug('é'.repeat(150)).length<=52);
 const malformed=render('# Safe {#foo" onclick="alert(1)}\n\n# Danger <img src="javascript:alert(1)">');
-assert(!malformed.body.innerHTML.includes('onclick='));
+assert([...malformed.body.querySelectorAll('*')].every(el=>
+ [...el.attributes].every(attr=>!/^on/i.test(attr.name))),'Event handler attributes must be removed');
 assert(!malformed.body.innerHTML.includes('<img'));
 assert([...malformed.querySelectorAll('[id]')].every(el=>isSafeHeadingId(el.id)));
 const custom='# Title {#my-special-id}\n\n# Again {#my-special-id}\n\n## Второй {#пример}';
