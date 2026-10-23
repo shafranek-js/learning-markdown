@@ -538,6 +538,9 @@ test('Print / PDF opens a printable HTML copy rather than printing the applicati
 });
 
 test('Offline reload uses the versioned service-worker shell and still renders Markdown',async({page,context})=>{
+ const resourceErrors=[];const pageErrors=[];
+ page.on('requestfailed',request=>resourceErrors.push({url:request.url(),error:request.failure()?.errorText}));
+ page.on('pageerror',error=>pageErrors.push(String(error)));
  await page.goto('/');
  await page.waitForFunction(async()=>{
   if(!('serviceWorker' in navigator))return false;
@@ -546,9 +549,13 @@ test('Offline reload uses the versioned service-worker shell and still renders M
  },null,{timeout:15000});
  const source='# Offline heading\n\n**Available without a connection**';
  await page.locator('#markdown-input').fill(source);
+ const beforeOffline=await page.evaluate(()=>({state:localStorage.getItem('md_course_state_v1'),controller:navigator.serviceWorker.controller?.scriptURL,cacheKeys:[]})); 
  await context.setOffline(true);
  try{
   await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForTimeout(1000);
+  const afterOffline=await page.evaluate(async()=>({state:localStorage.getItem('md_course_state_v1'),controller:navigator.serviceWorker.controller?.scriptURL,cacheKeys:await caches.keys(),scripts:[...document.scripts].map(s=>s.src),value:document.querySelector('#markdown-input')?.value,hash:location.hash,ready:document.readyState}));
+  console.log('OFFLINE DIAGNOSTICS',JSON.stringify({beforeOffline,afterOffline,resourceErrors,pageErrors}).slice(0,4200));
   await expect(page.locator('#markdown-input')).toHaveValue(source);
   await expect(page.locator('#markdown-preview h1')).toHaveText('Offline heading');
  }finally{await context.setOffline(false);}
