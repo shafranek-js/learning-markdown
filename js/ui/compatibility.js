@@ -177,11 +177,11 @@ export function renderPortability(source){
  $('extension-definitions-demo').textContent=dw.sample;
  $('extension-definitions-demo').hidden=!definitionsEnabled;
  $('extension-definitions-demo').disabled=!definitionsEnabled;
- const practice=$('extension-definitions-practice');
- practice.hidden=!definitionsEnabled;
+ const definitionsPractice=$('extension-definitions-practice');
+ definitionsPractice.hidden=!definitionsEnabled;
  const preview=document.getElementById('markdown-preview');
  const completed=[...preview.querySelectorAll('dl.md-definition-list')].some(dl=>dl.querySelectorAll('dt').length>=1&&dl.querySelectorAll('dd').length>=2);
- practice.textContent=dw.practice+' — '+(completed?dw.done:dw.pending);
+ definitionsPractice.textContent=dw.practice+' — '+(completed?dw.done:dw.pending);
  const headingsLabels=TOC_TEXT[state.lang]||TOC_TEXT.en;
  const customControl=$('extension-headingids-toggle');
  customControl.disabled=state.dialect!=='gfm';
