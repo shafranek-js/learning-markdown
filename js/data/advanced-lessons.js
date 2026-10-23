@@ -106,7 +106,7 @@ export const ADVANCED_LESSON_SPECS=[
       "<div class=\"af-align-center\">{{centered}}</div>",
       "<table class=\"af-table-outline\"><tr><th colspan=\"2\">{{merged}}</th></tr><tr><td>{{first}}</td><td>{{second}}</td></tr></table>"
     ],
-    "solution": "# {{report}}\n\n<mark>{{important}}</mark>\n\n<div class=\"af-align-center\">{{centered}}</div>\n\n<table class=\"af-table-outline\">\n<tr><th colspan=\"2\">{{merged}}</th></tr>\n<tr><td>{{first}}</td><td>{{second}}</td></tr>\n</table>\n\n<div class=\"af-callout-success\"><strong>{{success}}</strong><p>{{important}}</p></div>\n\n<ol type=\"i\"><li>{{first}}</li><li>{{second}}</li></ol>"
+    "solution": "# {{report}}\n\n<mark>{{important}}</mark>\n\n<div class=\"af-align-center\">{{centered}}</div>\n\n<table class=\"af-table-outline\">\n<tr><th colspan=\"2\">{{merged}}</th></tr>\n<tr><td>{{first}}</td><td>{{second}}</td></tr>\n</table>\n\n<div class=\"af-callout-success\"><strong>{{success}}</strong><p>{{important}}</p></div>\n\n<ol type=\"i\"><li>{{first}}</li><li>{{second}}</li><li>{{third}}</li></ol>"
   }
 ];
 export const ADVANCED_LOCALES={
