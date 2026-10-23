@@ -130,3 +130,7 @@ must distinguish best-effort rendering via `marked` from exact spec conformance.
 ### Official upstream conformance report
 
 An independent [GitHub Actions workflow](.github/workflows/conformance.yml) downloads two **pinned** official spec fixture sets: CommonMark 0.31.2 (652 cases) and GFM 0.29 from pinned cmark-gfm revision (648 cases). It compares the bundled parser against every official example, writes per-section summary plus individual differences, and uploads a JSON and Markdown artifact. The audit is informational, does not block publishing, and is **not certification**. It compares exact HTML before safety sanitization; harmless serializer differences may be reported as failures.
+
+### Browser-level UX checks
+
+The independent `Markdown browser UX QA` workflow runs Playwright Chromium tests against the production Vite build: headings, table rendering, dialect changes, Insert snippet controls, undo/redo, language/theme persistence, optional practice, cheat sheet, and mobile navigation. Run locally with `npm install && npm run build && npx playwright install chromium && npm run test:e2e`. The workflow reports test results without blocking the main GitHub Pages deployment.
