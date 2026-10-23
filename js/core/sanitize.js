@@ -1,6 +1,6 @@
 import {filterAdvancedClasses} from './advanced-presets.js';
 // Strict browser-DOM sanitizer for Markdown preview and exported HTML.
-const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 section strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
+const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 section figure figcaption strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
 const DROP=new Set('script style iframe object embed svg math form button textarea select link meta base template noscript audio video canvas'.split(' '));
 const VOID=new Set(['br','hr','img','input']);
 // Strict Unicode-aware ID shape for safe multilingual heading anchors.
@@ -27,7 +27,24 @@ export function sanitizeHTML(html){
    el.setAttribute('href',href);
    if(!href.startsWith('#')){el.setAttribute('rel','noopener noreferrer');el.setAttribute('target','_blank');}
   }
-  if(tag==='img'&&urlOK(node.getAttribute('src'),true)){el.setAttribute('src',node.getAttribute('src'));el.setAttribute('loading','lazy');el.setAttribute('alt',node.getAttribute('alt')||'');}
+  if(tag==='img'&&urlOK(node.getAttribute('src'),true)){
+   el.setAttribute('src',node.getAttribute('src'));
+   el.setAttribute('loading','lazy');
+   el.setAttribute('alt',(node.getAttribute('alt')||'').slice(0,400));
+   const dimension=value=>{
+    if(!/^[1-9][0-9]{0,3}$/.test(value||''))return null;
+    const number=Number(value);
+    return number>=1&&number<=1600?number:null;
+   };
+   const width=dimension(node.getAttribute('width'));
+   const height=dimension(node.getAttribute('height'));
+   if(width!==null)el.setAttribute('width',String(width));
+   if(height!==null)el.setAttribute('height',String(height));
+   // The only generated inline style is a validated integer pixel height.
+   // Raw style attributes are always discarded.
+   if(height!==null&&parent.tagName==='FIGURE'&&parent.classList.contains('af-figure-fixed'))
+    el.style.height=height+'px';
+  }
   if(tag==='input'){
    if(node.getAttribute('type')!=='checkbox')return;
    el.setAttribute('type','checkbox');
@@ -59,6 +76,11 @@ export function sanitizeHTML(html){
    if(SAFE_ID.test(id)&&id===id.toLocaleLowerCase('en')&&!usedIds.has(id)){el.id=id;usedIds.add(id);}
   }
   if(tag==='section'&&node.getAttribute('class')==='md-footnotes')el.className='md-footnotes';
+  if(tag==='figure'){
+   const classes=(node.getAttribute('class')||'').split(/\s+/);
+   if(classes.includes('af-figure'))
+    el.className=classes.includes('af-figure-fixed')?'af-figure af-figure-fixed':'af-figure';
+  }
   if(tag==='h2'&&node.getAttribute('class')==='fn-visually-hidden')el.className='fn-visually-hidden';
   if(tag==='a'&&['fn-ref','fn-backref'].includes(node.getAttribute('class'))){
    el.className=node.getAttribute('class');
