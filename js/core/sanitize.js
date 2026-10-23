@@ -16,6 +16,8 @@ export function sanitizeHTML(html){
   if(node.nodeType===Node.TEXT_NODE){parent.appendChild(document.createTextNode(node.textContent));return;}
   if(node.nodeType!==Node.ELEMENT_NODE)return;
   const tag=node.tagName.toLowerCase();if(DROP.has(tag))return;
+  // Never retain an inert-looking image element with a rejected URL.
+  if(tag==='img'&&!urlOK(node.getAttribute('src'),true))return;
   if(!TAGS.has(tag)){[...node.childNodes].forEach(c=>visit(c,parent));return;}
   const el=document.createElement(tag);
   if(tag==='a'&&urlOK(node.getAttribute('href'),false)){
