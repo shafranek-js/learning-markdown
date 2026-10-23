@@ -282,3 +282,8 @@ Both GitHub Actions workflows (Pages deployment and browser regression CI) use N
 ### Offline fenced-code syntax highlighting (#9)
 
 JavaScript/JS, JSON, HTML/XML, CSS, SQL, and Python/PY fenced code uses a pinned, locally bundled `highlight.js` core with only six registered grammars. The source Markdown is never modified, and unknown/no-language or oversized blocks stay safely escaped plaintext. Highlight markup is re-sanitized with a restricted class allowlist scoped inside code blocks. Code token colors work in all six themes, standalone offline HTML and print/PDF; tooltip guidance is localized to EN/CS/UK/RO/RU. Tests cover source fidelity, XSS, offline behavior, and export.
+
+
+### Optional processor extensions and portability (#10)
+
+The **Compatibility & Export** panel now contains an accessible, localized five-language capability matrix (CommonMark / GFM / GitHub.com / this app) and a **Soft line breaks** toggle. This app-only opt-in renders single newlines as `<br>` in GFM, without claiming that it belongs to normative GFM. It defaults to off. Choices persist separately for each lesson, sandbox, language and advanced document, and disabling the GFM dialect temporarily disables rendering without erasing the saved choice. Raw `.md` export warns about portability and preserves the source bytes; standalone HTML captures the selected rendering with the existing sanitizer and CSP. The extension registry rejects unrecognized IDs and malformed saved settings; footnotes and other future processor plugins are not enabled by this release.
