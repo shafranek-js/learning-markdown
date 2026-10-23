@@ -1084,3 +1084,34 @@ test('multi-cursor ordered lists renumber chosen lines without duplicating marke
  await page.locator('[data-action="ul"]').click();
  await expect(input).toHaveValue('- Apple\n- Banana\nOther');
 });
+
+test('Shift+Alt+I creates one caret for each of 100 selected lines',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const lines=Array.from({length:100},(_,i)=>'Line '+(i+1));
+ await input.fill(lines.join('\\n'));
+ await page.locator('#multi-cursor-toggle').click();
+ const cm=page.locator('#codemirror-mount .cm-content');
+ await cm.click();
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.keyboard.type('!');
+ await expect(input).toHaveValue(lines.map(line=>line+'!').join('\\n'));
+});
+
+test('Shift+Alt+I limits cursors to selected lines, excluding next-line boundary',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('One\\nTwo\\nThree\\nFour');
+ await page.locator('#multi-cursor-toggle').click();
+ const cm=page.locator('#codemirror-mount .cm-content');
+ await cm.click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Shift+ArrowDown');
+ await page.keyboard.press('Shift+ArrowDown');
+ await page.keyboard.press('Shift+Alt+i');
+ await expect(page.locator('#multi-cursor-count')).toContainText('2');
+ await page.keyboard.type('!');
+ await expect(input).toHaveValue('One!\\nTwo!\\nThree\\nFour');
+});
