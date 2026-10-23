@@ -1,0 +1,67 @@
+/* Base Theme Utility Bindings */
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-ui);
+        }
+        .theme-header {
+            background-color: var(--bg-header);
+            border-color: var(--border-ui);
+        }
+        .theme-panel {
+            background-color: var(--bg-panel);
+            border-color: var(--border-ui);
+        }
+        .theme-panel-alt {
+            background-color: var(--bg-panel-alt);
+            border-color: var(--border-ui);
+        }
+        .theme-editor-surface {
+            background-color: var(--bg-editor);
+        }
+        .theme-preview-surface {
+            background-color: var(--bg-preview);
+            color: var(--preview-text);
+        }
+        .theme-border {
+            border-color: var(--border-ui);
+        }
+        .theme-muted {
+            color: var(--text-ui-muted);
+        }
+        .theme-accent-bg {
+            background-color: var(--accent);
+            color: #ffffff;
+        }
+        .theme-accent-bg:hover {
+            background-color: var(--accent-hover);
+        }
+        .theme-accent-soft {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.6);
+        }
+
+        @keyframes taskPop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.14); }
+            100% { transform: scale(1); }
+        }
+        .animate-task-pop {
+            animation: taskPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+    

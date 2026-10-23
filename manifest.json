@@ -1,0 +1,6 @@
+{
+  "id":"./", "name":"Learning Markdown: Formatting Text without the Complexity", "short_name":"Learning Markdown",
+  "description":"A multilingual interactive Markdown course with a live editor and preview.",
+  "start_url":"./", "scope":"./", "display":"standalone", "background_color":"#131417",
+  "theme_color":"#131417", "icons":[{"src":"./assets/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

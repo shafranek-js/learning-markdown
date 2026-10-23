@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="codepen">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Markdown: Formatting Text without the Complexity</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <meta name="description" content="An interactive, multilingual Markdown course with instant preview, exercises, and a free writing sandbox.">
+    <meta name="theme-color" content="#131417">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Learning Markdown: Formatting Text without the Complexity">
+    <meta property="og:description" content="Learn Markdown in eight interactive lessons and practice with a live editor.">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+
+</head>
+<body class="w-screen h-screen m-0 p-0 flex flex-col overflow-hidden font-sans antialiased select-none">
+
+    <!-- ==================== FULL-WIDTH COURSE HEADER BAR (Screenshot Style) ==================== -->
+    <header class="h-14 w-full shrink-0 border-b theme-header px-3 sm:px-4 flex items-center justify-between gap-2 z-30">
+        
+        <!-- Left: Contents Drawer Toggle + Course Title & Subtitle -->
+        <div class="flex items-center gap-3 min-w-0">
+            <button id="contents-toggle-btn" type="button" class="px-3 py-1.5 rounded-lg theme-panel hover:opacity-90 border theme-border flex items-center gap-2 text-xs sm:text-sm font-bold transition shrink-0" title="Toggle Course Contents & Tasks">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h12"/>
+                </svg>
+                <span data-i18n="contentsBtn">Contents</span>
+            </button>
+
+            <button id="theory-pane-toggle-btn" type="button" class="hidden md:inline-flex px-2.5 py-1.5 rounded-lg theme-panel-alt hover:opacity-90 border theme-border items-center gap-1.5 text-xs font-semibold transition shrink-0" title="Show/Hide Lesson Guide Panel">
+                <span class="w-2 h-2 rounded-full bg-emerald-400" id="guide-indicator-dot"></span>
+                <span data-i18n="guideBtn">Lesson Guide</span>
+            </button>
+
+            <div class="min-w-0 border-l theme-border pl-3">
+                <div class="flex items-center gap-2">
+                    <h1 id="course-main-title" class="font-bold text-xs sm:text-sm md:text-base tracking-tight truncate">
+                        Learning Markdown: Formatting Text without the Complexity
+                    </h1>
+                </div>
+                <p id="course-main-subtitle" class="text-[11px] theme-muted truncate hidden sm:block">
+                    The best way to write, prompt, and much more
+                </p>
+            </div>
+        </div>
+
+        <!-- Center: Progress Indicator Pill -->
+        <div class="hidden xl:flex items-center gap-3 theme-panel px-3.5 py-1.5 rounded-xl border theme-border shrink-0">
+            <div class="w-36">
+                <div class="flex justify-between items-center text-[10px] mb-1">
+                    <span class="font-semibold theme-muted" id="progress-label">0 / 8 completed</span>
+                    <span class="font-mono font-bold" style="color: var(--accent)" id="progress-percentage">0%</span>
+                </div>
+                <div class="w-full h-1.5 bg-black/30 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full transition-all duration-500 rounded-full" style="width: 0%; background-color: var(--accent);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Controls (Sandbox, CheatSheet, Certificate, Theme Selector, Language Selector) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <!-- Prompt / Sandbox Button -->
+            <button id="sandbox-mode-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
+                <svg class="w-3.5 h-3.5" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span class="hidden sm:inline" data-i18n="sandboxBtn">AI Prompt Sandbox</span>
+            </button>
+
+            <!-- Cheat Sheet Button -->
+            <button id="cheatsheet-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
+                <svg class="w-3.5 h-3.5" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span class="hidden md:inline" data-i18n="cheatsheetBtn">Cheat Sheet</span>
+            </button>
+
+            <!-- Certificate Button -->
+            <button id="certificate-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 flex items-center gap-1 transition">
+                <span>🏆</span>
+                <span class="hidden md:inline" data-i18n="certBtn">Certificate</span>
+            </button>
+
+            <!-- Theme Selector Dropdown -->
+            <div class="relative">
+                <select id="theme-selector" aria-label="Theme" class="appearance-none theme-panel border theme-border rounded-lg pl-2.5 pr-7 py-1.5 text-xs font-semibold cursor-pointer focus:outline-none">
+                    <option value="codepen">🎨 CodePen Studio</option>
+                    <option value="midnight">🌙 Midnight Dark</option>
+                    <option value="daylight">☀️ Daylight Paper</option>
+                    <option value="dracula">🧛 Dracula Neon</option>
+                    <option value="nord">❄️ Nordic Frost</option>
+                    <option value="solarized">🌅 Solarized Warm</option>
+                </select>
+                <svg class="w-3.5 h-3.5 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </div>
+
+            <!-- Language Selector Dropdown (EN Default, CS, UK, RO, RU) -->
+            <div class="relative">
+                <select id="lang-selector" aria-label="Language" class="appearance-none theme-panel border theme-border rounded-lg pl-2.5 pr-7 py-1.5 text-xs font-bold cursor-pointer focus:outline-none">
+                    <option value="en">🇬🇧 EN (English)</option>
+                    <option value="cs">🇨🇿 CS (Čeština)</option>
+                    <option value="uk">🇺🇦 UK (Українська)</option>
+                    <option value="ro">🇷🇴 RO (Română)</option>
+                    <option value="ru">🇷🇺 RU (Русский)</option>
+                </select>
+                <svg class="w-3.5 h-3.5 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== SUB-BAR: LESSON TAB & RICH FORMATTING TOOLBAR ==================== -->
+    <div class="h-10 w-full shrink-0 border-b theme-panel px-3 flex items-center justify-between gap-2 overflow-x-auto z-20">
+        <!-- Left: Active Lesson Tab Badge (CodePen Tab style) -->
+        <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md theme-panel-alt border theme-border text-xs font-mono font-bold">
+                <span class="w-2 h-2 rounded-full" style="background-color: var(--accent)"></span>
+                <span id="active-tab-title">01_01 Headings</span>
+            </div>
+
+            <!-- Undo / Redo Group -->
+            <div class="inline-flex items-center theme-panel-alt p-0.5 rounded-lg border theme-border">
+                <button id="undo-btn" type="button" disabled class="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition" title="Undo (Ctrl+Z / Cmd+Z)">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                    </svg>
+                </button>
+                <button id="redo-btn" type="button" disabled class="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition" title="Redo (Ctrl+Y / Ctrl+Shift+Z)">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Quick Formatting Toolbar -->
+            <div class="inline-flex items-center theme-panel-alt p-0.5 rounded-lg border theme-border gap-0.5">
+                <button type="button" data-action="h1" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 1 (#) — Ctrl+1">H1</button>
+                <button type="button" data-action="h2" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 2 (##) — Ctrl+2">H2</button>
+                <button type="button" data-action="h3" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" style="color: var(--accent)" title="Heading 3 (###) — Ctrl+3">H3</button>
+                <span class="w-px h-3.5 bg-white/15 mx-0.5"></span>
+                <button type="button" data-action="bold" class="toolbar-btn px-2 py-0.5 rounded text-xs font-extrabold hover:bg-white/10 transition" title="Bold (**text**) — Ctrl+B">B</button>
+                <button type="button" data-action="italic" class="toolbar-btn px-2 py-0.5 rounded text-xs italic font-serif font-bold hover:bg-white/10 transition" title="Italic (*text*) — Ctrl+I">I</button>
+                <button type="button" data-action="strike" class="toolbar-btn px-2 py-0.5 rounded text-xs line-through hover:bg-white/10 transition" title="Strikethrough (~~text~~)">S</button>
+                <span class="w-px h-3.5 bg-white/15 mx-0.5"></span>
+                <button type="button" data-action="quote" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Blockquote (> )">❝</button>
+                <button type="button" data-action="ul" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Bullet List (- )">• List</button>
+                <button type="button" data-action="ol" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Numbered List (1. )">1. List</button>
+                <button type="button" data-action="task" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Task List (- [ ] )">☑ Task</button>
+                <span class="w-px h-3.5 bg-white/15 mx-0.5"></span>
+                <button type="button" data-action="code-inline" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Inline Code (`code`)">`code`</button>
+                <button type="button" data-action="code-block" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Code Block (```)">{ }</button>
+                <button type="button" data-action="link" class="toolbar-btn px-2 py-0.5 rounded text-xs hover:bg-white/10 transition" title="Link ([text](url)) — Ctrl+K">🔗</button>
+                <button type="button" data-action="image" class="toolbar-btn px-2 py-0.5 rounded text-xs hover:bg-white/10 transition" title="Image (![alt](url))">🖼️</button>
+                <button type="button" data-action="table" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Table">⊞</button>
+                <button type="button" data-action="hr" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Horizontal Rule (---)">―</button>
+            </div>
+        </div>
+
+        <!-- Right: Splitter Reset & View Modes -->
+        <div class="flex items-center gap-2 shrink-0">
+            <button id="reset-split-btn" type="button" class="hidden md:inline-flex px-2 py-1 rounded text-[11px] font-mono theme-panel-alt border theme-border hover:opacity-90 transition" title="Reset panel widths (Double-click splitter)">
+                ⇄ 50:50
+            </button>
+            <div class="inline-flex items-center rounded-lg theme-panel-alt p-0.5 border theme-border">
+                <button id="layout-split-btn" type="button" class="px-2.5 py-0.5 rounded-md text-xs font-semibold theme-accent-bg transition" data-i18n="splitView">Split</button>
+                <button id="layout-preview-btn" type="button" class="px-2.5 py-0.5 rounded-md text-xs font-semibold theme-muted hover:text-white transition" data-i18n="previewView">Preview</button>
+                <button id="layout-html-btn" type="button" class="px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold theme-muted hover:text-white transition">HTML</button>
+            </div>
+        </div>
+    </div>
+
+    <nav id="mobile-tabs" class="mobile-tabs" aria-label="Workspace panels"><button data-mobile-tab="guide">Guide</button><button data-mobile-tab="editor">Editor</button><button data-mobile-tab="preview">Preview</button></nav>
+
+    <!-- ==================== FULL-WIDTH MAIN WORKSPACE (100VW, RESIZABLE PANELS) ==================== -->
+    <div id="workspace-container" class="flex-1 w-full flex flex-col md:flex-row min-h-0 relative overflow-hidden">
+
+        <!-- SLIDE-OVER COURSE CONTENTS DRAWER (Triggered by "≡ Contents") -->
+        <div id="contents-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 hidden"></div>
+        <aside id="contents-drawer" class="fixed inset-y-0 left-0 z-50 w-80 theme-panel border-r theme-border flex flex-col transform -translate-x-full transition-transform duration-250 ease-out shadow-2xl">
+            <div class="p-4 border-b theme-border flex items-center justify-between">
+                <div>
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider theme-muted" data-i18n="curriculumTitle">Course Contents</h2>
+                    <p class="text-xs mt-0.5 font-semibold" data-i18n="curriculumSub">8 Interactive Modules + Sandbox</p>
+                </div>
+                <button id="close-contents-btn" type="button" class="p-1.5 rounded-lg theme-panel-alt hover:opacity-80">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <nav id="lesson-nav-list" class="flex-1 overflow-y-auto p-3 space-y-1.5"></nav>
+            <div class="p-3.5 border-t theme-border theme-panel-alt flex items-center justify-between gap-2">
+                <button id="reset-course-btn" type="button" class="w-full py-2 px-3 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-500/15 border border-rose-500/30 transition flex items-center justify-center gap-1.5">
+                    <span data-i18n="resetAllBtn">Reset All Progress</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- PANEL 1: COLLAPSIBLE & RESIZABLE LESSON GUIDE + TASKS PANEL -->
+        <section id="theory-panel" class="w-full md:w-[350px] shrink-0 theme-panel flex flex-col md:h-full overflow-hidden select-text" style="width: 350px; min-width: 240px; max-width: 620px;">
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Module Badge & Status -->
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <span id="lesson-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold theme-accent-soft">
+                            Module 1 / 8
+                        </span>
+                        <span id="lesson-status-pill" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold theme-panel-alt border theme-border">
+                            In Progress
+                        </span>
+                    </div>
+                    <h2 id="lesson-title" class="text-lg font-extrabold tracking-tight">Headings & Structure</h2>
+                    <p id="lesson-subtitle" class="text-xs theme-muted mt-0.5">Building document hierarchy with #</p>
+                </div>
+
+                <!-- Theory Explanation -->
+                <div id="lesson-theory" class="text-xs sm:text-[13px] space-y-2.5 leading-relaxed opacity-95"></div>
+
+                <!-- Interactive Click-to-Insert Snippets -->
+                <div class="theme-panel-alt border theme-border rounded-xl p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider theme-muted" data-i18n="snippetsLabel">Interactive Snippets</span>
+                        <span class="text-[10px] theme-muted" data-i18n="clickToInsert">Click to insert</span>
+                    </div>
+                    <div id="syntax-examples-container" class="grid grid-cols-1 gap-1.5"></div>
+                </div>
+
+                <!-- Live Verification Checklist -->
+                <div class="theme-panel-alt border theme-border rounded-xl p-3.5">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">✓</span>
+                            <span data-i18n="tasksTitle">Practice Checklist</span>
+                        </h3>
+                        <span id="tasks-counter-badge" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full theme-panel border theme-border">0 / 3</span>
+                    </div>
+                    <p id="lesson-goal-desc" class="text-[11px] theme-muted mb-2.5" data-i18n="tasksSubtitle">
+                        Write Markdown in the editor — tasks verify automatically:
+                    </p>
+                    <ul id="task-checklist" aria-live="polite" class="space-y-1.5"></ul>
+
+                    <!-- Hint & Solution Box -->
+                    <div id="hint-box" class="hidden mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs">
+                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <span class="font-bold text-amber-400 text-[11px]" data-i18n="solutionLabel">💡 Solution Example:</span>
+                            <button id="insert-solution-btn" type="button" class="px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] transition" data-i18n="applySolutionBtn">
+                                Insert Solution
+                            </button>
+                        </div>
+                        <pre id="hint-content" class="font-mono text-[11px] bg-black/30 p-2 rounded overflow-x-auto whitespace-pre-wrap leading-relaxed"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Navigation Footer -->
+            <div class="p-3 border-t theme-border theme-header flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-1.5">
+                    <button id="toggle-hint-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 transition">
+                        💡 <span data-i18n="hintBtn">Hint</span>
+                    </button>
+                    <button id="reset-lesson-btn" type="button" class="p-1.5 rounded-lg text-xs theme-panel-alt border theme-border hover:opacity-80 transition" title="Reset current lesson">
+                        ↺
+                    </button>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button id="prev-lesson-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel-alt border theme-border disabled:opacity-30 transition">
+                        ←
+                    </button>
+                    <button id="next-lesson-btn" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-bold theme-accent-bg transition flex items-center gap-1">
+                        <span id="next-btn-text" data-i18n="nextLessonBtn">Next</span> →
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- DRAGGABLE RESIZER 1: Between Lesson Guide and Editor -->
+        <div id="resizer-guide-editor" class="resizer-gutter hidden md:flex" title="Drag left/right to resize Guide panel"></div>
+
+        <!-- SPLIT IDE AREA: EDITOR PANE + DRAGGABLE SPLITTER + PREVIEW PANE -->
+        <section id="ide-split-container" class="flex-1 flex flex-col md:flex-row min-w-0 min-h-0 overflow-hidden relative">
+
+            <!-- PANE A: CODEPEN-STYLE MARKDOWN EDITOR WITH SYNTAX HIGHLIGHTING -->
+            <div id="editor-pane" class="flex flex-col min-w-[200px] min-h-[240px] md:h-full theme-editor-surface overflow-hidden select-text" style="width: 50%;">
+                <!-- CodePen-inspired Pane Header -->
+                <div class="h-8 px-3 theme-header border-b theme-border flex items-center justify-between text-[11px] font-mono shrink-0 select-none">
+                    <div class="flex items-center gap-2">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">/ HTML (Markdown)</span>
+                        <span id="unsaved-pill" class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-400 text-slate-950" data-i18n="liveEditorBadge">live buffer</span>
+                    </div>
+                    <div class="flex items-center gap-2.5 theme-muted">
+                        <div class="flex items-center gap-1">
+                            <button id="font-dec-btn" type="button" class="px-1.5 hover:text-white rounded" title="Decrease font size">A-</button>
+                            <button id="font-inc-btn" type="button" class="px-1.5 hover:text-white rounded" title="Increase font size">A+</button>
+                        </div>
+                        <button id="clear-editor-btn" type="button" class="hover:text-rose-400 transition" data-i18n="clearBtn">Clear</button>
+                    </div>
+                </div>
+
+                <!-- Live Syntax-Highlighted Editor Stack -->
+                <div class="editor-container">
+                    <div id="line-gutter" aria-hidden="true"></div>
+                    <pre id="editor-highlight-backdrop" class="editor-shared-metrics" aria-hidden="true"></pre>
+                    <textarea
+                        id="markdown-input"
+                        wrap="off"
+                        aria-label="Markdown editor"
+                        class="editor-shared-metrics"
+                        placeholder="# Write your Markdown here..."
+                        spellcheck="false"
+                        autocomplete="off"
+                        autocapitalize="off"
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- DRAGGABLE RESIZER 2 (CENTER SPLITTER): Drag Left/Right between Editor & Preview -->
+            <div id="resizer-editor-preview" class="resizer-gutter hidden md:flex" title="Drag left or right to resize Editor and Preview (Double-click for 50/50)"></div>
+
+            <!-- PANE B: LIVE EDITORIAL PREVIEW (Paper or Theme Surface) -->
+            <div id="preview-pane" class="flex-1 flex flex-col min-w-[200px] min-h-[240px] md:h-full theme-preview-surface overflow-hidden select-text">
+                <!-- Preview Top Header -->
+                <div class="h-8 px-3 theme-header border-b theme-border flex items-center justify-between text-[11px] font-mono shrink-0 select-none" style="color: var(--text-ui)">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span id="preview-pane-title" class="font-semibold" data-i18n="previewHeader">Live Preview (GFM)</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="download-html-btn" type="button" class="hover:opacity-80 transition" title="Export HTML">↓ .HTML</button>
+                        <button id="download-md-btn" type="button" class="hover:opacity-80 transition">↓ .MD</button>
+                        <button id="copy-md-btn" type="button" class="hover:opacity-80 transition" data-i18n="copyBtn">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Rendered Output Scroll Area -->
+                <div class="flex-1 p-6 sm:p-8 overflow-y-auto">
+                    <div id="markdown-preview" aria-live="polite" class="md-preview max-w-none"></div>
+                    <pre id="raw-html-preview" class="hidden font-mono text-xs p-4 rounded-xl bg-black/85 text-emerald-300 border border-slate-700 overflow-x-auto whitespace-pre-wrap leading-relaxed"></pre>
+                </div>
+
+                <!-- Lesson Complete Celebration Bar -->
+                <div id="lesson-complete-banner" class="hidden px-4 py-2.5 bg-emerald-950/90 text-emerald-100 border-t border-emerald-500/40 flex items-center justify-between gap-3 shrink-0 select-none">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-400 text-slate-950 flex items-center justify-center font-extrabold text-xs">✓</span>
+                        <span class="text-xs font-bold" data-i18n="lessonCompleteMsg">All tasks for this module are complete!</span>
+                    </div>
+                    <button id="banner-next-btn" type="button" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-400 hover:bg-emerald-300 text-slate-950 transition">
+                        <span data-i18n="nextLessonBtn">Next</span> →
+                    </button>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+    <!-- ==================== FULL-WIDTH STATUS FOOTER ==================== -->
+    <footer class="h-6 w-full px-3 theme-header border-t theme-border flex items-center justify-between text-[11px] font-mono theme-muted shrink-0 z-20">
+        <div class="flex items-center gap-4">
+            <span id="editor-stats">Lines: 1 • Words: 0 • Chars: 0</span>
+            <span id="cursor-position" class="hidden sm:inline">Ln 1, Col 1</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span id="split-ratio-indicator" class="hidden md:inline">Split: 50% / 50%</span>
+            <span id="history-status">History: 1/1</span>
+            <span id="editor-mode-status" class="hidden sm:inline">Lesson</span>
+            <span style="color: var(--accent)" class="font-semibold">CommonMark + GFM</span>
+        </div>
+    </footer>
+
+    <!-- ==================== MODAL 1: CHEAT SHEET ==================== -->
+    <div id="cheatsheet-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs hidden flex items-center justify-center p-4 select-text">
+        <div class="theme-panel border theme-border rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 border-b theme-border flex items-center justify-between">
+                <h3 class="font-bold text-base" data-i18n="cheatsheetBtn">Markdown Cheat Sheet</h3>
+                <button id="close-cheatsheet-btn" type="button" class="p-1.5 rounded-lg theme-panel-alt hover:opacity-80">✕</button>
+            </div>
+            <div id="cheatsheet-grid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono"></div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: CERTIFICATE ==================== -->
+    <div id="certificate-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 select-text">
+        <div class="theme-panel border theme-border rounded-3xl max-w-xl w-full p-6 sm:p-8 text-center shadow-2xl relative">
+            <button id="close-certificate-btn" type="button" class="absolute top-4 right-4 p-2 rounded-xl theme-panel-alt">✕</button>
+            <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-zinc-900 to-slate-950 text-white border-2 border-amber-500/40 shadow-xl">
+                <div class="text-3xl mb-2">🏆</div>
+                <div class="text-[11px] font-mono uppercase tracking-widest text-amber-400 font-semibold" data-i18n="certHeader">Certificate of Completion</div>
+                <h2 class="text-xl sm:text-2xl font-extrabold mt-1">Learning Markdown</h2>
+                <p class="text-xs text-slate-300 mt-1">Formatting Text without the Complexity</p>
+                <div class="my-4 max-w-xs mx-auto">
+                    <input id="student-name-input" type="text" placeholder="Your name" class="w-full text-center text-base font-bold bg-black/50 border border-amber-500/40 rounded-xl px-3 py-2 text-white focus:outline-none" />
+                </div>
+                <div class="grid grid-cols-2 gap-3 max-w-xs mx-auto text-center mt-4">
+                    <div class="p-2 rounded-xl bg-black/40 border border-slate-800">
+                        <div id="cert-completed-count" class="text-base font-extrabold text-emerald-400 font-mono">0 / 8</div>
+                        <div class="text-[10px] text-slate-400" data-i18n="modulesLabel">Modules</div>
+                    </div>
+                    <div class="p-2 rounded-xl bg-black/40 border border-slate-800">
+                        <div id="cert-tasks-count" class="text-base font-extrabold text-amber-400 font-mono">0 / 24</div>
+                        <div class="text-[10px] text-slate-400" data-i18n="tasksSolvedLabel">Tasks Verified</div>
+                    </div>
+                </div>
+            </div>
+            <p id="cert-locked-label" class="text-xs text-amber-400 mt-3"></p>
+            <div class="mt-5 flex justify-center gap-3">
+                <button id="print-cert-btn" type="button" class="px-5 py-2 rounded-xl text-xs font-bold theme-panel-alt border theme-border">Print / PDF</button>
+                <button id="copy-cert-md-btn" type="button" class="px-5 py-2 rounded-xl text-xs font-bold theme-accent-bg transition" data-i18n="copyCertBtn">Copy Certificate Markdown</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST NOTIFICATION ==================== -->
+    <div id="toast" class="fixed bottom-8 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 border border-white/20 text-white px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold">
+        <span class="text-emerald-400">✓</span>
+        <span id="toast-message">Copied!</span>
+    </div>
+
+    
+    <script src="./vendor/marked.js" defer></script>
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>

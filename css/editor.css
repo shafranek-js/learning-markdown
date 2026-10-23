@@ -1,0 +1,91 @@
+/* ==================== SYNTAX HIGHLIGHTED EDITOR OVERLAY ==================== */
+        .editor-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+        .editor-shared-metrics {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: var(--editor-font-size, 15px);
+            line-height: 1.65;
+            tab-size: 2;
+            letter-spacing: 0;
+            padding: 1.25rem 1.5rem;
+            margin: 0;
+            border: 0;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        #editor-highlight-backdrop {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+            color: var(--editor-text);
+            z-index: 1;
+        }
+        #markdown-input {
+            position: relative;
+            z-index: 2;
+            background: transparent;
+            color: transparent;
+            caret-color: var(--editor-caret);
+            resize: none;
+            outline: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        #markdown-input::selection {
+            background: rgba(99, 102, 241, 0.32);
+            color: transparent;
+        }
+
+        /* Live Markdown Syntax Tokens (CodePen style) */
+        .tok-h {
+            color: var(--syn-heading);
+            font-weight: 700;
+        }
+        .tok-bold {
+            color: var(--syn-bold);
+            font-weight: 700;
+        }
+        .tok-italic {
+            color: var(--syn-italic);
+            font-style: italic;
+        }
+        .tok-strike {
+            text-decoration: line-through;
+            opacity: 0.75;
+        }
+        .tok-quote {
+            color: var(--syn-quote);
+        }
+        .tok-quote-mark {
+            color: var(--syn-heading);
+            font-weight: 700;
+        }
+        .tok-code {
+            color: var(--syn-code);
+            background: rgba(126, 231, 135, 0.1);
+            border-radius: 3px;
+        }
+        .tok-link {
+            color: var(--syn-link);
+            text-decoration: underline;
+        }
+        .tok-list {
+            color: var(--syn-list);
+            font-weight: 700;
+        }
+        .tok-hr {
+            color: var(--syn-heading);
+            font-weight: 700;
+        }
+
+        

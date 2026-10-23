@@ -1,0 +1,33 @@
+html,body{width:100%;height:100%;margin:0;overflow:hidden}
+body{min-width:0}
+#ide-split-container,#editor-pane,#preview-pane{min-width:0}
+#editor-pane{flex:0 0 auto;max-width:100%}
+#preview-pane{flex:1 1 0;min-width:0}
+#theory-panel{max-width:620px}
+.mobile-tabs{display:none}
+@media(max-width:767px){
+ #workspace-container{display:block;position:relative;min-height:0;flex:1}
+ #theory-panel,#ide-split-container,#editor-pane,#preview-pane{width:100%!important;height:100%!important;max-width:none!important;min-width:0!important;min-height:0!important}
+ #theory-panel{display:none}#ide-split-container{display:flex}#editor-pane{display:flex}#preview-pane{display:none}
+ #resizer-guide-editor,#resizer-editor-preview{display:none!important}
+ #workspace-container[data-mobile-tab="guide"] #theory-panel{display:flex!important}
+ #workspace-container[data-mobile-tab="guide"] #ide-split-container{display:none!important}
+ #workspace-container[data-mobile-tab="preview"] #editor-pane{display:none!important}
+ #workspace-container[data-mobile-tab="preview"] #preview-pane{display:flex!important}
+ #workspace-container[data-mobile-tab="editor"] #preview-pane{display:none!important}
+ .mobile-tabs{height:36px;flex:0 0 36px;display:flex;gap:5px;padding:4px 8px;background:var(--bg-header);border-bottom:1px solid var(--border-ui)}
+ .mobile-tabs button{flex:1;border-radius:5px;color:var(--text-ui-muted);font-size:12px;font-weight:600}
+ .mobile-tabs button.selected{background:var(--accent-soft);color:var(--accent)}
+ #course-main-title{max-width:180px}
+ #theory-panel{min-width:0!important}
+ header{overflow-x:auto}
+}
+@media print{
+ @page{size:A4;margin:18mm}
+ body{background:white!important;color:#111!important}
+ body>*:not(#certificate-modal){display:none!important}
+ #certificate-modal{display:flex!important;position:static!important;background:white!important;padding:0!important;align-items:center;justify-content:center}
+ #certificate-modal>div{border:none!important;background:white!important;box-shadow:none!important;width:100%!important;max-width:none!important}
+ #certificate-modal button,#cert-locked-label{display:none!important}
+ #certificate-modal input{border:0!important;background:transparent!important}
+}

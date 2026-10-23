@@ -1,0 +1,15 @@
+.editor-container{position:relative;isolation:isolate}
+.editor-shared-metrics{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace!important;white-space:pre!important;word-wrap:normal!important;overflow-wrap:normal!important;padding-left:4.3rem!important;tab-size:2}
+#markdown-input{white-space:pre!important;overflow-x:auto!important}
+#editor-highlight-backdrop{overflow:hidden!important}
+#line-gutter{position:absolute;top:0;bottom:0;left:0;width:3.1rem;z-index:3;pointer-events:none;overflow:hidden;white-space:pre;text-align:right;padding:1.25rem .6rem 1.25rem 0;font:var(--editor-font-size,15px)/1.65 'JetBrains Mono',ui-monospace,Consolas,monospace;color:var(--text-ui-muted);opacity:.55;background:var(--bg-editor);border-right:1px solid var(--border-ui);box-sizing:border-box}
+#markdown-input:focus{outline:none}
+#markdown-input::placeholder{color:transparent}
+#markdown-input{color:transparent;-webkit-text-fill-color:transparent}
+#markdown-input::selection{-webkit-text-fill-color:transparent}
+#editor-highlight-backdrop{pointer-events:none;user-select:none}
+
+/* Matching glyph weight preserves pixel-aligned caret/syntax overlay. */
+.tok-h,.tok-bold,.tok-quote-mark,.tok-list,.tok-hr{font-weight:400}
+.tok-italic{font-style:normal}
+.tok-quote-mark{color:var(--syn-quote-mark,var(--syn-heading))}
