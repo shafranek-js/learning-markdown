@@ -1115,3 +1115,38 @@ test('Shift+Alt+I limits cursors to selected lines, excluding next-line boundary
  await page.keyboard.type('!');
  await expect(input).toHaveValue('One!\nTwo!\nThree\nFour');
 });
+
+test('multi-cursor Tab and Shift+Tab indent 100 lines once and preserve cursors',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const lines=Array.from({length:100},(_,i)=>'Item '+i);
+ await input.fill(lines.join('\n'));
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.keyboard.press('Tab');
+ await expect(input).toHaveValue(lines.map(s=>'  '+s).join('\n'));
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.keyboard.press('Shift+Tab');
+ await expect(input).toHaveValue(lines.join('\n'));
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.keyboard.type('!');
+ await expect(input).toHaveValue(lines.map(s=>s+'!').join('\n'));
+});
+
+test('multi-cursor partial selection indents only touched lines and excludes boundary',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('One\nTwo\nThree');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Shift+ArrowDown');
+ await page.keyboard.press('Shift+ArrowDown');
+ await page.keyboard.press('Tab');
+ await expect(input).toHaveValue('  One\n  Two\nThree');
+ await page.keyboard.press('Shift+Tab');
+ await expect(input).toHaveValue('One\nTwo\nThree');
+});
