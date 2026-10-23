@@ -6,6 +6,7 @@ import {markdown} from '@codemirror/lang-markdown';
 import {syntaxHighlighting,defaultHighlightStyle} from '@codemirror/language';
 import {state,save,docKey} from '../core/state.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
+import {makeRichSnippet} from '../data/rich-content.js';
 
 // Optional CodeMirror engine. The existing textarea stays as a live shadow
 // document for the course, table tools and exports; this is a reversible
@@ -156,4 +157,54 @@ export function multiCursorInsert(snippet,newline=true){
    range:EditorSelection.cursor(r.from+insertion.length)};
  });
  view.dispatch(transaction);view.focus();return true;
+}
+
+// All Advanced commands run as one CodeMirror transaction across every
+// selection, preserving the native multi-range history and cursor positions.
+export function multiCursorPreset(cssClass,isBlock=false){
+ if(!active)return false;
+ const prefix=isBlock?'\n\n<div class="'+cssClass+'">':'<span class="'+cssClass+'">';
+ const suffix=isBlock?'</div>\n\n':'</span>';
+ const placeholder=isBlock?'Formatted paragraph':'formatted text';
+ return multiCursorWrap(prefix,suffix,placeholder);
+}
+export function multiCursorRichContent(group,id){
+ if(!active)return false;
+ // makeRichSnippet checks its own allowed group/id combinations and escapes
+ // selected user content. Include earlier generated snippets when assigning IDs
+ // so that multiple anchor selections receive distinct destinations.
+ const source=view.state.doc.toString();
+ let reserved=source;
+ let rejected=false;
+ const transaction=view.state.changeByRange(r=>{
+  const selected=view.state.sliceDoc(r.from,r.to);
+  const snippet=makeRichSnippet(group,id,selected,reserved);
+  if(snippet===null){rejected=true;return {range:r};}
+  reserved+='\n'+snippet;
+  const lead=r.from>0&&view.state.sliceDoc(r.from-1,r.from)!=='\n'?'\n':'';
+  const inserted=lead+'\n\n'+snippet+'\n\n';
+  return {changes:{from:r.from,to:r.to,insert:inserted},
+   range:EditorSelection.cursor(r.from+inserted.length)};
+ });
+ if(rejected)return false;
+ view.dispatch(transaction);view.focus();return true;
+}
+export function multiCursorHeading(level){
+ if(!active)return false;
+ if(!Number.isInteger(level)||level<1||level>6)return false;
+ const doc=view.state.doc,changes=new Map();
+ for(const range of view.state.selection.ranges){
+  const first=doc.lineAt(range.from).number;
+  const last=doc.lineAt(range.to).number;
+  const end=range.to>range.from&&doc.line(last).from===range.to?last-1:last;
+  for(let number=first;number<=Math.max(first,end);number++){
+   const line=doc.line(number),match=line.text.match(/^(#{1,6})[ \t]*(.*)$/);
+   const value=match?match[2]:line.text.trim();
+   const updated=match?.[1].length===level?value:'#'.repeat(level)+' '+(value||'Heading '+level);
+   if(updated!==line.text)changes.set(line.from,{from:line.from,to:line.to,insert:updated});
+  }
+ }
+ if(!changes.size)return true;
+ view.dispatch({changes:[...changes.values()].sort((a,b)=>a.from-b.from)});
+ view.focus();return true;
 }

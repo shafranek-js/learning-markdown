@@ -1,8 +1,8 @@
-import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,registerEditorShortcut} from './editor.js';
+import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiHeading,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 const FENCE='```';
-export function setHeading(level){const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value;const begin=v.lastIndexOf('\n',s-1)+1;let finish=v.indexOf('\n',e);if(finish<0)finish=v.length;
+export function setHeading(level){if(multiHeading(level))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value;const begin=v.lastIndexOf('\n',s-1)+1;let finish=v.indexOf('\n',e);if(finish<0)finish=v.length;
  const line=v.slice(begin,finish),m=line.match(/^(#{1,6})[ \t]*(.*)$/),content=m?m[2]:line.trim();
  const newLine=m?.[1].length===level?content:'#'.repeat(level)+' '+(content||`Heading ${level}`);
  const caret=begin+newLine.length;applyEdit(v.slice(0,begin)+newLine+v.slice(finish),caret,caret);
@@ -16,6 +16,7 @@ export function applyAdvancedPreset(group,value){
  if(!cssClass)return false;
  const a=area(),start=a.selectionStart,end=a.selectionEnd,text=a.value,selected=text.slice(start,end);
  const isBlock=['align','indent','spacing'].includes(group);
+ if(multiPreset(cssClass,isBlock))return true;
  const sample=isBlock?'Formatted paragraph':'formatted text';
  const content=selected||sample;
  const before=isBlock?'\n\n<div class="'+cssClass+'">':'<span class="'+cssClass+'">';
@@ -25,6 +26,7 @@ export function applyAdvancedPreset(group,value){
  return true;
 }
 export function insertRichContent(group,id){
+ if(multiRich(group,id))return true;
  const a=area(),selected=a.value.slice(a.selectionStart,a.selectionEnd);
  const html=makeRichSnippet(group,id,selected,a.value);
  if(!html)return false;
