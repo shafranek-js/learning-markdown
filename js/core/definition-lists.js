@@ -73,3 +73,31 @@ export function definitionListExtension(){
 export function renderDefinitionLists(source,options){
  return new Marked(definitionListExtension()).parse(source,options);
 }
+
+
+/** Adjacent extension tokens may be lexed as separate lists by Marked.
+ * Join only immediately adjacent safe definition lists, not arbitrary HTML.
+ */
+export function mergeAdjacentDefinitionLists(safeHTML){
+ if(!safeHTML.includes('md-definition-list'))return safeHTML;
+ const root=document.createElement('div');
+ root.innerHTML=safeHTML; // Caller passes strictly sanitized markup.
+ for(const current of [...root.querySelectorAll('dl.md-definition-list')]){
+  if(!current.isConnected)continue;
+  let next=current.nextElementSibling;
+  while(next?.matches('dl.md-definition-list')){
+   let sibling=current.nextSibling,onlyWhitespace=true;
+   while(sibling&&sibling!==next){
+    if(sibling.nodeType!==Node.TEXT_NODE||sibling.textContent.trim()){
+     onlyWhitespace=false;break;
+    }
+    sibling=sibling.nextSibling;
+   }
+   if(!onlyWhitespace)break;
+   while(next.firstChild)current.appendChild(next.firstChild);
+   next.remove();
+   next=current.nextElementSibling;
+  }
+ }
+ return root.innerHTML;
+}

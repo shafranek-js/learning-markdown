@@ -1,7 +1,7 @@
 import {sanitizeHTML} from '../core/sanitize.js';
 import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
 import {renderFootnotedMarkdown} from '../core/footnotes.js';
-import {definitionListExtension,renderDefinitionLists} from '../core/definition-lists.js';
+import {definitionListExtension,renderDefinitionLists,mergeAdjacentDefinitionLists} from '../core/definition-lists.js';
 import {addHeadingAnchors} from '../core/heading-anchors.js';
 import {renderTOC} from './toc.js';
 import {extensionEnabled} from '../core/extensions.js';
@@ -27,7 +27,8 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
   :definitions?renderDefinitionLists(text,options):marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
  const safe=highlightCodeBlocks(sanitizeHTML(raw));
- return addHeadingAnchors(safe,{
+ const normalized=definitions?mergeAdjacentDefinitionLists(safe):safe;
+ return addHeadingAnchors(normalized,{
   customIds:extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'headingIds')
  });
 }
