@@ -68,7 +68,16 @@ function selectLesson(index,{route=true,scroll=true}={}){
   $('lesson-title').textContent=l.title;$('lesson-subtitle').textContent=l.subtitle;
   // Theory is bundled trusted HTML; never interpolate editor content into it.
   $('lesson-theory').innerHTML=l.theory;$('hint-content').textContent=l.hint;$('hint-box').classList.add('hidden');
-  const examples=$('syntax-examples-container');examples.replaceChildren();for(const ex of l.examples){const b=document.createElement('button');b.type='button';b.className='w-full text-left px-2.5 py-1.5 rounded-lg theme-panel border theme-border hover:opacity-90 text-xs font-mono';b.textContent=ex.label+'  +';b.addEventListener('click',()=>insertSnippet(ex.code+'\n'));examples.appendChild(b);}
+  const examples=$('syntax-examples-container');examples.replaceChildren();for(const ex of l.examples){
+   const b=document.createElement('button');b.type='button';
+   b.className='w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg theme-panel border theme-border hover:opacity-90 text-xs font-mono';
+   const label=document.createElement('span');label.className='min-w-0 truncate text-left';label.textContent=ex.label;
+   const action=document.createElement('span');action.className='shrink-0 text-[10px] font-sans font-semibold theme-accent-soft rounded px-1.5 py-0.5';
+   action.textContent=t(state.lang,'insert');
+   b.append(label,action);
+   b.title=t(state.lang,'insertHint');b.setAttribute('aria-label',t(state.lang,'insert')+': '+ex.label);
+   b.addEventListener('click',()=>insertSnippet(ex.code+'\n'));examples.appendChild(b);
+  }
   $('prev-lesson-btn').disabled=index===0;showGuide(state.guideVisible);
  }
  const saved=state.savedDrafts[docKey()],content=saved!==undefined?saved:index===-1?LINKEDIN_PROMPT_SAMPLE:getLesson(index).initial;

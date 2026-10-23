@@ -85,6 +85,11 @@ for(const drill of PRACTICE_DRILLS){
 for(let lessonId=1;lessonId<=8;lessonId++){
  assert(!evaluatePractice(lessonId,'\`\`\`md\\n# Sample\\n\`\`\`','<pre><code># Sample</code></pre>').some(d=>d.passed),'Do not credit unrelated fenced code');
 }
+const appSource=await readFile(new URL('../js/app.js',import.meta.url),'utf8');
+const modalSource=await readFile(new URL('../js/ui/modals.js',import.meta.url),'utf8');
+assert(!appSource.includes("ex.label+'  +'"),'Ambiguous plus suffix must not return');
+assert(!modalSource.includes("'↳ +'"),'Ambiguous plus action must not return');
+assert(appSource.includes("setAttribute('aria-label',t(state.lang,'insert')"),'Snippet action must have a localized accessible label');
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 assert(html.includes('id="deep-practice"'));
 for(let h=1;h<=6;h++)assert(html.includes('data-action="h'+h+'"'));

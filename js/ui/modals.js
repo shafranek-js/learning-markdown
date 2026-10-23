@@ -10,7 +10,7 @@ export function renderCheats(){const root=$('cheatsheet-grid');if(!root)return;r
  const item=cheats[i],card=document.createElement('div');card.className='p-3 rounded-xl theme-panel-alt border theme-border';
  const header=document.createElement('div');header.className='flex justify-between gap-2 items-center mb-2';
  const heading=document.createElement('strong');heading.textContent=`${i+1}. ${titles[state.lang][i]}`+(state.dialect!=='gfm'&&['tasks','table'].includes(item.key)?' · '+({en:'GFM only',cs:'pouze GFM',uk:'лише GFM',ro:'doar GFM',ru:'только GFM'}[state.lang]||'GFM only'):'');heading.style.color='var(--accent)';
- const btn=document.createElement('button');btn.textContent='↳ +';btn.type='button';btn.className='px-2 py-1 rounded theme-accent-soft';btn.setAttribute('aria-label',`Insert ${titles[state.lang][i]}`);
+ const btn=document.createElement('button');btn.textContent=t(state.lang,'insert');btn.type='button';btn.className='shrink-0 text-[11px] font-semibold px-2 py-1 rounded theme-accent-soft';btn.title=t(state.lang,'insertHint');btn.setAttribute('aria-label',t(state.lang,'insert')+': '+titles[state.lang][i]);
  btn.addEventListener('click',()=>{insertSnippet(item.code+'\n');toggleModal('cheatsheet-modal',false);});
  const pre=document.createElement('pre');pre.className='whitespace-pre-wrap break-words font-mono text-xs select-text';pre.textContent=item.code;
  header.append(heading,btn);card.append(header,pre);root.append(card);
