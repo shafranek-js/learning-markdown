@@ -1536,3 +1536,70 @@ test('issue #9 highlighted Markdown remains available on offline reload',async({
   await expect(page.locator('#markdown-preview .hljs-keyword')).toHaveCount(1);
  }finally{await context.setOffline(false);}
 });
+
+
+test('issue #10 opt-in line breaks persist by document and preserve standard dialects',async({page})=>{
+ await page.goto('/');
+ const source='First line\nSecond line';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#compatibility-panel summary').click();
+ const toggle=page.locator('#extension-softbreaks-toggle');
+ await expect(toggle).toHaveValue('off');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(0);
+ await toggle.selectOption('on');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+ await expect(input).toHaveValue(source);
+ await expect(page.locator('#extension-matrix-body tr')).toHaveCount(5);
+ await page.reload();
+ await expect(toggle).toHaveValue('on');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await expect(toggle).toBeDisabled();
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(0);
+ await page.locator('#dialect-selector').selectOption('original');
+ await expect(toggle).toBeDisabled();
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(0);
+ await page.locator('#dialect-selector').selectOption('gfm');
+ await expect(toggle).toBeEnabled();
+ await expect(toggle).toHaveValue('on');
+ await page.locator('#sandbox-mode-btn').click();
+ await expect(toggle).toHaveValue('off');
+ await input.fill(source);
+ await toggle.selectOption('on');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+ await page.locator('#sandbox-mode-btn').click();
+ await expect(toggle).toHaveValue('on');
+ await page.locator('#lang-selector').selectOption('ru');
+ await expect(toggle).toHaveValue('off');
+ await expect(page.locator('#extension-softbreaks-label')).toContainText('переносы');
+ await expect(page.locator('#extension-matrix-title')).toHaveText('Матрица совместимости');
+ await input.fill(source);
+ await toggle.selectOption('on');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+});
+
+test('issue #10 warns about nonstandard MD export without modifying Markdown',async({page})=>{
+ await page.goto('/');
+ const source='Hello\nWorld';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#compatibility-panel summary').click();
+ await page.locator('#extension-softbreaks-toggle').selectOption('on');
+ const dialogPromise=page.waitForEvent('dialog');
+ await page.locator('#download-md-btn').click();
+ const confirm=await dialogPromise;
+ expect(confirm.message()).toContain('single newlines');
+ const downloadPromise=page.waitForEvent('download');
+ await confirm.accept();
+ const file=await downloadPromise;
+ const {readFile}=await import('node:fs/promises');
+ expect(await readFile(await file.path(),'utf8')).toBe(source);
+ const htmlPromise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const htmlFile=await htmlPromise;
+ const html=await readFile(await htmlFile.path(),'utf8');
+ expect(html).toMatch(/Hello<br\s*\/?>World/);
+ expect(html).not.toContain('<script');
+ await expect(input).toHaveValue(source);
+});
