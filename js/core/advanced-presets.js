@@ -10,7 +10,8 @@ export const ADVANCED_PRESETS=Object.freeze({
 });
 export const ADVANCED_ALLOWED_CLASSES=new Set(Object.entries(ADVANCED_PRESETS)
  .flatMap(([group,values])=>values.map(value=>'af-'+group+'-'+value))
- .concat('af-page-break'));
+ .concat('af-page-break','af-table-outline','af-table-borderless','af-table-compact',
+  'af-cell-blue','af-cell-mint','af-cell-sand','af-callout-info','af-callout-warning','af-callout-success'));
 export const presetClass=(group,value)=>{
  if(!Object.hasOwn(ADVANCED_PRESETS,group)||!ADVANCED_PRESETS[group].includes(value))return null;
  return 'af-'+group+'-'+value;

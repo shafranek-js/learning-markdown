@@ -162,3 +162,21 @@ and toolbar visibility persist locally without affecting eight-lesson progress.
 HTML downloads are self-contained, with bundled advanced/preview CSS and
 print-only page breaks, while `.md` remains a plain-text export. Other Markdown
 renderers may strip the HTML classes, so styled output is **not portable Markdown**.
+
+## Advanced Formatting — Rich HTML templates (Issue #3)
+
+The dedicated Advanced ribbon now has three translated menus (EN/CS/UK/RO/RU):
+rich tables, informational blocks/anchors and list numbering. Table templates
+provide `colspan` and `rowspan` examples, colored cells, invisible borders and compact layout.
+Callouts use strictly approved CSS classes, and lists use native `<ol type="a|A|i|I">`.
+An internal-anchor command generates a unique `id` and corresponding `#id` link.
+Clicking that link inside Preview scrolls to the target **without overwriting**
+the application's URL-hash lesson route. HTML export retains native hash links.
+
+All HTML templates insert into the same undoable Markdown source, are listed
+in the optional HTML Lab, and do not affect the initial eight lessons or certificate.
+The class/attribute sanitizer limits numeric spans to 1–20, filters duplicate or
+invalid IDs, allows only safe list types, and strips arbitrary `style`, scripts
+and `on*` handlers. Templates are not a visual table-merge editor: merge values
+can be adjusted manually in the HTML source. Other Markdown renderers may
+strip the HTML features or the CSS classes.

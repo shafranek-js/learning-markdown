@@ -1,5 +1,6 @@
 import {area,applyEdit,undoOrRedo} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
+import {makeRichSnippet} from '../data/rich-content.js';
 const FENCE='```';
 export function setHeading(level){const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value;const begin=v.lastIndexOf('\n',s-1)+1;let finish=v.indexOf('\n',e);if(finish<0)finish=v.length;
  const line=v.slice(begin,finish),m=line.match(/^(#{1,6})[ \t]*(.*)$/),content=m?m[2]:line.trim();
@@ -21,6 +22,13 @@ export function applyAdvancedPreset(group,value){
  const after=isBlock?'</div>\n\n':'</span>';
  const next=text.slice(0,start)+before+content+after+text.slice(end);
  applyEdit(next,start+before.length,start+before.length+content.length);
+ return true;
+}
+export function insertRichContent(group,id){
+ const a=area(),selected=a.value.slice(a.selectionStart,a.selectionEnd);
+ const html=makeRichSnippet(group,id,selected,a.value);
+ if(!html)return false;
+ insertSnippet('\n\n'+html+'\n\n');
  return true;
 }
 export function insertAdvancedPageBreak(){

@@ -1,6 +1,8 @@
 import {state,save} from '../core/state.js';
 import {insertSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolbar.js';
 import {ADVANCED_PRESETS} from '../core/advanced-presets.js';
+import {RICH_CONTENT,RICH_GROUPS,richLabels} from '../data/rich-content.js';
+import {insertRichContent} from './toolbar.js';
 
 const $=id=>document.getElementById(id);
 export const ADVANCED_EXAMPLES=[
@@ -66,10 +68,56 @@ function renderPresetControls(){
  pageBreak.addEventListener('click',insertAdvancedPageBreak);root.append(pageBreak);
 }
 
+function renderRichControls(){
+ const locale=richLabels(state.lang),root=$('advanced-rich-controls');root.replaceChildren();
+ $('advanced-rich-heading').textContent=locale.heading;
+ for(let i=0;i<RICH_GROUPS.length;i++){
+  const group=RICH_GROUPS[i],options=RICH_CONTENT[group],label=document.createElement('label');
+  label.className='flex items-center gap-1.5 shrink-0 text-[11px] theme-muted font-semibold';
+  const title=document.createElement('span');title.textContent=locale.groups[i];
+  const select=document.createElement('select');select.id='rich-'+group;
+  select.setAttribute('aria-label',locale.groups[i]);
+  select.className='rounded-md theme-panel-alt border theme-border px-1.5 py-1 text-[11px]';
+  options.forEach((option,index)=>{
+   const entry=document.createElement('option');entry.value=option.id;
+   entry.textContent=locale.items[i][index]||option.label;select.append(entry);
+  });
+  const chosen=state.advancedRichChoices?.[group];
+  if(options.some(o=>o.id===chosen))select.value=chosen;
+  select.addEventListener('change',()=>{
+   if(!state.advancedRichChoices||typeof state.advancedRichChoices!=='object')state.advancedRichChoices={};
+   state.advancedRichChoices[group]=select.value;save();
+  });
+  const apply=document.createElement('button');apply.type='button';
+  apply.className='rounded-md theme-accent-soft border theme-border px-2 py-1 font-bold text-[11px]';
+  apply.dataset.richApply=group;apply.textContent=locale.insert;
+  apply.setAttribute('aria-label',locale.insert+': '+locale.groups[i]);
+  apply.addEventListener('click',()=>insertRichContent(group,select.value));
+  label.append(title,select,apply);root.append(label);
+ }
+ const examples=$('advanced-rich-lab-examples');examples.replaceChildren();
+ for(let i=0;i<RICH_GROUPS.length;i++){
+  const group=RICH_GROUPS[i];
+  RICH_CONTENT[group].forEach((option,j)=>{
+   const item=document.createElement('button');item.type='button';
+   item.className='w-full flex gap-2 items-center justify-between rounded-lg border theme-border theme-panel px-2 py-1.5 text-xs';
+   item.dataset.richExample=group+':'+option.id;
+   const name=document.createElement('span');name.className='min-w-0 text-left font-semibold';
+   name.textContent=locale.items[i][j]||option.label;
+   const insert=document.createElement('span');insert.className='theme-accent-soft font-semibold text-[10px] px-1.5 py-1 rounded shrink-0';
+   insert.textContent=locale.insert;
+   item.setAttribute('aria-label',locale.insert+': '+name.textContent);
+   item.addEventListener('click',()=>insertRichContent(group,option.id));
+   item.append(name,insert);examples.append(item);
+  });
+ }
+ $('advanced-rich-lab-title').textContent=locale.heading+' · '+locale.description;
+}
 export const advancedLabels=lang=>TEXT[lang]||TEXT.en;
 function applyAdvancedVisibility(){
  const panel=$('advanced-toolbar'),open=state.advancedToolsOpen;
  panel.classList.toggle('hidden',!open);
+ $('advanced-rich-toolbar').classList.toggle('hidden',!open);
  const toggle=$('advanced-tools-toggle');
  toggle.setAttribute('aria-expanded',String(open));
  toggle.textContent=advancedLabels(state.lang).toggle+(open?' ▴':' ▾');
@@ -79,6 +127,7 @@ export function renderAdvancedUI(){
  applyAdvancedVisibility();
  $('advanced-toolbar-warning').textContent=words.warning;
  renderPresetControls();
+ renderRichControls();
  $('advanced-lab-title').textContent=words.lab;
  $('advanced-lab-description').textContent=words.description;
  const root=$('advanced-lab-examples');root.replaceChildren();

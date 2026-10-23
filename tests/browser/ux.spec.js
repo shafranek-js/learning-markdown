@@ -247,3 +247,118 @@ test('Advanced formatting remains accessible on a narrow mobile viewport',async(
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
  await expect(page.locator('#markdown-preview .af-page-break')).toHaveCount(1);
 });
+
+
+test('rich HTML table templates render merged cells and preset decorations',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await expect(page.locator('#advanced-rich-toolbar')).toBeVisible();
+ const input=page.locator('#markdown-input');
+ await input.fill('');
+ await page.locator('#rich-tables').selectOption('colspan');
+ await page.locator('[data-rich-apply="tables"]').click();
+ await expect(page.locator('#markdown-preview th[colspan="2"]')).toHaveText('Merged heading');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('');
+ await page.locator('#rich-tables').selectOption('rowspan');
+ await page.locator('[data-rich-apply="tables"]').click();
+ await expect(page.locator('#markdown-preview th[rowspan="2"]')).toHaveText('Merged label');
+ await input.fill('');
+ await page.locator('#rich-tables').selectOption('colored');
+ await page.locator('[data-rich-apply="tables"]').click();
+ await expect(page.locator('#markdown-preview .af-cell-blue')).toHaveCount(1);
+ await page.locator('#rich-tables').selectOption('borderless');
+ await input.fill('');
+ await page.locator('[data-rich-apply="tables"]').click();
+ await expect(page.locator('#markdown-preview table.af-table-borderless')).toHaveCount(1);
+});
+
+test('translated rich HTML lab offers all 14 examples and does not change course progress',async({page})=>{
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#advanced-lab summary').click();
+ const items=page.locator('#advanced-rich-lab-examples button');
+ await expect(items).toHaveCount(14);
+ await expect(items.first()).toContainText('Вставить');
+ const before=await page.locator('#progress-label').innerText();
+ await page.locator('#markdown-input').fill('');
+ await page.locator('[data-rich-example="blocks:warning"]').click();
+ await expect(page.locator('#markdown-preview .af-callout-warning')).toHaveCount(1);
+ await expect(page.locator('#progress-label')).toHaveText(before);
+});
+
+test('rich callout selection is HTML-escaped and settings are persisted',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ const editor=page.locator('#markdown-input');
+ await editor.fill('Read < carefully & safely');
+ await editor.selectText();
+ await page.locator('#rich-blocks').selectOption('warning');
+ await page.locator('[data-rich-apply="blocks"]').click();
+ await expect(page.locator('#markdown-preview .af-callout-warning p')).toHaveText('Read < carefully & safely');
+ await expect(page.locator('#markdown-preview .af-callout-warning script')).toHaveCount(0);
+ await page.reload();
+ await expect(page.locator('#advanced-toolbar')).toBeVisible();
+ await expect(page.locator('#rich-blocks')).toHaveValue('warning');
+});
+
+test('internal anchors do not reset the lesson URL hash when clicked',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#markdown-input').fill('');
+ const hash=await page.evaluate(()=>location.hash);
+ await page.locator('#rich-blocks').selectOption('anchor');
+ await page.locator('[data-rich-apply="blocks"]').click();
+ await expect(page.locator('#markdown-preview #advanced-section')).toBeVisible();
+ await page.locator('#markdown-preview a[href="#advanced-section"]').click();
+ expect(await page.evaluate(()=>location.hash)).toBe(hash);
+ await page.locator('[data-rich-apply="blocks"]').click();
+ await expect(page.locator('#markdown-preview #advanced-section-2')).toHaveCount(1);
+});
+
+test('custom alphabetic and Roman lists use semantic ol type attributes',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ const editor=page.locator('#markdown-input');
+ await editor.fill('Alpha\nBeta');
+ await editor.selectText();
+ await page.locator('#rich-numbering').selectOption('a');
+ await page.locator('[data-rich-apply="numbering"]').click();
+ await expect(page.locator('#markdown-preview ol[type="a"] li')).toHaveCount(2);
+ await expect(page.locator('#markdown-preview ol[type="a"] li').first()).toHaveText('Alpha');
+ await editor.fill('');
+ await page.locator('#rich-numbering').selectOption('I');
+ await page.locator('[data-rich-apply="numbering"]').click();
+ await expect(page.locator('#markdown-preview ol[type="I"] li')).toHaveCount(3);
+});
+
+test('export retains rich styles, merged cells, callouts, list types and internal anchors',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('<table class="af-table-outline"><tr><td colspan="2" class="af-cell-sand">Merged</td></tr></table>\n\n<div class="af-callout-info">Info</div>\n\n<ol type="i"><li>One</li></ol>\n\n<div id="anchor-a">Target</div>\n\n[Jump](#anchor-a)');
+ await expect(page.locator('#markdown-preview .af-cell-sand')).toHaveCount(1);
+ const wait=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const dl=await wait;
+ const {readFile}=await import('node:fs/promises');
+ const source=await readFile(await dl.path(),'utf8');
+ expect(source).toContain('.md-preview .af-cell-sand');
+ expect(source).toContain('.md-preview .af-callout-info');
+ expect(source).toContain('colspan="2"');
+ expect(source).toContain('type="i"');
+ expect(source).toContain('href="#anchor-a"');
+ expect(source).toContain('id="anchor-a"');
+});
+
+test('mobile rich templates remain operable without expanding standard toolbar',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#mobile-tabs button[data-mobile-tab="editor"]').click();
+ await expect(page.locator('#advanced-rich-toolbar')).toBeVisible();
+ await page.locator('#markdown-input').fill('');
+ await page.locator('#rich-blocks').selectOption('success');
+ await page.locator('[data-rich-apply="blocks"]').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(/af-callout-success/);
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await expect(page.locator('#markdown-preview .af-callout-success')).toBeVisible();
+});

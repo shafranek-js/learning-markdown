@@ -8,7 +8,7 @@ import {initEditor,area,setEditorContent,refreshEditor,applyEdit} from './ui/edi
 import {initToolbar,insertSnippet} from './ui/toolbar.js';
 import {renderPractice} from './ui/deep-practice.js';
 import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
-import {updatePreview,currentHtml} from './ui/preview.js';
+import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
 import {standaloneHTML} from './core/export-html.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
@@ -111,7 +111,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initResizers();initModals();initAdvancedUI();
+ initEditor(evaluate);initToolbar();initResizers();initModals();initPreviewAnchors();initAdvancedUI();
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
