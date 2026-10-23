@@ -6,7 +6,8 @@ export function validateTableDimensions(columns,rows){
 export function makeMarkdownTable(columns,rows,label='Column'){
  const x=validateTableDimensions(columns,rows);
  if(!x)throw new RangeError('Invalid table dimensions');
- const safe=String(label).replace(/[\r\n|]/g,' ').trim()||'Column';
+ const safe=(String(label).replace(/[\r\n|]/g,' ').trim()||'Column')
+  .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
  const header='| '+Array.from({length:x.columns},(_,i)=>safe+' '+(i+1)).join(' | ')+' |';
  const separator='| '+Array(x.columns).fill('---').join(' | ')+' |';
  const empty='| '+Array(x.columns).fill(' ').join(' | ')+' |';
