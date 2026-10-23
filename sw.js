@@ -1,5 +1,5 @@
 // Offline-first application shell, versioned caches for GitHub Pages subpaths.
-const VERSION='learning-markdown-v1.0.0';
+const VERSION='learning-markdown-v1.0.1';
 const ROOT=new URL('./',self.registration.scope);
 const urls=[
  './','./index.html','./manifest.json','./assets/icon.svg',
@@ -15,6 +15,18 @@ self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys
 self.addEventListener('fetch',event=>{
  const req=event.request;if(req.method!=='GET')return;
  const u=new URL(req.url);if(u.origin!==self.location.origin||!u.pathname.startsWith(ROOT.pathname))return;
+ // Prefer the network for navigations so a new deployment is visible immediately.
+ // Fall back to the cached document when offline.
+ if(req.mode==='navigate'){
+  event.respondWith(fetch(req).then(response=>{
+   if(response.ok){
+    const copy=response.clone();
+    event.waitUntil(caches.open(VERSION).then(cache=>cache.put(req,copy)).catch(()=>{}));
+   }
+   return response;
+  }).catch(async()=>await caches.match(req)||await caches.match(new URL('./index.html',ROOT).href)||Response.error()));
+  return;
+ }
  event.respondWith(caches.match(req).then(cached=>{
   const live=fetch(req).then(res=>{if(res.ok){const copy=res.clone();caches.open(VERSION).then(c=>c.put(req,copy));}return res;}).catch(()=>cached||Response.error());
   return cached||live;
