@@ -1277,3 +1277,50 @@ test('100 simultaneous inline Markdown wraps undo as one operation',async({page}
  await page.locator('#redo-btn').click();
  await expect(input).toHaveValue(lines.map(line=>line+'**bold text**').join('\n'));
 });
+
+
+test('Ctrl+Shift+L selects all 100 occurrences for one replacement',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source=Array.from({length:100},(_,i)=>'tag '+(i+1)).join('\n');
+ await input.fill(source);
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+d');
+ await page.keyboard.press('Control+Shift+l');
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.keyboard.insertText('label');
+ await expect(input).toHaveValue(source.replaceAll('tag','label'));
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue(source.replaceAll('tag','label'));
+});
+
+test('Escape collapses multiple selections without editing document',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('sun sun sun\nsun');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+d');
+ await page.keyboard.press('Control+Shift+l');
+ await expect(page.locator('#multi-cursor-count')).toContainText('4');
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#multi-cursor-count')).toContainText('1');
+ await expect(input).toHaveValue('sun sun sun\nsun');
+ await page.keyboard.insertText('!');
+ await expect(input).toHaveValue('sun! sun sun\nsun');
+});
+
+test('new shortcut help is translated and includes line-end cursors',async({page})=>{
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ const toggle=page.locator('#multi-cursor-toggle');
+ await expect(toggle).toHaveAttribute('title',/Ctrl\+Shift\+L/);
+ await expect(toggle).toHaveAttribute('title',/Shift\+Alt\+I/);
+ await expect(toggle).toHaveAttribute('title',/Esc/);
+ await expect(toggle).toHaveAttribute('title',/совпадения/);
+});
