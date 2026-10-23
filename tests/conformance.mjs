@@ -53,18 +53,18 @@ import {compareHtml,CATEGORIES} from './html-compare.mjs';
    const matches=k=>k==='exact'||k==='dom-equivalent';
    if(matches(newClass)&&!matches(category))improved++;
    if(matches(category)&&!matches(newClass))regressed++;
-   const ok=category==='exact';
+   const ok=newClass==='exact';
    totalBySection.set(item.section,(totalBySection.get(item.section)||0)+1);
    if(ok){passed++;passesBySection.set(item.section,(passesBySection.get(item.section)||0)+1);}
-   else failures.push({...item,actual:html,error,category,modernCategory:newClass,modernActual:modern});
+   else failures.push({...item,actual:modern,error:modernError,category:newClass,legacyCategory:category,legacyActual:html});
   }
   out.push({name:source.label,source:source.url,total:cases.length,passed,failed:failures.length,
    percent:Math.round(passed*10000/cases.length)/100,
-   categories:classified,modernCategories:modernClassified,modernImproved:improved,modernRegressed:regressed,
+   categories:modernClassified,legacyCategories:classified,modernImproved:improved,modernRegressed:regressed,
    sections:[...totalBySection].map(([name,total])=>({name,total,passed:passesBySection.get(name)||0})),failures});
  }
  const dir='conformance-report';await mkdir(dir,{recursive:true});
- const report={generatedAt:new Date().toISOString(),parser:'Bundled marked.js (without HTML sanitizer)',comparison:'Exact raw HTML plus parse5 browser-DOM categorization',note:'DOM-equivalent differences are serialization only. Attributes, whitespace, text and structural categories require interpretation; not certification.',datasets:out};
+ const report={generatedAt:new Date().toISOString(),parser:'Production marked@18.1.1 (without HTML sanitizer), compared with legacy vendor baseline',comparison:'Exact raw HTML plus parse5 browser-DOM categorization',note:'DOM-equivalent differences are serialization only. Attributes, whitespace, text and structural categories require interpretation; not certification.',datasets:out};
  await writeFile(join(dir,'report.json'),JSON.stringify(report,null,2));
  const md=['# Upstream Markdown specification audit','','**Informational, not a release gate.** Compares unsanitized parser HTML against official HTML, classifying DOM-equivalent serialization differences separately.','','| Dataset | Exact matches | Total examples | Exact-match rate |','| --- | ---: | ---: | ---: |',
  ...out.map(x=>'| '+x.name+' | '+x.passed+' | '+x.total+' | '+x.percent+'% |'),'','## Results by section',''];
@@ -72,10 +72,10 @@ import {compareHtml,CATEGORIES} from './html-compare.mjs';
   '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
   ...out.map(data=>'| '+data.name+' | '+CATEGORIES.map(k=>data.categories[k]).join(' | ')+' |'),'',
   'DOM-equivalent means the parsed browser document trees are identical despite different HTML strings. Other categories are diagnostic, not automatically defects.','');
- md.push('','## Parser upgrade experiment (not applied to the app)','',
- '| Dataset | Current exact + DOM-equivalent | marked 18.1.1 exact + DOM-equivalent | Improved cases | Regressed cases |',
+ md.push('','## Parser upgrade — now used in production','',
+ '| Dataset | Legacy exact + DOM-equivalent | Production exact + DOM-equivalent | Improved cases | Regressed cases |',
  '| --- | ---: | ---: | ---: | ---: |',
- ...out.map(d=>'| '+d.name+' | '+(d.categories.exact+d.categories['dom-equivalent'])+' | '+(d.modernCategories.exact+d.modernCategories['dom-equivalent'])+' | '+d.modernImproved+' | '+d.modernRegressed+' |'),'');
+ ...out.map(d=>'| '+d.name+' | '+(d.legacyCategories.exact+d.legacyCategories['dom-equivalent'])+' | '+(d.categories.exact+d.categories['dom-equivalent'])+' | '+d.modernImproved+' | '+d.modernRegressed+' |'),'');
 
  for(const data of out){
   md.push('### '+data.name,'','| Section | Matched | Total |','| --- | ---: | ---: |',...data.sections.map(x=>'| '+x.name.replaceAll('|','\\|')+' | '+x.passed+' | '+x.total+' |'),'','First ten deviations:','');
@@ -96,7 +96,7 @@ import {compareHtml,CATEGORIES} from './html-compare.mjs';
  for(const x of out){
   console.log(x.name+': '+x.passed+'/'+x.total+' exact HTML matches ('+x.percent+'%)');
   console.log('AUDIT '+x.name+' '+CATEGORIES.map(k=>k+'='+x.categories[k]).join(', '));
-  console.log('EXPERIMENT marked@18.1.1 '+x.name+' '+CATEGORIES.map(k=>k+'='+x.modernCategories[k]).join(', ')+' improved='+x.modernImproved+' regressed='+x.modernRegressed);
+  console.log('LEGACY baseline '+x.name+' '+CATEGORIES.map(k=>k+'='+x.legacyCategories[k]).join(', ')+' improved='+x.modernImproved+' regressed='+x.modernRegressed);
   const sections=x.sections.map(s=>({...s,diff:s.total-s.passed})).sort((a,b)=>b.diff-a.diff).slice(0,7);
   console.log('TOP SECTIONS '+x.name+' '+sections.map(s=>s.name+':'+s.diff+'/'+s.total).join('; '));
   for(const category of CATEGORIES.filter(x=>x!=='exact')){
