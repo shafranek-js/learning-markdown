@@ -243,7 +243,7 @@ test('Advanced formatting remains accessible on a narrow mobile viewport',async(
  await page.locator('[data-advanced-apply="size"]').click();
  await expect(editor).toHaveValue('<span class="af-size-large">Mobile</span>');
  await page.locator('#advanced-page-break').click();
- await expect(editor).toContainText('af-page-break');
+ await expect(editor).toHaveValue(/af-page-break/);
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
  await expect(page.locator('#markdown-preview .af-page-break')).toHaveCount(1);
 });
