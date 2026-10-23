@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
 const context={};
 runInNewContext(await readFile(new URL('../vendor/marked.js',import.meta.url),'utf8'),context);
-const parse=(markdown,dialect)=>context.marked.parse(markdown,{gfm:dialect==='gfm',pedantic:false,breaks:false});
+const parse=(markdown,dialect)=>context.marked.parse(markdown,{gfm:dialect==='gfm',pedantic:false,breaks:false,headerIds:false,mangle:false});
 const cases=[
   [
     "ATX H1",
