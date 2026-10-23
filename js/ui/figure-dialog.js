@@ -14,6 +14,8 @@ let insert=()=>{};
 export function renderFigureLanguage(){
  if(!$('figure-dialog-title'))return;
  const w=words();
+ $('figure-width-preset').querySelector('option[value="custom"]').textContent=w.custom;
+ $('figure-cancel-top').setAttribute('aria-label',w.cancel);
  for(const [id,label] of Object.entries({
  'figure-dialog-title':w.title,'figure-description':w.description,
  'figure-url-label':w.url,'figure-alt-label':w.alt,
