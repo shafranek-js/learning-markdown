@@ -228,3 +228,22 @@ test('HTML export keeps safe preset CSS and print page breaks but strips unsafe 
  expect(exported).not.toContain('onclick="alert');
  expect(exported).not.toContain('evil-class');
 });
+
+
+test('Advanced formatting remains accessible on a narrow mobile viewport',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await expect(page.locator('#advanced-toolbar')).toBeVisible();
+ await page.locator('#mobile-tabs button[data-mobile-tab="editor"]').click();
+ const editor=page.locator('#markdown-input');
+ await editor.fill('Mobile');
+ await editor.selectText();
+ await page.locator('#advanced-size').selectOption('large');
+ await page.locator('[data-advanced-apply="size"]').click();
+ await expect(editor).toHaveValue('<span class="af-size-large">Mobile</span>');
+ await page.locator('#advanced-page-break').click();
+ await expect(editor).toContainText('af-page-break');
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await expect(page.locator('#markdown-preview .af-page-break')).toHaveCount(1);
+});
