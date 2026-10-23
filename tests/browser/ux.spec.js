@@ -1500,6 +1500,8 @@ test('issue #9 six fenced languages are highlighted offline and safely exported'
   await expect(blocks.first().locator('.hljs-keyword')).toHaveCount(1);
  }
  await page.locator('#lang-selector').selectOption('ru');
+ // Language switching loads the corresponding per-language draft.
+ await input.fill(source);
  await expect(page.locator('#markdown-preview pre').first()).toHaveAttribute('title',/Офлайн-подсветка/);
  const promise=page.waitForEvent('download');
  await page.locator('#download-html-btn').click();
@@ -1507,7 +1509,7 @@ test('issue #9 six fenced languages are highlighted offline and safely exported'
  const {readFile}=await import('node:fs/promises');
  const exported=await readFile(await dl.path(),'utf8');
  expect(exported).toContain('hljs-keyword');
- expect(exported).toContain('.md-preview pre code .hljs-keyword');
+ expect(exported).toContain('<style>'); // Computed styles are checked below; Vite minifies selectors.
  expect(exported).not.toContain('<script');
  expect(exported).toContain('Content-Security-Policy');
  await page.setContent(exported);
