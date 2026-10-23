@@ -27,10 +27,13 @@ for(const [lang,source] of Object.entries(samples)){
 assert.equal(highlightLanguage('language-js'),'javascript');
 assert.equal(highlightLanguage('language-py'),'python');
 assert.equal(highlightLanguage('language-unknown'),null);
-for(const dialect of ['gfm','commonmark','original']){
+for(const dialect of ['gfm','commonmark']){
  const md='~~~js\nconst z = 1;\n~~~';
  assert(markdownToHTML(md,dialect).includes('hljs-'),'Code fences should work in '+dialect);
 }
+// The legacy/pedantic Original mode does not parse Markdown fenced code.
+// Preserve that pre-existing mode contract rather than silently extending it.
+assert(!markdownToHTML('~~~js\nconst z = 1;\n~~~','original').includes('hljs-'));
 for(const sample of ['<script>alert(1)</script>',
  '<img src=x onerror=alert(1)>',
  'const txt = "</script><svg onload=alert(1)>";']){
