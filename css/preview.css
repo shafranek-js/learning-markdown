@@ -127,6 +127,11 @@
             background: var(--preview-quote-bg);
             font-weight: 700;
         }
+        /* GFM table alignment must override the generic left-aligned table
+           rule in Preview, offline HTML export and browser print output. */
+        .md-preview th[align="left"], .md-preview td[align="left"] { text-align: left; }
+        .md-preview th[align="center"], .md-preview td[align="center"] { text-align: center; }
+        .md-preview th[align="right"], .md-preview td[align="right"] { text-align: right; }
         .md-preview input[type="checkbox"] {
             accent-color: var(--accent);
             width: 1rem;
