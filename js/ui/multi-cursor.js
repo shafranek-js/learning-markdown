@@ -177,7 +177,7 @@ export function renderMultiCursorLabels(){
 export function multiCursorUndoOrRedo(direction){
  if(!active)return false;
  const ok=(direction<0?undo:redo)(view);
- if(ok){mirror();updateUI(true);}
+ if(ok){mirror();updateUI(true);view.focus();}
  return ok;
 }
 export function loadMultiCursorDocument(text,resetSelection=true){
