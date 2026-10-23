@@ -50,10 +50,10 @@
 .md-preview .af-callout-warning{background:#fff3cf;border-color:#d89104}
 .md-preview .af-callout-success{background:#e0f3e7;border-color:#178548}
 .md-preview .af-callout-info p:last-child,.md-preview .af-callout-warning p:last-child,.md-preview .af-callout-success p:last-child{margin-bottom:0}
-.md-preview ol[type="a"]{list-style-type:lower-alpha}
-.md-preview ol[type="A"]{list-style-type:upper-alpha}
-.md-preview ol[type="i"]{list-style-type:lower-roman}
-.md-preview ol[type="I"]{list-style-type:upper-roman}
+.md-preview ol[type="a" s]{list-style-type:lower-alpha}
+.md-preview ol[type="A" s]{list-style-type:upper-alpha}
+.md-preview ol[type="i" s]{list-style-type:lower-roman}
+.md-preview ol[type="I" s]{list-style-type:upper-roman}
 .md-preview details{border:1px solid #94a3b8;border-radius:.5rem;padding:.7rem .9rem;margin:1rem 0}
 .md-preview details summary{cursor:pointer;font-weight:700}
 .md-preview :target{scroll-margin-top:2rem;outline:2px dotted #4f86b7;outline-offset:3px}
