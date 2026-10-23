@@ -1434,7 +1434,7 @@ test('issue #8 GFM alignment survives live Preview, standalone HTML and print',a
  const {readFile}=await import('node:fs/promises');
  const html=await readFile(await download.path(),'utf8');
  for(const align of expected)expect(html).toContain('align="'+align+'"');
- expect(html).toContain('.md-preview td[align="center"]');
+ // CSS is minified in production; verify actual computed styles below instead.
  expect(html).not.toContain('<script');
  await page.setContent(html);
  for(const scope of ['thead th','tbody td']){
