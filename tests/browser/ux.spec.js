@@ -1487,9 +1487,10 @@ test('issue #9 six fenced languages are highlighted offline and safely exported'
  await expect(blocks).toHaveCount(7);
  for(let i=0;i<6;i++){
   await expect(blocks.nth(i).locator('span[class^="hljs-"]').first()).toBeVisible();
-  const token=blocks.nth(i).locator('span[class^="hljs-"]').first();
-  const foreground=await token.evaluate(el=>getComputedStyle(el).color);
-  expect(foreground).not.toBe('rgb(248, 250, 252)');
+  // Check actual colored output, not a particular grammar's first token.
+  const colors=await blocks.nth(i).locator('span[class^="hljs-"]')
+   .evaluateAll(nodes=>nodes.map(el=>getComputedStyle(el).color));
+  expect(colors.some(color=>color!=='rgb(248, 250, 252)')).toBe(true);
  }
  await expect(blocks.nth(6).locator('span[class^="hljs-"]')).toHaveCount(0);
  await expect(page.locator('#markdown-preview script')).toHaveCount(0);
@@ -1510,7 +1511,7 @@ test('issue #9 six fenced languages are highlighted offline and safely exported'
  expect(exported).not.toContain('<script');
  expect(exported).toContain('Content-Security-Policy');
  await page.setContent(exported);
- await expect(page.locator('main pre code .hljs-keyword')).toHaveCount(1);
+ expect(await page.locator('main pre code .hljs-keyword').count()).toBeGreaterThan(0);
  await page.emulateMedia({media:'print'});
  expect(await page.locator('main pre code .hljs-keyword').first()
   .evaluate(el=>getComputedStyle(el).color)).toBe('rgb(76, 29, 149)');

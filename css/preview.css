@@ -193,3 +193,22 @@
  .md-preview pre code .hljs-variable,.md-preview pre code .hljs-params,.md-preview pre code .hljs-name,.md-preview pre code .hljs-tag,.md-preview pre code .hljs-template-variable,.md-preview pre code .hljs-template-tag{color:#155e75!important}
  .md-preview pre code .hljs-deletion{color:#991b1b!important}
 }
+
+
+/* Additional highlight.js scopes: no token should silently inherit plain code color. */
+.md-preview pre code .hljs-operator,
+.md-preview pre code .hljs-punctuation,
+.md-preview pre code .hljs-subst,
+.md-preview pre code .hljs-formula { color:#a5b4fc; }
+.md-preview pre code .hljs-selector-pseudo-class,
+.md-preview pre code .hljs-selector-pseudo-element,
+.md-preview pre code .hljs-link,
+.md-preview pre code .hljs-bullet { color:#fde68a; }
+.md-preview pre code .hljs-emphasis {color:#86efac;font-style:italic}
+.md-preview pre code .hljs-strong {color:#fbcfe8;font-weight:700}
+@media print{
+ .md-preview pre code .hljs-operator,.md-preview pre code .hljs-punctuation,.md-preview pre code .hljs-subst,.md-preview pre code .hljs-formula{color:#3730a3!important}
+ .md-preview pre code .hljs-selector-pseudo-class,.md-preview pre code .hljs-selector-pseudo-element,.md-preview pre code .hljs-link,.md-preview pre code .hljs-bullet{color:#854d0e!important}
+ .md-preview pre code .hljs-emphasis{color:#166534!important}
+ .md-preview pre code .hljs-strong{color:#9d174d!important}
+}
