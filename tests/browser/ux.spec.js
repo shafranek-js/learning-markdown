@@ -822,3 +822,30 @@ test('Advanced formatting groups can filter ribbon controls and persist across r
  await expect(page.locator('#advanced-color')).toBeVisible();
  await expect(page.locator('#rich-tables')).toBeVisible();
 });
+
+
+test('custom ordered-list types are case-sensitive in Preview and downloaded HTML',async({page})=>{
+ await page.goto('/');
+ const types=['a','A','i','I','1'];
+ const styles=['lower-alpha','upper-alpha','lower-roman','upper-roman','decimal'];
+ const source=types.map(t=>'<ol type="'+t+'"><li>First</li><li>Second</li><li>Third</li></ol>').join('\n\n');
+ await page.locator('#markdown-input').fill(source);
+ const lists=page.locator('#markdown-preview ol');
+ await expect(lists).toHaveCount(types.length);
+ for(let i=0;i<types.length;i++){
+  await expect(lists.nth(i)).toHaveAttribute('type',types[i]);
+  expect(await lists.nth(i).evaluate(el=>getComputedStyle(el).listStyleType)).toBe(styles[i]);
+ }
+ const pending=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await pending;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await file.path(),'utf8');
+ expect(html).toContain('ol[type="a" s]');
+ expect(html).toContain('ol[type="A" s]');
+ await page.setContent(html);
+ const exported=page.locator('main.md-preview ol');
+ await expect(exported).toHaveCount(types.length);
+ for(let i=0;i<types.length;i++)
+  expect(await exported.nth(i).evaluate(el=>getComputedStyle(el).listStyleType)).toBe(styles[i]);
+});
