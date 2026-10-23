@@ -1896,3 +1896,104 @@ test('issue #13 wide figures and captions never overflow the mobile preview',asy
  expect(measure.right).toBeLessThanOrEqual(measure.containerRight+1);
  await expect(page.locator('#markdown-preview figure figcaption')).toContainText('Long explanatory caption');
 });
+
+
+test('issue #14 definition lists are opted in and persist per document without affecting base dialects',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='Term A\nTerm B\n: First **definition**\n: Second *definition*\n  with continuation.\nAnother term\n: Final definition.';
+ await input.fill(source);
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(0);
+ await page.locator('#compatibility-panel summary').click();
+ const toggle=page.locator('#extension-definitions-toggle');
+ await expect(toggle).toHaveValue('off');
+ await toggle.selectOption('on');
+ await expect(page.locator('#markdown-preview dl.md-definition-list')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview dl dt')).toHaveCount(3);
+ await expect(page.locator('#markdown-preview dl dd')).toHaveCount(3);
+ await expect(page.locator('#markdown-preview dl strong')).toHaveText('definition');
+ await expect(page.locator('#markdown-preview dl em')).toHaveText('definition');
+ await expect(page.locator('#extension-definitions-practice')).toContainText('Complete');
+ await expect(input).toHaveValue(source);
+ await page.reload();
+ await expect(toggle).toHaveValue('on');
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await expect(toggle).toBeDisabled();
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(0);
+ await page.locator('#dialect-selector').selectOption('original');
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(0);
+ await page.locator('#dialect-selector').selectOption('gfm');
+ await expect(toggle).toHaveValue('on');
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
+ await page.locator('#lang-selector').selectOption('ru');
+ await expect(toggle).toHaveValue('off');
+ await expect(page.locator('#extension-definitions-label')).toContainText('Списки определений');
+ await expect(page.locator('#extension-matrix-body tr')).toHaveCount(7);
+});
+
+test('issue #14 Advanced HTML definition template is semantic, reversible and available across dialects',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ const input=page.locator('#markdown-input');
+ await input.fill('');
+ await page.locator('#definition-html-insert').click();
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview dl dt')).toHaveCount(2);
+ await expect(page.locator('#markdown-preview dl dd')).toHaveCount(3);
+ await expect(page.locator('#markdown-preview dl strong')).toHaveText('definition');
+ await expect(input).toHaveValue(/<dl>/);
+ const source=await input.inputValue();
+ await page.locator('#undo-btn').click();
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(0);
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue(source);
+ for(const dialect of ['commonmark','original','gfm']){
+  await page.locator('#dialect-selector').selectOption(dialect);
+  await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
+ }
+ await page.locator('#lang-selector').selectOption('ru');
+ await expect(page.locator('#definition-html-insert')).toContainText('HTML-список');
+});
+
+test('issue #14 example, standalone HTML and print keep sanitized definition list semantics',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('');
+ await page.locator('#compatibility-panel summary').click();
+ await page.locator('#extension-definitions-toggle').selectOption('on');
+ await page.locator('#extension-definitions-demo').click();
+ await expect(page.locator('#markdown-preview dl.md-definition-list')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview dl dd')).toHaveCount(3);
+ await expect(page.locator('#extension-definitions-practice')).toContainText('Complete');
+ const source=await input.inputValue();
+ const download=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await download;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await file.path(),'utf8');
+ expect(html).toContain('<dl class="md-definition-list">');
+ expect(html).toContain('<dt>Term A</dt>');
+ expect(html).not.toContain('<script');
+ await page.setContent(html);
+ await expect(page.locator('main.md-preview dl dd')).toHaveCount(3);
+ await page.emulateMedia({media:'print'});
+ expect(await page.locator('main.md-preview dl dt').first().evaluate(el=>getComputedStyle(el).fontWeight)).toMatch(/700|bold/);
+ await page.emulateMedia({media:'screen'});
+ await page.goto('/');
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
+});
+
+test('issue #14 definition syntax never creates executable markup from hostile terms or definitions',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='Safe term\n: <script>window.__definitionXss=1</script> **safe definition**\n\nOrdinary: paragraph';
+ await input.fill(source);
+ await page.locator('#compatibility-panel summary').click();
+ await page.locator('#extension-definitions-toggle').selectOption('on');
+ await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview dl strong')).toHaveText('safe definition');
+ await expect(page.locator('#markdown-preview script')).toHaveCount(0);
+ expect(await page.evaluate(()=>window.__definitionXss)).toBeUndefined();
+ await expect(page.locator('#markdown-preview')).toContainText('Ordinary: paragraph');
+});
