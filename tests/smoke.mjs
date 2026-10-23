@@ -7,9 +7,15 @@ import {cheats,titles} from '../js/data/cheatsheet.js';
 import {ADVANCED_EXAMPLES,advancedLabels} from '../js/ui/advanced.js';
 import {PRACTICE_DRILLS,PRACTICE_UI,evaluatePractice,practiceForLesson} from '../js/data/deep-practice.js';
 
-// CommonMark/GFM switch must change the actual rendered HTML, not just a label.
+// Run the production HTML allowlist against a standards-based browser DOM in Node.
+const {JSDOM}=await import('jsdom');
+const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
 globalThis.localStorage={getItem:()=>null,setItem:()=>{}};
-globalThis.window={DOMPurify:{sanitize:html=>html}};
+globalThis.window=dom.window;
+globalThis.DOMParser=dom.window.DOMParser;
+globalThis.document=dom.window.document;
+globalThis.Node=dom.window.Node;
+globalThis.location=dom.window.location;
 const {markdownToHTML,DIALECT_OPTIONS}=await import('../js/ui/preview.js');
 assert.deepEqual(Object.keys(DIALECT_OPTIONS),['gfm','commonmark','original']);
 const parse=(text,dialect)=>markdownToHTML(text,dialect);
