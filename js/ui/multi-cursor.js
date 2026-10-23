@@ -298,16 +298,23 @@ export function multiCursorLineFormat(kind){
   const end=r.to>r.from&&doc.line(last).from===r.to?last-1:last;
   for(let n=first;n<=Math.max(first,end);n++)lines.add(n);
  }
- const edits=[];let ordinal=0;
+ const edits=[];let ordinal=0,previous=-2;
  for(const n of [...lines].sort((a,b)=>a-b)){
   const line=doc.line(n),value=line.text;
   const indent=value.match(/^[ \t]*/)[0],body=value.slice(indent.length);
+  // Preserve existing checked tasks if the same task style is reapplied.
+  const taskMark=body.match(/^(?:[-*+]|\d+[.)])\s+\[([ xX])\]\s+/);
   // Replace existing Markdown list/quote markers instead of nesting them.
   const bare=body.replace(/^(?:>\s*)+/, '')
    .replace(/^(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/, '');
   let prefix;
-  if(kind==='ol')prefix=(++ordinal)+'. ';
-  else prefix={ul:'- ',task:'- [ ] ',quote:'> '}[kind];
+  if(kind==='ol'){
+   if(n!==previous+1)ordinal=0;
+   prefix=(++ordinal)+'. ';
+  }else if(kind==='task'){
+   prefix=taskMark&&/[xX]/.test(taskMark[1])?'- [x] ':'- [ ] ';
+  }else prefix={ul:'- ',quote:'> '}[kind];
+  previous=n;
   const next=indent+prefix+bare;
   if(next!==value)edits.push({from:line.from,to:line.to,insert:next});
  }
