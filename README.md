@@ -231,3 +231,7 @@ entries in the postbuild step; this is tested separately in Chromium.
 ## Interactive GFM task checkboxes
 
 GFM task lists display checked/unchecked values correctly in Preview. Clicking an editable checkbox toggles only its corresponding Markdown `[x]`/`[ ]` marker and records an Undo/Redo step; draft changes persist across reloads. The editor enables preview checkboxes only when rendered tasks and source markers agree one-to-one, avoiding potentially destructive edits for ambiguous HTML, code fences or unsupported formats. Standalone HTML exports preserve checked states as disabled static checkboxes. CommonMark and Original parsing modes remain unaffected.
+
+## Table insertion grid (Word-like)
+
+The portable Markdown Table button now opens a 10-column × 8-row interactive selection grid. Hover or use arrow keys to choose a rectangle; click/Enter to insert a GFM table with that number of rows and columns. Number fields support larger dimensions up to 20 columns × 50 rows. Row count includes the header row; Markdown requires a separate separator line. The source is editable and changes are undoable. The popover is keyboard/mobile accessible and localized in EN, CS, UK, RO and RU. In CommonMark/Original mode it explains that the resulting Markdown table requires GFM rendering.

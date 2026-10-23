@@ -612,3 +612,67 @@ test('CommonMark treats GFM task markers as text, not interactive checkboxes',as
  await page.locator('#dialect-selector').selectOption('commonmark');
  await expect(page.locator('#markdown-preview input[type="checkbox"]')).toHaveCount(0);
 });
+
+
+test('Word-like picker selects a 5 by 4 grid and generates an undoable GFM table',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('');
+ await page.locator('#table-picker-trigger').click();
+ await expect(page.locator('#table-picker-popup')).toBeVisible();
+ await page.locator('.table-picker-cell[data-col="5"][data-row="4"]').hover();
+ await expect(page.locator('#table-picker-size')).toContainText('5 × 4');
+ await expect(page.locator('.table-picker-cell.selected')).toHaveCount(20);
+ await page.locator('.table-picker-cell[data-col="5"][data-row="4"]').click();
+ await expect(page.locator('#table-picker-popup')).toBeHidden();
+ await expect(page.locator('#markdown-preview table th')).toHaveCount(5);
+ await expect(page.locator('#markdown-preview table tbody tr')).toHaveCount(3);
+ await expect(input).toHaveValue(/\| Column 5 \|/);
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('');
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview table th')).toHaveCount(5);
+});
+
+test('picker restores the source caret and inserts table in the correct place',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('Before\n\nAfter');
+ await input.evaluate(x=>{x.focus();x.setSelectionRange(8,8);});
+ await page.locator('#table-picker-trigger').click();
+ await page.locator('.table-picker-cell[data-col="2"][data-row="2"]').click();
+ const source=await input.inputValue();
+ expect(source.indexOf('Column 1')).toBeGreaterThan(source.indexOf('Before'));
+ expect(source.indexOf('Column 1')).toBeLessThan(source.indexOf('After'));
+});
+
+test('manual sizes, Russian labels and accessible arrow-key navigation',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#table-picker-trigger').click();
+ await expect(page.locator('#table-picker-title')).toHaveText('Вставить таблицу');
+ await page.locator('#table-picker-columns').fill('12');
+ await page.locator('#table-picker-rows').fill('9');
+ await page.locator('#table-picker-insert').click();
+ await expect(page.locator('#markdown-preview table th')).toHaveCount(12);
+ await expect(page.locator('#markdown-preview table tbody tr')).toHaveCount(8);
+ await page.locator('#table-picker-trigger').focus();
+ await page.keyboard.press('ArrowDown');
+ await expect(page.locator('#table-picker-popup')).toBeVisible();
+ await page.keyboard.press('ArrowRight');
+ await expect(page.locator('#table-picker-size')).toContainText('2 × 1');
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#table-picker-popup')).toBeHidden();
+});
+
+test('picker remains accessible on mobile and warns in non-GFM mode',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await page.locator('#table-picker-trigger').click();
+ await expect(page.locator('#table-picker-popup')).toBeInViewport();
+ await expect(page.locator('#table-picker-mode-hint')).toBeVisible();
+ await page.locator('#table-picker-cancel').click();
+ await expect(page.locator('#table-picker-popup')).toBeHidden();
+});

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {marked} from 'marked';
+import {makeMarkdownTable,validateTableDimensions,MAX_COLUMNS,MAX_ROWS} from '../js/core/table-generator.js';
+assert.deepEqual(validateTableDimensions(5,4),{columns:5,rows:4});
+assert.equal(validateTableDimensions(0,5),null);
+assert.equal(validateTableDimensions(2.5,3),null);
+assert.equal(validateTableDimensions(MAX_COLUMNS+1,2),null);
+assert.equal(validateTableDimensions(10,MAX_ROWS+1),null);
+const s=makeMarkdownTable(5,4);
+assert.equal(s.trimEnd().split('\n').length,5);
+const html=marked.parse(s,{gfm:true});
+assert.equal((html.match(/<th>/g)||[]).length,5);
+assert.equal((html.match(/<tr>/g)||[]).length,4);
+const max=makeMarkdownTable(MAX_COLUMNS,MAX_ROWS);
+assert.equal(max.trimEnd().split('\n').length,MAX_ROWS+1);
+assert.throws(()=>makeMarkdownTable(1,0),RangeError);
+assert(!makeMarkdownTable(2,2,'</script>|evil').includes('</script>'));
+console.log('PASS: Word-like table insertion grid dimensions and GFM serialization');

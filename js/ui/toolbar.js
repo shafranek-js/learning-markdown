@@ -42,7 +42,7 @@ export function toolbarAction(action){switch(action){
  case 'task':insertSnippet('- [x] Completed task\n- [ ] Open task\n');break;
  case 'code-inline':wrap('`','`','command');break;case 'code-block':insertSnippet(`${FENCE}js\nconsole.log("Markdown Studio");\n${FENCE}\n`);break;
  case 'link':wrap('[','](https://example.com)','Link text');break;case 'image':insertSnippet('![Image](https://placehold.co/600x160/png)\n');break;
- case 'table':insertSnippet('| Column 1 | Column 2 |\n| --- | --- |\n| Value A | Value B |\n');break;
+ case 'table':document.getElementById('table-picker-trigger')?.click();break;
  case 'hr':insertSnippet('\n---\n\n');break;
  // Advanced HTML actions are explicit opt-ins; they do not change the Markdown dialect.
  case 'adv-underline':wrap('<u>','</u>','underlined text');break;
