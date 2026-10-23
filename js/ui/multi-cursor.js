@@ -1,6 +1,6 @@
 import {EditorState,EditorSelection} from '@codemirror/state';
 import {EditorView,keymap,lineNumbers,drawSelection,rectangularSelection,highlightActiveLine,highlightSpecialChars} from '@codemirror/view';
-import {history,historyKeymap,defaultKeymap,undo,redo,undoDepth,redoDepth,addCursorAbove,addCursorBelow} from '@codemirror/commands';
+import {history,historyKeymap,defaultKeymap,undo,redo,undoDepth,redoDepth,isolateHistory,addCursorAbove,addCursorBelow} from '@codemirror/commands';
 import {selectNextOccurrence} from '@codemirror/search';
 import {markdown} from '@codemirror/lang-markdown';
 import {syntaxHighlighting,defaultHighlightStyle} from '@codemirror/language';
@@ -15,6 +15,17 @@ let view=null,active=false,input=null,updateUI=()=>{},shortcutAction=()=>{},sess
 const sessions=new Map();
 const $=id=>document.getElementById(id);
 const words=()=>getMultiCursorLabels(state.lang);
+// Map all selections after inserted prefixes, instead of leaving a caret
+// before the spaces at column zero.
+function dispatchFormattingChanges(editor,edits){
+ if(!edits.length)return;
+ const changes=editor.state.changes(edits);
+ editor.dispatch({
+  changes,
+  selection:editor.state.selection.map(changes,1),
+  annotations:isolateHistory.of('full')
+ });
+}
 
 function mirror(){
  if(!view||!input)return;
@@ -45,7 +56,7 @@ export function insertCursorsAtLineEnds(editor){
 export function multiCursorIndent(editor,outdent=false){
  const state=editor.state,doc=state.doc,ranges=state.selection.ranges;
  if(!outdent&&ranges.length===1&&ranges[0].empty){
-  editor.dispatch(state.replaceSelection('  '));return true;
+  editor.dispatch({...state.replaceSelection('  '),annotations:isolateHistory.of('full')});return true;
  }
  const numbers=new Set();
  for(const r of ranges){
@@ -58,10 +69,10 @@ export function multiCursorIndent(editor,outdent=false){
  for(const n of [...numbers].sort((a,b)=>a-b)){
   const line=doc.line(n);
   if(!outdent){changes.push({from:line.from,insert:'  '});continue;}
-  const match=line.text.match(/^(?: {1,2}|\\t)/);
+  const match=line.text.match(/^(?: {1,2}|\t)/);
   if(match)changes.push({from:line.from,to:line.from+match[0].length,insert:''});
  }
- if(changes.length)editor.dispatch({changes});
+ dispatchFormattingChanges(editor,changes);
  return true;
 }
 
@@ -116,10 +127,20 @@ function ensureView(){
 function activate(enabled,{focus=true}={}){
  if(enabled===active)return;
  if(enabled){
-  active=true;
   ensureView();
-  if(view.state.doc.toString()!==input.value) view.setState(createState(input.value,{anchor:input.selectionStart,head:input.selectionEnd}));
-  sessionKey=docKey();
+  const key=docKey(),text=input.value;
+  if(sessionKey!==key){
+   // Restore document-specific selections/history only for unchanged content.
+   if(sessionKey)sessions.set(sessionKey,view.state);
+   const saved=sessions.get(key);
+   view.setState(saved&&saved.doc.toString()===text
+    ?saved:createState(text,{anchor:input.selectionStart,head:input.selectionEnd}));
+  }else if(view.state.doc.toString()!==text){
+   // Textarea edits invalidate the old CodeMirror history.
+   view.setState(createState(text,{anchor:input.selectionStart,head:input.selectionEnd}));
+  }
+  sessionKey=key;
+  active=true;
  }else{
   mirror();
   sessions.set(sessionKey,view.state);
@@ -192,7 +213,7 @@ export function multiCursorWrap(prefix,suffix,placeholder){
   return {changes:{from:r.from,to:r.to,insert:replacement},
    range:EditorSelection.range(r.from+prefix.length,r.from+prefix.length+selected.length)};
  });
- view.dispatch(transaction);view.focus();return true;
+ view.dispatch({...transaction,annotations:isolateHistory.of('full')});view.focus();return true;
 }
 export function multiCursorInsert(snippet,newline=true){
  if(!active)return false;
@@ -202,7 +223,7 @@ export function multiCursorInsert(snippet,newline=true){
   return {changes:{from:r.from,to:r.to,insert:insertion},
    range:EditorSelection.cursor(r.from+insertion.length)};
  });
- view.dispatch(transaction);view.focus();return true;
+ view.dispatch({...transaction,annotations:isolateHistory.of('full')});view.focus();return true;
 }
 
 // All Advanced commands run as one CodeMirror transaction across every
@@ -233,7 +254,7 @@ export function multiCursorRichContent(group,id){
    range:EditorSelection.cursor(r.from+inserted.length)};
  });
  if(rejected)return false;
- view.dispatch(transaction);view.focus();return true;
+ view.dispatch({...transaction,annotations:isolateHistory.of('full')});view.focus();return true;
 }
 export function multiCursorHeading(level){
  if(!active)return false;
@@ -251,7 +272,7 @@ export function multiCursorHeading(level){
   }
  }
  if(!changes.size)return true;
- view.dispatch({changes:[...changes.values()].sort((a,b)=>a.from-b.from)});
+ dispatchFormattingChanges(view,[...changes.values()].sort((a,b)=>a.from-b.from));
  view.focus();return true;
 }
 
@@ -279,6 +300,6 @@ export function multiCursorLineFormat(kind){
   const next=indent+prefix+bare;
   if(next!==value)edits.push({from:line.from,to:line.to,insert:next});
  }
- if(edits.length)view.dispatch({changes:edits});
+ dispatchFormattingChanges(view,edits);
  view.focus();return true;
 }
