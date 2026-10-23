@@ -1,8 +1,8 @@
 export const MULTI_CURSOR_TEXT={
- en:{on:'Multi-cursor: ON',off:'Multi-cursor',help:'Alt+Click: another cursor · Ctrl+D: next occurrence · Ctrl+Alt+↑/↓: cursor above/below · Alt+Shift+Drag: column selection',cursors:'Cursors'},
- cs:{on:'Více kurzorů: ZAP',off:'Více kurzorů',help:'Alt+klik: další kurzor · Ctrl+D: další výskyt · Ctrl+Alt+↑/↓: kurzor nahoru/dolů · Alt+Shift+tažení: sloupcový výběr',cursors:'Kurzory'},
- uk:{on:'Мультикурсор: УВІМК',off:'Мультикурсор',help:'Alt+клік: додати курсор · Ctrl+D: наступний збіг · Ctrl+Alt+↑/↓: курсор вище/нижче · Alt+Shift+перетягування: прямокутне виділення',cursors:'Курсори'},
- ro:{on:'Multi-cursor: ON',off:'Multi-cursor',help:'Alt+clic: cursor nou · Ctrl+D: următoarea apariție · Ctrl+Alt+↑/↓: cursor sus/jos · Alt+Shift+tragere: selecție dreptunghiulară',cursors:'Cursoare'},
- ru:{on:'Мультикурсор: ВКЛ',off:'Мультикурсор',help:'Alt+клик: ещё один курсор · Ctrl+D: следующее совпадение · Ctrl+Alt+↑/↓: курсор выше/ниже · Alt+Shift+перетаскивание: выделение столбцом',cursors:'Курсоров'}
+ en:{on:'Multi-cursor: ON',off:'Multi-cursor',help:'Alt+Click: another cursor · Ctrl+D: next occurrence · Ctrl+Alt+↑/↓: cursor above/below · Alt+Shift+Drag: column selection · Ctrl+Shift+L: all occurrences · Shift+Alt+I: cursors on selected lines · Esc: single cursor',cursors:'Cursors'},
+ cs:{on:'Více kurzorů: ZAP',off:'Více kurzorů',help:'Alt+klik: další kurzor · Ctrl+D: další výskyt · Ctrl+Alt+↑/↓: kurzor nahoru/dolů · Alt+Shift+tažení: sloupcový výběr · Ctrl+Shift+L: všechny výskyty · Shift+Alt+I: kurzor na každý vybraný řádek · Esc: jeden kurzor',cursors:'Kurzory'},
+ uk:{on:'Мультикурсор: УВІМК',off:'Мультикурсор',help:'Alt+клік: додати курсор · Ctrl+D: наступний збіг · Ctrl+Alt+↑/↓: курсор вище/нижче · Alt+Shift+перетягування: прямокутне виділення · Ctrl+Shift+L: усі збіги · Shift+Alt+I: курсор на кожному вибраному рядку · Esc: один курсор',cursors:'Курсори'},
+ ro:{on:'Multi-cursor: ON',off:'Multi-cursor',help:'Alt+clic: cursor nou · Ctrl+D: următoarea apariție · Ctrl+Alt+↑/↓: cursor sus/jos · Alt+Shift+tragere: selecție dreptunghiulară · Ctrl+Shift+L: toate aparițiile · Shift+Alt+I: cursor pe fiecare linie selectată · Esc: un singur cursor',cursors:'Cursoare'},
+ ru:{on:'Мультикурсор: ВКЛ',off:'Мультикурсор',help:'Alt+клик: ещё один курсор · Ctrl+D: следующее совпадение · Ctrl+Alt+↑/↓: курсор выше/ниже · Alt+Shift+перетаскивание: выделение столбцом · Ctrl+Shift+L: все совпадения · Shift+Alt+I: курсор на каждой выделенной строке · Esc: один курсор',cursors:'Курсоров'}
 };
 export const getMultiCursorLabels=lang=>MULTI_CURSOR_TEXT[lang]||MULTI_CURSOR_TEXT.en;
