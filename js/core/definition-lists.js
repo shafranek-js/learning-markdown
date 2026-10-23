@@ -7,8 +7,20 @@ const continuation=/^(?: {2,}|\t)(?!:[ \t])(.+)$/;
 const badTerm=/^(?:\s|#{1,6}(?:\s|$)|>|[-+*]\s|\d+[.)]\s|\x60{3}|~{3}|\||<|\[[^\]]+\]:)/;
 const isTerm=s=>s.length>0&&s.length<=300&&!badTerm.test(s);
 function findStart(source){
- const match=/(?:^|\n)([^\n]{1,300})\n {0,3}:[ \t]+\S/.exec(source);
- return match?match.index+(source[match.index]==='\n'?1:0):undefined;
+ // A definition can have several consecutive terms. The start hint must
+ // point to the FIRST term, not the one immediately before ': Definition',
+ // or Marked will consume early terms as an ordinary paragraph.
+ const marker=/(?:^|\n) {0,3}:[ \t]+\S/.exec(source);
+ if(!marker)return;
+ let start=marker.index+(source[marker.index]==='\n'?1:0);
+ for(let i=0;i<MAX_TERMS;i++){
+  if(start===0)break;
+  const previous=source.lastIndexOf('\n',start-2)+1;
+  const term=source.slice(previous,start-1);
+  if(!isTerm(term))break;
+  start=previous;
+ }
+ return start;
 }
 export function definitionListExtension(){
  return {extensions:[{
