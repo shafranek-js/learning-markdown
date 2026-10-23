@@ -4,6 +4,7 @@ import {lessonTranslations,LANGUAGES} from '../js/i18n/index.js';
 import {lesson,LESSON_CORE} from '../js/data/lessons.js';
 import {verifyLesson} from '../js/core/validator.js';
 import {cheats,titles} from '../js/data/cheatsheet.js';
+import {ADVANCED_EXAMPLES,advancedLabels} from '../js/ui/advanced.js';
 import {PRACTICE_DRILLS,PRACTICE_UI,evaluatePractice,practiceForLesson} from '../js/data/deep-practice.js';
 
 // CommonMark/GFM switch must change the actual rendered HTML, not just a label.
@@ -70,6 +71,9 @@ const table=lesson(6,'en',lessonTranslations);
 assert(verifyLesson(table,table.hint,'gfm').every(t=>t.passed));
 assert(!verifyLesson(table,table.hint,'original').some(t=>t.passed));
 assert.equal(PRACTICE_DRILLS.length,16);
+assert.equal(ADVANCED_EXAMPLES.length,5);
+for(const lang of LANGUAGES)assert.equal(advancedLabels(lang).actions.length,5);
+for(const tag of ['u','sup','sub','mark','details','summary'])assert((await readFile(new URL('../js/core/sanitize.js',import.meta.url),'utf8')).includes(tag));
 for(const lang of LANGUAGES)assert(PRACTICE_UI[lang]?.title,'Practice UI not localized for '+lang);
 for(let i=1;i<=8;i++)assert.equal(practiceForLesson(i).length,2);
 for(const drill of PRACTICE_DRILLS){

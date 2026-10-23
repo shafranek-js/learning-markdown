@@ -65,3 +65,7 @@
             animation: taskPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
     
+/* The optional HTML toolbar lives on its own row, never mixed with Markdown commands. */
+.advanced-tools-strip { display:flex; }
+.advanced-tools-strip.hidden { display:none; }
+.advanced-tool-btn:focus-visible, #advanced-tools-toggle:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }

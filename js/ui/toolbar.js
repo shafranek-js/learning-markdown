@@ -19,6 +19,12 @@ export function toolbarAction(action){switch(action){
  case 'link':wrap('[','](https://example.com)','Link text');break;case 'image':insertSnippet('![Image](https://placehold.co/600x160/png)\n');break;
  case 'table':insertSnippet('| Column 1 | Column 2 |\n| --- | --- |\n| Value A | Value B |\n');break;
  case 'hr':insertSnippet('\n---\n\n');break;
+ // Advanced HTML actions are explicit opt-ins; they do not change the Markdown dialect.
+ case 'adv-underline':wrap('<u>','</u>','underlined text');break;
+ case 'adv-sup':wrap('<sup>','</sup>','2');break;
+ case 'adv-sub':wrap('<sub>','</sub>','2');break;
+ case 'adv-highlight':wrap('<mark>','</mark>','highlighted text');break;
+ case 'adv-spoiler':insertSnippet('\n<details>\n<summary>More information</summary>\n\nHidden content\n</details>\n');break;
  }}
 export function initToolbar(){document.querySelectorAll('.toolbar-btn').forEach(button=>button.addEventListener('click',()=>toolbarAction(button.dataset.action)));
  document.getElementById('undo-btn').addEventListener('click',()=>undoOrRedo(-1));document.getElementById('redo-btn').addEventListener('click',()=>undoOrRedo(1));

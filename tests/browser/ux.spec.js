@@ -97,3 +97,43 @@ test('unsafe raw HTML is removed from rendered preview',async({page})=>{
  await expect(page.locator('#markdown-preview img')).not.toHaveAttribute('onerror',/./);
  expect(await page.evaluate(()=>window.__markdownXss)).toBeUndefined();
 });
+
+
+test('advanced HTML toolbar is separate, persists and supports undoable underlining',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ await expect(page.locator('#advanced-toolbar')).toBeHidden();
+ await page.locator('#advanced-tools-toggle').click();
+ await expect(page.locator('#advanced-toolbar')).toBeVisible();
+ await editor.fill('Demo');
+ await editor.selectText();
+ await page.locator('[data-action="adv-underline"]').click();
+ await expect(editor).toHaveValue('<u>Demo</u>');
+ await expect(page.locator('#markdown-preview u')).toHaveText('Demo');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue('Demo');
+ await page.reload();
+ await expect(page.locator('#advanced-toolbar')).toBeVisible();
+});
+test('advanced semantic HTML survives preview sanitization without unsafe attributes',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('<u>Underline</u> H<sub>2</sub>O and x<sup>2</sup> <mark>Highlight</mark>\n\n<details><summary>Expand</summary>\n\nHidden content\n</details>');
+ await expect(page.locator('#markdown-preview u')).toHaveText('Underline');
+ await expect(page.locator('#markdown-preview sub')).toHaveText('2');
+ await expect(page.locator('#markdown-preview sup')).toHaveText('2');
+ await expect(page.locator('#markdown-preview mark')).toHaveText('Highlight');
+ await expect(page.locator('#markdown-preview details summary')).toHaveText('Expand');
+ await page.locator('#markdown-input').fill('<u onclick="alert(1)">Test</u>');
+ await expect(page.locator('#markdown-preview u')).not.toHaveAttribute('onclick',/./);
+});
+test('advanced HTML Lab is separate from course progress and localized',async({page})=>{
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#advanced-lab summary').click();
+ await expect(page.locator('#advanced-lab-examples button')).toHaveCount(5);
+ await expect(page.locator('#advanced-lab-examples button').first()).toContainText('Вставить');
+ const before=await page.locator('#progress-label').innerText();
+ await page.locator('#advanced-lab-examples button').first().click();
+ await expect(page.locator('#markdown-preview u')).toHaveCount(1);
+ await expect(page.locator('#progress-label')).toHaveText(before);
+});

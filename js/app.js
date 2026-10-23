@@ -7,6 +7,7 @@ import {verifyLesson} from './core/validator.js';
 import {initEditor,area,setEditorContent,refreshEditor,applyEdit} from './ui/editor.js';
 import {initToolbar,insertSnippet} from './ui/toolbar.js';
 import {renderPractice} from './ui/deep-practice.js';
+import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
 import {updatePreview,currentHtml} from './ui/preview.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
@@ -58,7 +59,7 @@ function renderLocalization(){const strings=ui(state.lang);document.documentElem
  ro:['Deschide cuprinsul','Arată sau ascunde ghidul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
  ru:['Открыть содержание курса','Показать или скрыть гид урока','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
  ['contents-toggle-btn','theory-pane-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
- renderCheats();renderDialectUI();
+ renderCheats();renderDialectUI();renderAdvancedUI();
 }
 function selectLesson(index,{route=true,scroll=true}={}){
  if(index<-1||index>=LESSON_CORE.length)return;state.currentLessonIndex=index;save();if(route)syncRoute(state,{push:true});
@@ -109,7 +110,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initResizers();initModals();
+ initEditor(evaluate);initToolbar();initResizers();initModals();initAdvancedUI();
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');

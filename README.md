@@ -142,3 +142,9 @@ The independent `Markdown browser UX QA` workflow runs Playwright Chromium tests
 ### Conformance classification
 
 Official example audits now classify mismatches as exact HTML, DOM-equivalent markup, attribute differences, whitespace, textual differences, structural differences, and parser errors. DOM-equivalent comparisons use the HTML5 parser `parse5` and account for entity and attribute ordering normalization. **Other categories are diagnostic and may include false positives.** Summary and examples appear in the GitHub Actions log; exhaustive details are saved in the report artifact. The eight-lesson production smoke/browser tests remain the publication gate.
+
+## Advanced Formatting — Phase 1 (optional HTML)
+
+The compact **HTML / Advanced** toggle opens a physically separate toolbar for safe raw HTML authoring: underline, subscript, superscript, highlighted text and native expandable details. The Lesson Guide also includes a separate, optional **Beyond Markdown · HTML Lab** with examples. Both controls are localized in EN/CS/UK/RO/RU and their expanded/collapsed states persist independently.
+
+Raw HTML is **not an interoperable Markdown formatting standard**: GFM/CommonMark allow HTML syntax in certain contexts, but hosting platforms may filter it. The app sanitizer permits only safe semantic tags for this phase; scripts, event attributes and arbitrary inline styles remain forbidden. Tools write editable HTML into the Markdown source and are undoable; existing eight-lesson completion and certificate remain unchanged. The remaining Word-like functionality and full advanced lessons are tracked in [Epic #1](https://github.com/shafranek-js/learning-markdown/issues/1).

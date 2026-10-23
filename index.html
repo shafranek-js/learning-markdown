@@ -162,6 +162,7 @@
                 <button type="button" data-action="table" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Table">⊞</button>
                 <button type="button" data-action="hr" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono hover:bg-white/10 transition" title="Horizontal Rule (---)">―</button>
             </div>
+            <button id="advanced-tools-toggle" type="button" aria-controls="advanced-toolbar" aria-expanded="false" class="px-2 py-1 shrink-0 rounded-md text-[11px] font-semibold border border-amber-500/35 text-amber-400 hover:bg-amber-500/10" title="Toggle advanced non-standard HTML tools">HTML / Advanced ▾</button>
         </div>
 
         <!-- Right: Markdown profile, splitter reset & view modes -->
@@ -180,6 +181,18 @@
                 <button id="layout-preview-btn" type="button" class="px-2.5 py-0.5 rounded-md text-xs font-semibold theme-muted hover:text-white transition" data-i18n="previewView">Preview</button>
                 <button id="layout-html-btn" type="button" class="px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold theme-muted hover:text-white transition">HTML</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Advanced tools are intentionally segregated from portable Markdown. -->
+    <div id="advanced-toolbar" class="advanced-tools-strip hidden theme-panel border-b theme-border px-3 py-1.5 gap-2 items-center overflow-x-auto" role="group" aria-label="Advanced HTML formatting (non-portable)">
+        <span id="advanced-toolbar-warning" class="shrink-0 text-[11px] text-amber-400 font-semibold">HTML · not portable to all Markdown platforms</span>
+        <div class="flex items-center gap-1 shrink-0 border-l theme-border pl-2">
+            <button type="button" data-action="adv-underline" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs underline" title="Underline using HTML">U</button>
+            <button type="button" data-action="adv-sup" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs" title="Superscript using HTML">x²</button>
+            <button type="button" data-action="adv-sub" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs" title="Subscript using HTML">H₂O</button>
+            <button type="button" data-action="adv-highlight" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs" title="Highlight using HTML">Mark</button>
+            <button type="button" data-action="adv-spoiler" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs" title="Expandable spoiler using HTML">▸ Details</button>
         </div>
     </div>
 
@@ -275,6 +288,14 @@
                     <p id="deep-practice-subtitle" class="text-[11px] theme-muted mt-2"></p>
                     <div id="deep-practice-items" class="space-y-2 mt-2"></div>
                     <p id="deep-practice-optional" class="text-[10px] theme-muted mt-2"></p>
+                </details>
+
+                <details id="advanced-lab" class="theme-panel-alt border theme-border rounded-xl p-3 mt-3" aria-label="Advanced HTML practice">
+                    <summary class="cursor-pointer text-xs font-bold">
+                        <span id="advanced-lab-title">Beyond Markdown · HTML Lab</span>
+                    </summary>
+                    <p id="advanced-lab-description" class="text-[11px] theme-muted mt-2">Additional HTML formatting is not portable across Markdown platforms.</p>
+                    <div id="advanced-lab-examples" class="space-y-1.5 mt-2"></div>
                 </details>
             </div>
 

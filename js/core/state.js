@@ -1,6 +1,6 @@
 export const STORAGE_KEY='md_course_state_v1';
 const LEGACY_KEY='learning_markdown_studio_v3';
-export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,dialect:'gfm',deepPracticeExpanded:false,layoutMode:'split',mobileTab:'editor',name:''};
+export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,dialect:'gfm',deepPracticeExpanded:false,advancedToolsOpen:false,advancedLabExpanded:false,layoutMode:'split',mobileTab:'editor',name:''};
 const LANGS=new Set(['en','cs','uk','ro','ru']);
 export const DIALECTS=new Set(['gfm','commonmark','original']);
 const THEMES=new Set(['codepen','midnight','daylight','dracula','nord','solarized']);
@@ -17,7 +17,9 @@ function fromStorage(){
    editorRatio:Math.max(.18,Math.min(.82,Number(saved.editorRatio)||.5)),
    guideWidth:Math.max(240,Math.min(620,Number(saved.guideWidth)||350)),
    fontSize:Math.max(12,Math.min(22,Number(saved.fontSize)||15)),
-   deepPracticeExpanded:Boolean(saved.deepPracticeExpanded)
+   deepPracticeExpanded:Boolean(saved.deepPracticeExpanded),
+   advancedToolsOpen:Boolean(saved.advancedToolsOpen),
+   advancedLabExpanded:Boolean(saved.advancedLabExpanded)
   };
  } catch(error){console.warn('Unable to restore saved progress:',error);return {...defaults};}
 }
