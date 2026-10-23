@@ -256,3 +256,10 @@ While **Multi-cursor** is active, Advanced HTML inline presets (color, backgroun
 ### Line-end cursors and indentation
 
 In Multi-cursor mode, select any set of lines and press **Shift+Alt+I** to create a caret at the end of each selected line (for the whole document, use **Ctrl+A** first). A selection ending at the beginning of the following line excludes that following line. Press **Tab** to add two spaces to each selected line, or **Shift+Tab** to remove up to two spaces (or one leading tab). With one empty selection, Tab inserts two spaces at the caret. Changes to multiple lines are grouped into a single history transaction and preserve the multi-cursor selection.
+
+
+### Multi-cursor editing regression coverage
+
+The CodeMirror editor preserves all cursors when returning from textarea mode **as long as the document content is unchanged**. Editing the document in the textarea resets stale CodeMirror selections and history when re-enabled, rather than allowing Undo to resurrect old content. Line indentation, headings and list formatting preserve cursor positions after their inserted prefixes. Manual formatting commands are isolated as separate Undo/Redo steps, and Undo/Redo buttons restore focus to the editing surface.
+
+The `.github/workflows/browser-tests.yml` workflow runs the Playwright Chromium suite on each `main` push and pull request (and manually via **workflow_dispatch**), independent of Pages deployment. It checks 100-cursor line and inline formatting, multi-cursor Undo/Redo, real tab outdenting, and editor mode switching. Failed runs upload the Playwright report as an artifact.
