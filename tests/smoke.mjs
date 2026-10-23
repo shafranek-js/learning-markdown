@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {runInNewContext} from 'node:vm';
 import {lessonTranslations,LANGUAGES} from '../js/i18n/index.js';
 import {lesson,LESSON_CORE} from '../js/data/lessons.js';
 import {verifyLesson} from '../js/core/validator.js';
@@ -9,9 +8,7 @@ import {PRACTICE_DRILLS,PRACTICE_UI,evaluatePractice,practiceForLesson} from '..
 
 // CommonMark/GFM switch must change the actual rendered HTML, not just a label.
 globalThis.localStorage={getItem:()=>null,setItem:()=>{}};
-const vendorContext={};
-runInNewContext(await readFile(new URL('../vendor/marked.js',import.meta.url),'utf8'),vendorContext);
-globalThis.window={marked:vendorContext.marked,DOMPurify:{sanitize:html=>html}};
+globalThis.window={DOMPurify:{sanitize:html=>html}};
 const {markdownToHTML,DIALECT_OPTIONS}=await import('../js/ui/preview.js');
 assert.deepEqual(Object.keys(DIALECT_OPTIONS),['gfm','commonmark','original']);
 const parse=(text,dialect)=>markdownToHTML(text,dialect);

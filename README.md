@@ -4,23 +4,27 @@ An educational, full-screen Markdown studio with eight guided lessons, a free pr
 
 ## Getting started
 
-No build step is required for the original static ES-module application:
-
-```sh
-python3 -m http.server 8000
-```
-
-Open **http://localhost:8000/**. The ES-module imports require a local HTTP server; do not double-click `index.html` if your browser blocks local-file module imports.
-
-Optionally use Vite for development and bundling:
+The browser app uses the **pinned modern marked 18.1.1 parser**, bundled locally by Vite.
+Install dependencies and launch the development server:
 
 ```sh
 npm install
 npm run dev
-npm run build
 ```
 
-The `dist/` folder is the deployable Vite output, including a generated offline asset cache.
+Then open the Vite address shown in the terminal (usually http://localhost:5173/).
+
+Run production tests and build:
+
+```sh
+npm test
+npm run build
+npm run preview
+```
+
+The `dist/` directory contains the entire deployable offline-first application and can be served by any static hosting provider. A bare `python -m http.server` from the **source directory** no longer resolves the npm dependency; build first and serve `dist/` for standalone hosting.
+
+The legacy `vendor/marked.js` source remains in the repository **only as a pinned historical comparison baseline** for the upstream conformance audit. Production preview, examples and smoke tests all use marked 18.1.1.
 
 ## Deploy to GitHub Pages
 

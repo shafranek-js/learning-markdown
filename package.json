@@ -9,7 +9,6 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build --base ./",
     "preview": "vite preview --host 0.0.0.0",
-    "serve": "python3 -m http.server 8000",
     "postbuild": "node scripts/postbuild.mjs",
     "test:e2e": "playwright test"
   },
@@ -18,5 +17,8 @@
     "@playwright/test": "1.64.1",
     "parse5": "^7.3.0"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "marked": "18.1.1"
+  }
 }

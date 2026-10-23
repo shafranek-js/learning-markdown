@@ -1,11 +1,8 @@
 // Curated syntax regression examples derived from CommonMark 0.31.2 and GFM.
 // They are NOT a complete normative conformance certification.
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
-import {runInNewContext} from 'node:vm';
-const context={};
-runInNewContext(await readFile(new URL('../vendor/marked.js',import.meta.url),'utf8'),context);
-const parse=(markdown,dialect)=>context.marked.parse(markdown,{gfm:dialect==='gfm',pedantic:false,breaks:false,headerIds:false,mangle:false});
+import {marked} from 'marked';
+const parse=(markdown,dialect)=>marked.parse(markdown,{gfm:dialect==='gfm',pedantic:false,breaks:false});
 const cases=[
   [
     "ATX H1",
