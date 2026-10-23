@@ -5,6 +5,7 @@ import {lessonTranslations,LANGUAGES} from '../js/i18n/index.js';
 import {lesson,LESSON_CORE} from '../js/data/lessons.js';
 import {verifyLesson} from '../js/core/validator.js';
 import {cheats,titles} from '../js/data/cheatsheet.js';
+import {PRACTICE_DRILLS,PRACTICE_UI,evaluatePractice,practiceForLesson} from '../js/data/deep-practice.js';
 
 // CommonMark/GFM switch must change the actual rendered HTML, not just a label.
 globalThis.localStorage={getItem:()=>null,setItem:()=>{}};
@@ -71,7 +72,21 @@ assert(!verifyLesson(strike,strike.hint,'commonmark')[2].passed);
 const table=lesson(6,'en',lessonTranslations);
 assert(verifyLesson(table,table.hint,'gfm').every(t=>t.passed));
 assert(!verifyLesson(table,table.hint,'original').some(t=>t.passed));
+assert.equal(PRACTICE_DRILLS.length,16);
+for(const lang of LANGUAGES)assert(PRACTICE_UI[lang]?.title,'Practice UI not localized for '+lang);
+for(let i=1;i<=8;i++)assert.equal(practiceForLesson(i).length,2);
+for(const drill of PRACTICE_DRILLS){
+ assert(drill.code&&LANGUAGES.every(l=>drill.labels[l]));
+ for(const dialect of ['gfm','commonmark']){
+  const results=evaluatePractice(drill.lesson,drill.code,parse(drill.code,dialect));
+  assert(results.find(x=>x.id===drill.id)?.passed,drill.id+' sample failed in '+dialect);
+ }
+}
+for(let lessonId=1;lessonId<=8;lessonId++){
+ assert(!evaluatePractice(lessonId,'\`\`\`md\\n# Sample\\n\`\`\`','<pre><code># Sample</code></pre>').some(d=>d.passed),'Do not credit unrelated fenced code');
+}
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+assert(html.includes('id="deep-practice"'));
 for(let h=1;h<=6;h++)assert(html.includes('data-action="h'+h+'"'));
 assert(html.includes('id="dialect-selector"'));
 assert(html.includes('id="active-dialect-status"'));

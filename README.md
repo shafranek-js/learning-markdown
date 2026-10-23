@@ -107,3 +107,15 @@ Further reference:
 
 The included `npm test` script checks dialect differences, all six heading levels,
 localized lesson solutions and cheat-sheet coverage. GitHub Actions runs it before building.
+
+## Deep Practice (Basic Syntax coverage)
+
+Each of the eight lessons includes two **optional** additional exercises in the collapsible Lesson Guide:
+Setext H1/H2; combined bold+italic and hard breaks; nested lists and escaped list numbers;
+multi-paragraph blockquotes and quoted headings; reference links and email autolinks;
+indented code blocks and double-backtick inline code; alternative horizontal rules and escaped punctuation;
+images with alt/title and safe inline HTML.
+
+These drills are verified against actual rendered Markdown HTML. They work in the **same editor**, have
+an insertable example, and do not change the original eight-lesson certificate or previously saved progress.
+The expanded/collapsed state is persisted locally.

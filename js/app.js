@@ -6,6 +6,7 @@ import {LESSON_CORE,LINKEDIN_PROMPT_SAMPLE,lesson} from './data/lessons.js';
 import {verifyLesson} from './core/validator.js';
 import {initEditor,area,setEditorContent,refreshEditor,applyEdit} from './ui/editor.js';
 import {initToolbar,insertSnippet} from './ui/toolbar.js';
+import {renderPractice} from './ui/deep-practice.js';
 import {updatePreview,currentHtml} from './ui/preview.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
@@ -75,6 +76,7 @@ function selectLesson(index,{route=true,scroll=true}={}){
  if(scroll){$('theory-panel').querySelector('.overflow-y-auto')?.scrollTo(0,0);}
 }
 function evaluate(text){updatePreview(text);
+ if(state.currentLessonIndex>=0)renderPractice(state.currentLessonIndex+1,text,currentHtml());
  if(state.currentLessonIndex===-1){$('lesson-complete-banner').classList.add('hidden');return;}
  const l=getLesson(state.currentLessonIndex),checks=verifyLesson(l,text,state.dialect);currentChecks=checks;
  const warning=$('dialect-warning');warning.classList.toggle('hidden',state.dialect==='gfm'||![2,7,8].includes(l.id));warning.textContent=(DIALECT_UI[state.lang]||DIALECT_UI.en).warning;
@@ -98,7 +100,10 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initResizers();initModals();renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
+ initEditor(evaluate);initToolbar();initResizers();initModals();
+ $('deep-practice').open=Boolean(state.deepPracticeExpanded);
+ $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
+ renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
  selectLesson(state.currentLessonIndex,{route:false});syncRoute(state);onRouteChange(setFromRoute);
  $('theme-selector').addEventListener('change',e=>setTheme(e.target.value));$('dialect-selector').addEventListener('change',e=>setDialect(e.target.value));$('lang-selector').addEventListener('change',e=>setLanguage(e.target.value));
  $('theory-pane-toggle-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1){selectLesson(0);return;}state.guideVisible=!state.guideVisible;showGuide(state.guideVisible);save();});
