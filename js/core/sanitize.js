@@ -56,7 +56,7 @@ export function sanitizeHTML(html){
   }
   if(['span','div','h1','h2','h3','h4','h5','h6','a','li'].includes(tag)){
    const id=node.getAttribute('id')||'';
-   if(SAFE_ID.test(id)&&!usedIds.has(id)){el.id=id;usedIds.add(id);}
+   if(SAFE_ID.test(id)&&id===id.toLocaleLowerCase('en')&&!usedIds.has(id)){el.id=id;usedIds.add(id);}
   }
   if(tag==='section'&&node.getAttribute('class')==='md-footnotes')el.className='md-footnotes';
   if(tag==='h2'&&node.getAttribute('class')==='fn-visually-hidden')el.className='fn-visually-hidden';
