@@ -27,6 +27,10 @@ export function sanitizeHTML(html){
    if(node.hasAttribute('checked'))el.setAttribute('checked','');
   }
   if(['td','th'].includes(tag)){
+   // GFM emits align="left|center|right". Preserve only those exact
+   // semantics; arbitrary inline styles and malformed values stay forbidden.
+   const align=node.getAttribute('align');
+   if(['left','center','right'].includes(align))el.setAttribute('align',align);
    for(const name of ['colspan','rowspan']){
     const raw=node.getAttribute(name)||'';
     if(/^[1-9][0-9]?$/.test(raw)&&Number(raw)<=20)el.setAttribute(name,raw);
