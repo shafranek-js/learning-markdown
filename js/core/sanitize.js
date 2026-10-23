@@ -32,7 +32,16 @@ export function sanitizeHTML(html){
     if(/^[1-9][0-9]?$/.test(raw)&&Number(raw)<=20)el.setAttribute(name,raw);
    }
   }
-  if(tag==='ol'&&['1','a','A','i','I'].includes(node.getAttribute('type')))el.setAttribute('type',node.getAttribute('type'));
+  if(tag==='ol'){
+   const type=node.getAttribute('type');
+   const styles={'1':'af-list-decimal','a':'af-list-lower-alpha','A':'af-list-upper-alpha',
+    'i':'af-list-lower-roman','I':'af-list-upper-roman'};
+   if(Object.prototype.hasOwnProperty.call(styles,type)){
+    el.setAttribute('type',type);
+    // Explicitly generated classes avoid CSS selector case-folding differences.
+    el.classList.add(styles[type]);
+   }
+  }
   if(['span','div','h1','h2','h3','h4','h5','h6'].includes(tag)){
    const id=node.getAttribute('id')||'';
    if(/^[a-z][a-z0-9_-]{0,63}$/.test(id)&&!usedIds.has(id)){el.id=id;usedIds.add(id);}

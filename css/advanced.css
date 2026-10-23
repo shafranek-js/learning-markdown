@@ -61,3 +61,11 @@
  .md-preview details{break-inside:avoid}
  .md-preview .af-callout-info,.md-preview .af-callout-warning,.md-preview .af-callout-success{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
+
+/* Browser-independent ordered-list numbering: the sanitizer generates these classes
+   from the allowlisted, case-sensitive <ol type> attribute. */
+.md-preview ol.af-list-decimal{list-style-type:decimal}
+.md-preview ol.af-list-lower-alpha{list-style-type:lower-alpha}
+.md-preview ol.af-list-upper-alpha{list-style-type:upper-alpha}
+.md-preview ol.af-list-lower-roman{list-style-type:lower-roman}
+.md-preview ol.af-list-upper-roman{list-style-type:upper-roman}

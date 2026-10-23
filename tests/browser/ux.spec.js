@@ -863,16 +863,16 @@ test('multi-cursor mode adds vertical cursors, edits lines together and uses nat
  await page.keyboard.press('Control+Home');
  await page.keyboard.press('Control+Alt+ArrowDown');
  await expect(page.locator('#multi-cursor-count')).toContainText('2');
- await page.keyboard.insertText('>');
- await expect(textarea).toHaveValue('>alpha\n>beta\ngamma');
- await expect(page.locator('#markdown-preview')).toContainText('>alpha');
+ await page.keyboard.insertText('!');
+ await expect(textarea).toHaveValue('!alpha\n!beta\ngamma');
+ await expect(page.locator('#markdown-preview')).toContainText('!alpha');
  await page.locator('#undo-btn').click();
  await expect(textarea).toHaveValue('alpha\nbeta\ngamma');
  await page.locator('#redo-btn').click();
- await expect(textarea).toHaveValue('>alpha\n>beta\ngamma');
+ await expect(textarea).toHaveValue('!alpha\n!beta\ngamma');
  await page.locator('#multi-cursor-toggle').click();
  await expect(textarea).toBeVisible();
- await expect(textarea).toHaveValue('>alpha\n>beta\ngamma');
+ await expect(textarea).toHaveValue('!alpha\n!beta\ngamma');
 });
 
 test('multi-cursor mode supports repeated occurrence selection via Ctrl+D',async({page})=>{
