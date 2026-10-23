@@ -18,7 +18,9 @@ export function markdownToHTML(text,dialect=state.dialect){
 function enableTaskInputs(preview,source){
  if(state.dialect!=='gfm')return;
  const markers=scanTaskMarkers(source);
- const inputs=[...preview.querySelectorAll('li input[type="checkbox"]')];
+ const inputs=[...preview.querySelectorAll('input[type="checkbox"]')];
+ // A manually supplied HTML checkbox must not shift indices for Markdown tasks.
+ if(inputs.some(input=>!input.closest('li')))return;
  // Never edit on an ambiguous mapping (including source HTML inputs).
  if(!markers.length||markers.length!==inputs.length||!markers.every((marker,i)=>marker.checked===inputs[i].checked))return;
  inputs.forEach((input,i)=>{
