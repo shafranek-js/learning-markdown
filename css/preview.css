@@ -212,3 +212,26 @@
  .md-preview pre code .hljs-emphasis{color:#166534!important}
  .md-preview pre code .hljs-strong{color:#9d174d!important}
 }
+
+
+/* #11: semantic, offline footnotes with accessible references and backlinks */
+.md-preview .md-footnotes{
+ border-top:1px solid var(--preview-border);
+ margin-top:2.5rem;padding-top:.85rem;font-size:.88em;
+}
+.md-preview .md-footnotes ol{padding-left:1.8em}
+.md-preview .md-footnotes li{margin:.4rem 0}
+.md-preview .fn-ref,.md-preview .fn-backref{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.md-preview .fn-backref{margin-left:.25em}
+.md-preview .fn-ref:focus-visible,.md-preview .fn-backref:focus-visible{
+ outline:2px solid var(--accent);outline-offset:2px
+}
+.md-preview .fn-visually-hidden{
+ position:absolute!important;width:1px!important;height:1px!important;
+ padding:0!important;margin:-1px!important;overflow:hidden!important;
+ clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important
+}
+@media print{
+ .md-preview .md-footnotes{break-inside:avoid-page}
+ .md-preview .fn-ref,.md-preview .fn-backref{color:#1d4ed8!important}
+}

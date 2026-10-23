@@ -1,5 +1,7 @@
 import {sanitizeHTML} from '../core/sanitize.js';
 import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
+import {renderFootnotedMarkdown} from '../core/footnotes.js';
+import {extensionEnabled} from '../core/extensions.js';
 import {marked} from 'marked';
 import {state,docKey} from '../core/state.js';
 import {parserExtensionOptions} from '../core/extensions.js';
@@ -15,7 +17,8 @@ export const DIALECT_OPTIONS={
 export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  const base=DIALECT_OPTIONS[dialect]||DIALECT_OPTIONS.gfm;
  const options=extensions?{...base,...parserExtensionOptions(state.extensionSettingsByDocument,docKey(),dialect)}:base;
- const raw=marked.parse(text,options);
+ const raw=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'footnotes')
+  ?renderFootnotedMarkdown(text,options):marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
  return highlightCodeBlocks(sanitizeHTML(raw));
 }

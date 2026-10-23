@@ -1,6 +1,6 @@
 import {filterAdvancedClasses} from './advanced-presets.js';
 // Strict browser-DOM sanitizer for Markdown preview and exported HTML.
-const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
+const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 section strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
 const DROP=new Set('script style iframe object embed svg math form button textarea select link meta base template noscript audio video canvas'.split(' '));
 const VOID=new Set(['br','hr','img','input']);
 // Fixed classes emitted by registered highlight.js grammars.
@@ -50,9 +50,16 @@ export function sanitizeHTML(html){
     el.classList.add(styles[type]);
    }
   }
-  if(['span','div','h1','h2','h3','h4','h5','h6'].includes(tag)){
+  if(['span','div','h1','h2','h3','h4','h5','h6','a','li'].includes(tag)){
    const id=node.getAttribute('id')||'';
    if(/^[a-z][a-z0-9_-]{0,63}$/.test(id)&&!usedIds.has(id)){el.id=id;usedIds.add(id);}
+  }
+  if(tag==='section'&&node.getAttribute('class')==='md-footnotes')el.className='md-footnotes';
+  if(tag==='h2'&&node.getAttribute('class')==='fn-visually-hidden')el.className='fn-visually-hidden';
+  if(tag==='a'&&['fn-ref','fn-backref'].includes(node.getAttribute('class'))){
+   el.className=node.getAttribute('class');
+   const label=node.getAttribute('aria-label');
+   if(label&&label.length<=120)el.setAttribute('aria-label',label);
   }
   if(tag==='code'){const cls=node.getAttribute('class')||'';if(/^language-[\w-]{1,30}$/.test(cls))el.className=cls;}
   if(['span','div','table','td','th'].includes(tag)){
