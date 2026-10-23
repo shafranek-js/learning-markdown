@@ -934,3 +934,14 @@ test('multi-cursor editor loads without network after service worker precache',a
   await context.setOffline(false);
  }
 });
+
+
+test('multi-cursor mode switch localizes before the optional engine loads',async({page})=>{
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await expect(page.locator('#multi-cursor-toggle')).toHaveText('Мультикурсор');
+ await page.locator('#multi-cursor-toggle').click();
+ await expect(page.locator('#multi-cursor-toggle')).toHaveText('Мультикурсор: ВКЛ');
+ await page.locator('#multi-cursor-toggle').click();
+ await expect(page.locator('#multi-cursor-toggle')).toHaveText('Мультикурсор');
+});

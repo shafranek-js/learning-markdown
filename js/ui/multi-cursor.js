@@ -5,6 +5,7 @@ import {selectNextOccurrence} from '@codemirror/search';
 import {markdown} from '@codemirror/lang-markdown';
 import {syntaxHighlighting,defaultHighlightStyle} from '@codemirror/language';
 import {state,save,docKey} from '../core/state.js';
+import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 
 // Optional CodeMirror engine. The existing textarea stays as a live shadow
 // document for the course, table tools and exports; this is a reversible
@@ -12,14 +13,8 @@ import {state,save,docKey} from '../core/state.js';
 let view=null,active=false,input=null,updateUI=()=>{},shortcutAction=()=>{},sessionKey='';
 const sessions=new Map();
 const $=id=>document.getElementById(id);
-const I18N={
- en:{on:'Multi-cursor: ON',off:'Multi-cursor',help:'Alt+Click: another cursor · Ctrl+D: next occurrence · Ctrl+Alt+↑/↓: cursor above/below · Alt+Shift+Drag: column selection',cursors:'Cursors'},
- cs:{on:'Více kurzorů: ZAP',off:'Více kurzorů',help:'Alt+klik: další kurzor · Ctrl+D: další výskyt · Ctrl+Alt+↑/↓: kurzor nahoru/dolů · Alt+Shift+tažení: sloupcový výběr',cursors:'Kurzory'},
- uk:{on:'Мультикурсор: УВІМК',off:'Мультикурсор',help:'Alt+клік: додати курсор · Ctrl+D: наступний збіг · Ctrl+Alt+↑/↓: курсор вище/нижче · Alt+Shift+перетягування: прямокутне виділення',cursors:'Курсори'},
- ro:{on:'Multi-cursor: ON',off:'Multi-cursor',help:'Alt+clic: cursor nou · Ctrl+D: următoarea apariție · Ctrl+Alt+↑/↓: cursor sus/jos · Alt+Shift+tragere: selecție dreptunghiulară',cursors:'Cursoare'},
- ru:{on:'Мультикурсор: ВКЛ',off:'Мультикурсор',help:'Alt+клик: ещё один курсор · Ctrl+D: следующее совпадение · Ctrl+Alt+↑/↓: курсор выше/ниже · Alt+Shift+перетаскивание: выделение столбцом',cursors:'Курсоров'}
-};
-const words=()=>I18N[state.lang]||I18N.en;
+const words=()=>getMultiCursorLabels(state.lang);
+
 function mirror(){
  if(!view||!input)return;
  input.value=view.state.doc.toString();

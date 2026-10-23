@@ -1,11 +1,20 @@
 import {state,docKey,save} from '../core/state.js';
 import {record,ensureHistory,step,status} from '../core/history.js';
+import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 export const area=()=>document.getElementById('markdown-input');
 const el=id=>document.getElementById(id);
 let onChange=()=>{};
 let multi=null,multiLoading=null,multiShortcut=()=>{};
 export const multiActive=()=>Boolean(multi?.isMultiCursorMode());
-export const renderMultiCursorUI=()=>multi?.renderMultiCursorLabels();
+export function renderMultiCursorUI(){
+ if(multi){multi.renderMultiCursorLabels();return;}
+ const b=el('multi-cursor-toggle');
+ if(!b)return;
+ const labels=getMultiCursorLabels(state.lang);
+ b.textContent=labels.off;
+ b.title=labels.help;
+ b.setAttribute('aria-label',labels.help);
+}
 export const multiWrap=(a,b,placeholder)=>multiActive()?multi.multiCursorWrap(a,b,placeholder):false;
 export const multiInsert=(s,newline)=>multiActive()?multi.multiCursorInsert(s,newline):false;
 export function registerEditorShortcut(handler){multiShortcut=handler;if(multi)multi.registerMultiCursorShortcut(handler);}
