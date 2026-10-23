@@ -1256,3 +1256,24 @@ test('Shift+Tab removes real leading tab characters on multiple lines',async({pa
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue('\tAlpha\n\tBeta\nGamma');
 });
+
+
+test('100 simultaneous inline Markdown wraps undo as one operation',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const lines=Array.from({length:100},(_,i)=>'Line '+(i+1));
+ await input.fill(lines.join('\n'));
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await page.locator('[data-action="bold"]').click();
+ await expect(input).toHaveValue(lines.map(line=>line+'**bold text**').join('\n'));
+ await expect(page.locator('#markdown-preview strong')).toHaveCount(100);
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(lines.join('\n'));
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue(lines.map(line=>line+'**bold text**').join('\n'));
+});
