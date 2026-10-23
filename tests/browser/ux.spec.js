@@ -1325,3 +1325,58 @@ test('new shortcut help is translated and includes line-end cursors',async({page
  await expect(toggle).toHaveAttribute('title',/совпадения/);
  await expect(page.locator('#multi-cursor-count')).toHaveAttribute('aria-live','polite');
 });
+
+
+test('moving 100 CodeMirror cursors does not rewrite unchanged drafts',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const rows=Array.from({length:100},(_,i)=>'Row '+i);
+ await input.fill(rows.join('\n'));
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await expect(page.locator('#multi-cursor-count')).toContainText('100');
+ await page.evaluate(()=>{
+  const original=Storage.prototype.setItem;
+  window.__draftWrites=0;
+  Storage.prototype.setItem=function(key,value){
+   if(key==='md_course_state_v1')window.__draftWrites++;
+   return original.call(this,key,value);
+  };
+ });
+ await page.keyboard.press('ArrowLeft');
+ await page.keyboard.press('ArrowRight');
+ await page.keyboard.press('Escape');
+ await expect(input).toHaveValue(rows.join('\n'));
+ expect(await page.evaluate(()=>window.__draftWrites)).toBe(0);
+ await page.keyboard.insertText('!');
+ expect(await page.evaluate(()=>window.__draftWrites)).toBeGreaterThan(0);
+});
+
+test('multi-cursor line transformations preserve cursor count through sequential operations',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('One\nTwo\nThree\nFour');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.locator('#codemirror-mount .cm-content').click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+a');
+ await page.keyboard.press('Shift+Alt+i');
+ await expect(page.locator('#multi-cursor-count')).toContainText('4');
+ await page.locator('[data-action="h2"]').click();
+ await expect(input).toHaveValue('## One\n## Two\n## Three\n## Four');
+ await page.locator('[data-action="ul"]').click();
+ await expect(input).toHaveValue('- ## One\n- ## Two\n- ## Three\n- ## Four');
+ await expect(page.locator('#multi-cursor-count')).toContainText('4');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('## One\n## Two\n## Three\n## Four');
+ await expect(page.locator('#multi-cursor-count')).toContainText('4');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('One\nTwo\nThree\nFour');
+ await page.locator('#redo-btn').click();
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue('- ## One\n- ## Two\n- ## Three\n- ## Four');
+ await expect(page.locator('#multi-cursor-count')).toContainText('4');
+});
