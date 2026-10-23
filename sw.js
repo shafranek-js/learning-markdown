@@ -24,10 +24,10 @@ self.addEventListener('fetch',event=>{
     event.waitUntil(caches.open(VERSION).then(cache=>cache.put(req,copy)).catch(()=>{}));
    }
    return response;
-  }).catch(async()=>await caches.match(req)||await caches.match(new URL('./index.html',ROOT).href)||Response.error()));
+  }).catch(async()=>await caches.match(req,{ignoreVary:true})||await caches.match(new URL('./index.html',ROOT).href,{ignoreVary:true})||Response.error()));
   return;
  }
- event.respondWith(caches.match(req).then(cached=>{
+ event.respondWith(caches.match(req,{ignoreVary:true}).then(cached=>{
   const live=fetch(req).then(res=>{if(res.ok){const copy=res.clone();caches.open(VERSION).then(c=>c.put(req,copy));}return res;}).catch(()=>cached||Response.error());
   return cached||live;
  }));
