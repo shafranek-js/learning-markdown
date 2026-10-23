@@ -1470,7 +1470,7 @@ test('issue #8 sanitizer rejects injected alignment and styling',async({page})=>
 
 
 
-test('issue #9 six fenced languages are highlighted offline and safely exported',async({page,context})=>{
+test('issue #9 six fenced languages are highlighted and safely exported',async({page})=>{
  await page.goto('/');
  const source=[
   '~~~javascript','const n = 42;','~~~',
@@ -1517,12 +1517,22 @@ test('issue #9 six fenced languages are highlighted offline and safely exported'
  await page.emulateMedia({media:'print'});
  expect(await page.locator('main pre code .hljs-keyword').first()
   .evaluate(el=>getComputedStyle(el).color)).toBe('rgb(76, 29, 149)');
+});
+
+test('issue #9 highlighted Markdown remains available on offline reload',async({page,context})=>{
  await page.goto('/');
- await input.fill('~~~js\nconst ready = true;\n~~~');
- await page.waitForFunction(()=>Boolean(navigator.serviceWorker?.controller));
+ await page.waitForFunction(async()=>{
+  if(!('serviceWorker' in navigator))return false;
+  await navigator.serviceWorker.ready;
+  return !!navigator.serviceWorker.controller;
+ },null,{timeout:15000});
+ const source='~~~js\nconst ready = true;\n~~~';
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview .hljs-keyword')).toHaveCount(1);
  await context.setOffline(true);
  try{
   await page.reload({waitUntil:'domcontentloaded'});
+  await expect(page.locator('#markdown-input')).toHaveValue(source);
   await expect(page.locator('#markdown-preview .hljs-keyword')).toHaveCount(1);
  }finally{await context.setOffline(false);}
 });
