@@ -1323,4 +1323,5 @@ test('new shortcut help is translated and includes line-end cursors',async({page
  await expect(toggle).toHaveAttribute('title',/Shift\+Alt\+I/);
  await expect(toggle).toHaveAttribute('title',/Esc/);
  await expect(toggle).toHaveAttribute('title',/совпадения/);
+ await expect(page.locator('#multi-cursor-count')).toHaveAttribute('aria-live','polite');
 });
