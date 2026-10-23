@@ -1606,3 +1606,93 @@ test('issue #10 warns about nonstandard MD export without modifying Markdown',as
  expect(html).not.toContain('<script');
  await expect(input).toHaveValue(source);
 });
+
+
+
+test('issue #11 footnotes are optional with repeated references and route-safe backlinks',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='One fact[^study], repeated[^study].\n\n[^study]: **Reliable** source.\n\n    More details.';
+ await input.fill(source);
+ const panel=page.locator('#compatibility-panel');
+ await panel.locator('summary').click();
+ const toggle=page.locator('#extension-footnotes-toggle');
+ await expect(toggle).toHaveValue('off');
+ await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(0);
+ await toggle.selectOption('on');
+ await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
+ await expect(page.locator('#markdown-preview .fn-backref')).toHaveCount(2);
+ await expect(page.locator('#markdown-preview .md-footnotes strong')).toHaveText('Reliable');
+ await expect(page.locator('#markdown-preview .md-footnotes p')).toHaveCount(2);
+ const oldHash=await page.evaluate(()=>location.hash);
+ await page.locator('#markdown-preview .fn-ref').first().click();
+ expect(await page.evaluate(()=>location.hash)).toBe(oldHash);
+ await page.locator('#markdown-preview .fn-backref').nth(1).click();
+ expect(await page.evaluate(()=>location.hash)).toBe(oldHash);
+ await expect(input).toHaveValue(source);
+ await page.reload();
+ await expect(toggle).toHaveValue('on');
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await expect(toggle).toBeDisabled();
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(0);
+ await page.locator('#dialect-selector').selectOption('original');
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(0);
+ await page.locator('#dialect-selector').selectOption('gfm');
+ await expect(toggle).toBeEnabled();
+ await expect(toggle).toHaveValue('on');
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
+});
+
+test('issue #11 footnote exercise and safe standalone HTML / print export',async({page})=>{
+ await page.goto('/');
+ await page.locator('#compatibility-panel summary').click();
+ const toggle=page.locator('#extension-footnotes-toggle');
+ await toggle.selectOption('on');
+ const input=page.locator('#markdown-input');
+ await input.fill('');
+ await page.locator('#extension-footnote-demo').click();
+ await expect(input).toContainText('A documented claim[^source]');
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview .fn-backref')).toHaveCount(1);
+ await page.locator('#lang-selector').selectOption('ru');
+ await expect(page.locator('#extension-footnotes-label')).toContainText('Сноски');
+ await expect(toggle).toHaveValue('off'); // separate language document
+ await toggle.selectOption('on');
+ const source='Threat[^s].\n\n[^s]: <script>alert(1)</script> Plain text.';
+ await input.fill(source);
+ await expect(page.locator('#markdown-preview script')).toHaveCount(0);
+ await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(1);
+ const download=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await download;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await file.path(),'utf8');
+ expect(html).toContain('fn-item-1');
+ expect(html).toContain('fn-ref-1-1');
+ expect(html).toContain('fn-backref');
+ expect(html).not.toContain('<script');
+ await page.setContent(html);
+ await expect(page.locator('main.md-preview .md-footnotes')).toHaveCount(1);
+ await expect(page.locator('main.md-preview .fn-backref')).toHaveCount(1);
+ await page.emulateMedia({media:'print'});
+ expect(await page.locator('main.md-preview .md-footnotes').evaluate(el=>getComputedStyle(el).borderTopStyle)).toBe('solid');
+});
+
+test('issue #11 MD export warns for non-GFM footnotes and leaves source intact',async({page})=>{
+ await page.goto('/');
+ await page.locator('#compatibility-panel summary').click();
+ await page.locator('#extension-footnotes-toggle').selectOption('on');
+ const source='A[^one].\n\n[^one]: Note.';
+ await page.locator('#markdown-input').fill(source);
+ const messages=[];
+ page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
+ const downloading=page.waitForEvent('download');
+ await page.locator('#download-md-btn').click();
+ const file=await downloading;
+ const {readFile}=await import('node:fs/promises');
+ expect(await readFile(await file.path(),'utf8')).toBe(source);
+ expect(messages).toHaveLength(1);
+ expect(messages[0]).toContain('GitHub.com');
+});
