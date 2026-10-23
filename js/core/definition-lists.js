@@ -1,0 +1,63 @@
+// Optional definition lists; GFM opt-in only. Never mutate global marked.
+import {Marked} from 'marked';
+
+const MAX_TERMS=8,MAX_ENTRIES=100,MAX_LINES=1200;
+const definition=/^ {0,3}:[ \t]+(\S.*)$/;
+const continuation=/^(?: {2,}|\t)(?!:[ \t])(.+)$/;
+const badTerm=/^(?:\s|#{1,6}(?:\s|$)|>|[-+*]\s|\d+[.)]\s|\x60{3}|~{3}|\||<|\[[^\]]+\]:)/;
+const isTerm=s=>s.length>0&&s.length<=300&&!badTerm.test(s);
+function findStart(source){
+ const match=/(?:^|\n)([^\n]{1,300})\n {0,3}:[ \t]+\S/.exec(source);
+ return match?match.index+(source[match.index]==='\n'?1:0):undefined;
+}
+export function definitionListExtension(){
+ return {extensions:[{
+  name:'definitionList',level:'block',start:findStart,
+  tokenizer(source){
+   if(!source||source.length>250000)return;
+   const lines=source.split('\n'),entries=[];
+   let pos=0;
+   while(pos<lines.length&&pos<MAX_LINES&&entries.length<MAX_ENTRIES){
+    const terms=[];
+    while(pos<lines.length&&terms.length<MAX_TERMS&&isTerm(lines[pos])){
+     terms.push(lines[pos++]);
+     if(definition.test(lines[pos]||''))break;
+    }
+    if(!terms.length||!definition.test(lines[pos]||''))break;
+    const definitions=[];
+    while(pos<lines.length){
+     const match=definition.exec(lines[pos]);
+     if(!match)break;
+     const parts=[match[1]];pos++;
+     while(pos<lines.length&&continuation.test(lines[pos])){
+      parts.push(lines[pos].replace(/^(?: {2,}|\t)/,'').trimEnd());pos++;
+     }
+     definitions.push(parts.join('\n'));
+    }
+    entries.push({terms,definitions});
+    if(!isTerm(lines[pos]||''))break;
+    let next=pos;
+    while(next<lines.length&&next-pos<MAX_TERMS&&isTerm(lines[next]))next++;
+    if(!definition.test(lines[next]||''))break;
+   }
+   if(!entries.length)return;
+   const raw=lines.slice(0,pos).join('\n')+(pos<lines.length?'\n':'');
+   const items=entries.map(e=>({
+    terms:e.terms.map(t=>this.lexer.inlineTokens(t,[])),
+    definitions:e.definitions.map(t=>this.lexer.inlineTokens(t,[]))
+   }));
+   return {type:'definitionList',raw,entries:items};
+  },
+  renderer(token){
+   const inline=tokens=>this.parser.parseInline(tokens);
+   return '<dl class="md-definition-list">\n'
+    +token.entries.map(e=>
+     e.terms.map(t=>'<dt>'+inline(t)+'</dt>\n').join('')
+     +e.definitions.map(d=>'<dd>'+inline(d)+'</dd>\n').join('')
+    ).join('')+'</dl>\n';
+  }
+ }]};
+}
+export function renderDefinitionLists(source,options){
+ return new Marked(definitionListExtension()).parse(source,options);
+}
