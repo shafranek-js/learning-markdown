@@ -1,4 +1,4 @@
-import {area,applyEdit,undoOrRedo} from './editor.js';
+import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 const FENCE='```';
@@ -7,8 +7,8 @@ export function setHeading(level){const a=area(),s=a.selectionStart,e=a.selectio
  const newLine=m?.[1].length===level?content:'#'.repeat(level)+' '+(content||`Heading ${level}`);
  const caret=begin+newLine.length;applyEdit(v.slice(0,begin)+newLine+v.slice(finish),caret,caret);
 }
-export function insertSnippet(snippet,newline=true){const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,p=newline&&s>0&&v[s-1]!=='\n'?'\n':'';const value=p+snippet,pos=s+value.length;applyEdit(v.slice(0,s)+value+v.slice(e),pos,pos);}
-function wrap(prefix,suffix=prefix,placeholder='text'){const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,selection=v.slice(s,e)||placeholder;
+export function insertSnippet(snippet,newline=true){if(multiInsert(snippet,newline))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,p=newline&&s>0&&v[s-1]!=='\n'?'\n':'';const value=p+snippet,pos=s+value.length;applyEdit(v.slice(0,s)+value+v.slice(e),pos,pos);}
+function wrap(prefix,suffix=prefix,placeholder='text'){if(multiWrap(prefix,suffix,placeholder))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,selection=v.slice(s,e)||placeholder;
  const next=v.slice(0,s)+prefix+selection+suffix+v.slice(e);applyEdit(next,s+prefix.length,s+prefix.length+selection.length);
 }
 export function applyAdvancedPreset(group,value){
@@ -51,7 +51,7 @@ export function toolbarAction(action){switch(action){
  case 'adv-highlight':wrap('<mark>','</mark>','highlighted text');break;
  case 'adv-spoiler':insertSnippet('\n<details>\n<summary>More information</summary>\n\nHidden content\n</details>\n');break;
  }}
-export function initToolbar(){document.querySelectorAll('.toolbar-btn').forEach(button=>button.addEventListener('click',()=>toolbarAction(button.dataset.action)));
+export function initToolbar(){registerEditorShortcut(toolbarAction);document.querySelectorAll('.toolbar-btn').forEach(button=>button.addEventListener('click',()=>toolbarAction(button.dataset.action)));
  document.getElementById('undo-btn').addEventListener('click',()=>undoOrRedo(-1));document.getElementById('redo-btn').addEventListener('click',()=>undoOrRedo(1));
  area().addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;if(!mod||e.altKey||e.shiftKey)return;
  const key=e.code,shortcuts={Digit1:'h1',Digit2:'h2',Digit3:'h3',Digit4:'h4',Digit5:'h5',Digit6:'h6',KeyB:'bold',KeyI:'italic',KeyK:'link'};

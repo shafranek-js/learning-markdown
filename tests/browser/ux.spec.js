@@ -849,3 +849,88 @@ test('custom ordered-list types are case-sensitive in Preview and downloaded HTM
  for(let i=0;i<types.length;i++)
   expect(await exported.nth(i).evaluate(el=>getComputedStyle(el).listStyleType)).toBe(styles[i]);
 });
+
+
+test('multi-cursor mode adds vertical cursors, edits lines together and uses native Undo',async({page})=>{
+ await page.goto('/');
+ const textarea=page.locator('#markdown-input');
+ await textarea.fill('alpha\nbeta\ngamma');
+ await page.locator('#multi-cursor-toggle').click();
+ const editor=page.locator('#codemirror-mount .cm-content');
+ await expect(editor).toBeVisible();
+ await expect(page.locator('#multi-cursor-toggle')).toHaveAttribute('aria-pressed','true');
+ await editor.click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+Alt+ArrowDown');
+ await expect(page.locator('#multi-cursor-count')).toContainText('2');
+ await page.keyboard.insertText('>');
+ await expect(textarea).toHaveValue('>alpha\n>beta\ngamma');
+ await expect(page.locator('#markdown-preview')).toContainText('>alpha');
+ await page.locator('#undo-btn').click();
+ await expect(textarea).toHaveValue('alpha\nbeta\ngamma');
+ await page.locator('#redo-btn').click();
+ await expect(textarea).toHaveValue('>alpha\n>beta\ngamma');
+ await page.locator('#multi-cursor-toggle').click();
+ await expect(textarea).toBeVisible();
+ await expect(textarea).toHaveValue('>alpha\n>beta\ngamma');
+});
+
+test('multi-cursor mode supports repeated occurrence selection via Ctrl+D',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('cat\ncat\ndog');
+ await page.locator('#multi-cursor-toggle').click();
+ const editor=page.locator('#codemirror-mount .cm-content');
+ await editor.click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+d');
+ await page.keyboard.press('Control+d');
+ await expect(page.locator('#multi-cursor-count')).toContainText('2');
+ await page.keyboard.insertText('fox');
+ await expect(page.locator('#markdown-input')).toHaveValue('fox\nfox\ndog');
+});
+
+test('multi-cursor mode wraps multiple selections with Markdown toolbar',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('one\ntwo');
+ await page.locator('#multi-cursor-toggle').click();
+ const editor=page.locator('#codemirror-mount .cm-content');
+ await editor.click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Control+Alt+ArrowDown');
+ await page.locator('[data-action="bold"]').click();
+ const result=await page.locator('#markdown-input').inputValue();
+ expect(result).toContain('**bold text**one');
+ expect(result).toContain('**bold text**two');
+ await expect(page.locator('#markdown-preview strong')).toHaveCount(2);
+});
+
+test('multi-cursor preference and Markdown source survive reload and fallback',async({page})=>{
+ await page.goto('/');
+ const textarea=page.locator('#markdown-input');
+ await textarea.fill('# Saved heading\n\n- [x] Done');
+ await page.locator('#multi-cursor-toggle').click();
+ await expect(page.locator('#codemirror-mount .cm-editor')).toBeVisible();
+ await page.reload();
+ await expect(page.locator('#multi-cursor-toggle')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#codemirror-mount .cm-editor')).toBeVisible();
+ await expect(textarea).toHaveValue('# Saved heading\n\n- [x] Done');
+ await expect(page.locator('#markdown-preview h1')).toHaveText('Saved heading');
+ await page.locator('#multi-cursor-toggle').click();
+ await expect(textarea).toBeVisible();
+ await expect(textarea).toHaveValue('# Saved heading\n\n- [x] Done');
+});
+
+test('multi-cursor editor loads without network after service worker precache',async({page,context})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('offline\nmulti-cursor');
+ await page.locator('#multi-cursor-toggle').click();
+ await page.waitForFunction(async()=>Boolean(navigator.serviceWorker.controller));
+ await context.setOffline(true);
+ try{
+  await page.reload({waitUntil:'domcontentloaded'});
+  await expect(page.locator('#codemirror-mount .cm-editor')).toBeVisible({timeout:15000});
+  await expect(page.locator('#markdown-input')).toHaveValue('offline\nmulti-cursor');
+ }finally{
+  await context.setOffline(false);
+ }
+});

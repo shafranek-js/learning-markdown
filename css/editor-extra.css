@@ -9,6 +9,21 @@
 #markdown-input::selection{-webkit-text-fill-color:transparent}
 #editor-highlight-backdrop{pointer-events:none;user-select:none}
 
+/* CodeMirror opt-in mode: keep #markdown-input as a synchronized shadow source.
+   Its overlay is hidden only when multi-cursor editing is active. */
+#codemirror-mount[hidden]{display:none!important}
+#editor-pane.multi-cursor-active #markdown-input,
+#editor-pane.multi-cursor-active #line-gutter,
+#editor-pane.multi-cursor-active #editor-highlight-backdrop{display:none!important}
+#codemirror-mount{position:absolute;inset:0;min-width:0;min-height:0;overflow:hidden;z-index:5}
+#codemirror-mount .cm-editor{height:100%;width:100%;outline:none}
+#codemirror-mount .cm-scroller{height:100%;overflow:auto}
+#codemirror-mount .cm-content{min-height:100%;white-space:pre}
+#codemirror-mount .cm-line{font-size:var(--editor-font-size,15px)}
+#codemirror-mount .cm-gutters{user-select:none}
+#multi-cursor-toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+
 /* Matching glyph weight preserves pixel-aligned caret/syntax overlay. */
 .tok-h,.tok-bold,.tok-quote-mark,.tok-list,.tok-hr{font-weight:400}
 .tok-italic{font-style:normal}
