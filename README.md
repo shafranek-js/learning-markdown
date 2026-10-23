@@ -277,3 +277,8 @@ Moving multi-cursors without editing text no longer triggers redundant synchrono
 Reapplying the Task List command preserves completed `[x]` markers instead of resetting them to `[ ]`. Numbering applied to disjoint line groups starts at `1.` for each group rather than numbering unrelated lines as a continuous list. Dedicated Playwright cases protect both behaviors.
 
 Both GitHub Actions workflows (Pages deployment and browser regression CI) use Node 24-compatible GitHub action releases. The project application itself continues building on Node 22.
+
+
+### Offline fenced-code syntax highlighting (#9)
+
+JavaScript/JS, JSON, HTML/XML, CSS, SQL, and Python/PY fenced code uses a pinned, locally bundled `highlight.js` core with only six registered grammars. The source Markdown is never modified, and unknown/no-language or oversized blocks stay safely escaped plaintext. Highlight markup is re-sanitized with a restricted class allowlist scoped inside code blocks. Code token colors work in all six themes, standalone offline HTML and print/PDF; tooltip guidance is localized to EN/CS/UK/RO/RU. Tests cover source fidelity, XSS, offline behavior, and export.

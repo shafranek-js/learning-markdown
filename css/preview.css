@@ -146,3 +146,50 @@
         .md-preview h4 { font-size: 1.12rem; }
         .md-preview h5 { font-size: 1rem; font-weight: 700; }
         .md-preview h6 { font-size: 0.9rem; font-weight: 700; opacity: 0.83; }
+
+
+
+/* #9: locally bundled code highlighting; all six Preview themes use a dark pre. */
+.md-preview pre code .hljs-keyword,
+.md-preview pre code .hljs-selector-tag,
+.md-preview pre code .hljs-literal { color:#c4b5fd; }
+.md-preview pre code .hljs-string,
+.md-preview pre code .hljs-addition,
+.md-preview pre code .hljs-attr { color:#86efac; }
+.md-preview pre code .hljs-number,
+.md-preview pre code .hljs-regexp,
+.md-preview pre code .hljs-symbol { color:#fbcfe8; }
+.md-preview pre code .hljs-comment,
+.md-preview pre code .hljs-quote,
+.md-preview pre code .hljs-doctag { color:#cbd5e1; }
+.md-preview pre code .hljs-title,
+.md-preview pre code .hljs-type,
+.md-preview pre code .hljs-class,
+.md-preview pre code .hljs-function,
+.md-preview pre code .hljs-section { color:#93c5fd; }
+.md-preview pre code .hljs-built_in,
+.md-preview pre code .hljs-meta,
+.md-preview pre code .hljs-selector-id,
+.md-preview pre code .hljs-selector-class,
+.md-preview pre code .hljs-selector-attr,
+.md-preview pre code .hljs-selector-pseudo,
+.md-preview pre code .hljs-attribute,
+.md-preview pre code .hljs-property { color:#fde68a; }
+.md-preview pre code .hljs-variable,
+.md-preview pre code .hljs-params,
+.md-preview pre code .hljs-name,
+.md-preview pre code .hljs-tag,
+.md-preview pre code .hljs-template-variable,
+.md-preview pre code .hljs-template-tag { color:#67e8f9; }
+.md-preview pre code .hljs-deletion { color:#fda4af; }
+@media print {
+ .md-preview pre{background:#fff!important;color:#111827!important;border:1px solid #94a3b8;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .md-preview pre code .hljs-keyword,.md-preview pre code .hljs-literal,.md-preview pre code .hljs-selector-tag{color:#4c1d95!important}
+ .md-preview pre code .hljs-string,.md-preview pre code .hljs-addition,.md-preview pre code .hljs-attr{color:#166534!important}
+ .md-preview pre code .hljs-number,.md-preview pre code .hljs-regexp,.md-preview pre code .hljs-symbol{color:#9d174d!important}
+ .md-preview pre code .hljs-comment,.md-preview pre code .hljs-quote,.md-preview pre code .hljs-doctag{color:#475569!important}
+ .md-preview pre code .hljs-title,.md-preview pre code .hljs-type,.md-preview pre code .hljs-class,.md-preview pre code .hljs-function,.md-preview pre code .hljs-section{color:#1e40af!important}
+ .md-preview pre code .hljs-built_in,.md-preview pre code .hljs-meta,.md-preview pre code .hljs-attribute,.md-preview pre code .hljs-property,.md-preview pre code .hljs-selector-id,.md-preview pre code .hljs-selector-class,.md-preview pre code .hljs-selector-attr,.md-preview pre code .hljs-selector-pseudo{color:#854d0e!important}
+ .md-preview pre code .hljs-variable,.md-preview pre code .hljs-params,.md-preview pre code .hljs-name,.md-preview pre code .hljs-tag,.md-preview pre code .hljs-template-variable,.md-preview pre code .hljs-template-tag{color:#155e75!important}
+ .md-preview pre code .hljs-deletion{color:#991b1b!important}
+}

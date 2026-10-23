@@ -3,6 +3,10 @@ import {filterAdvancedClasses} from './advanced-presets.js';
 const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
 const DROP=new Set('script style iframe object embed svg math form button textarea select link meta base template noscript audio video canvas'.split(' '));
 const VOID=new Set(['br','hr','img','input']);
+// Fixed classes emitted by registered highlight.js grammars.
+// Only meaningful within <pre><code>, never arbitrary user-defined CSS.
+const CODE_TOKEN_CLASSES=new Set('keyword built_in type literal number string regexp subst symbol variable title section comment meta attr attribute name tag selector-tag selector-id selector-class selector-attr selector-pseudo selector-pseudo-class selector-pseudo-element property params function class operator punctuation template-variable template-tag link bullet addition deletion quote formula emphasis strong doctag'.split(' ').map(x=>'hljs-'+x));
+
 const urlOK=(url,forImage)=>{const str=(url||'').trim().replace(/[\x00-\x20\x7f]/g,'');if(!str)return false;if(str.startsWith('#')&&!forImage)return true;
  try {const u=new URL(str,location.href);if(/^(https?:)$/.test(u.protocol))return true;if(!forImage&&u.protocol==='mailto:')return true;return false;}catch{return false;}};
 export function sanitizeHTML(html){
@@ -52,8 +56,13 @@ export function sanitizeHTML(html){
   }
   if(tag==='code'){const cls=node.getAttribute('class')||'';if(/^language-[\w-]{1,30}$/.test(cls))el.className=cls;}
   if(['span','div','table','td','th'].includes(tag)){
-   const safe=filterAdvancedClasses(node.getAttribute('class')||'');
-   if(safe)el.className=safe;
+   const classes=node.getAttribute('class')||'';
+   const safe=filterAdvancedClasses(classes);
+   // Highlight scopes are allowed only inside code blocks, after sanitizing.
+   const tokens=tag==='span'&&parent.closest('pre > code')
+    ?[...new Set(classes.split(/\s+/).filter(x=>CODE_TOKEN_CLASSES.has(x)))].join(' ')
+    :'';
+   if(safe||tokens)el.className=[safe,tokens].filter(Boolean).join(' ');
   }
   if(!VOID.has(tag)){[...node.childNodes].forEach(c=>visit(c,el));}
   parent.appendChild(el);

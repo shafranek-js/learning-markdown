@@ -1467,3 +1467,59 @@ test('issue #8 sanitizer rejects injected alignment and styling',async({page})=>
  await input.fill('| A | B |\n| :--- | ---: |\n| x | y |');
  await expect(page.locator('#markdown-preview table')).toHaveCount(0);
 });
+
+
+
+test('issue #9 six fenced languages are highlighted offline and safely exported',async({page,context})=>{
+ await page.goto('/');
+ const source=[
+  '~~~javascript','const n = 42;','~~~',
+  '~~~json','{"active": true, "count": 3}','~~~',
+  '~~~html','<div title="hi">& text</div>','~~~',
+  '~~~css','.demo { color: red; }','~~~',
+  '~~~sql','SELECT id FROM products;','~~~',
+  '~~~python','def greet(name):','    return name','~~~',
+  '~~~unknown','<script>alert(1)</script>','~~~'
+ ].join('\n\n').replace(/\n\n(?=~~~)/g,'\n');
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ const blocks=page.locator('#markdown-preview pre > code');
+ await expect(blocks).toHaveCount(7);
+ for(let i=0;i<6;i++){
+  await expect(blocks.nth(i).locator('span[class^="hljs-"]').first()).toBeVisible();
+  const token=blocks.nth(i).locator('span[class^="hljs-"]').first();
+  const foreground=await token.evaluate(el=>getComputedStyle(el).color);
+  expect(foreground).not.toBe('rgb(248, 250, 252)');
+ }
+ await expect(blocks.nth(6).locator('span[class^="hljs-"]')).toHaveCount(0);
+ await expect(page.locator('#markdown-preview script')).toHaveCount(0);
+ await expect(input).toHaveValue(source);
+ for(const theme of ['codepen','midnight','daylight','dracula','nord','solarized']){
+  await page.locator('#theme-selector').selectOption(theme);
+  await expect(blocks.first().locator('.hljs-keyword')).toHaveCount(1);
+ }
+ await page.locator('#lang-selector').selectOption('ru');
+ await expect(page.locator('#markdown-preview pre').first()).toHaveAttribute('title',/Офлайн-подсветка/);
+ const promise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const dl=await promise;
+ const {readFile}=await import('node:fs/promises');
+ const exported=await readFile(await dl.path(),'utf8');
+ expect(exported).toContain('hljs-keyword');
+ expect(exported).toContain('.md-preview pre code .hljs-keyword');
+ expect(exported).not.toContain('<script');
+ expect(exported).toContain('Content-Security-Policy');
+ await page.setContent(exported);
+ await expect(page.locator('main pre code .hljs-keyword')).toHaveCount(1);
+ await page.emulateMedia({media:'print'});
+ expect(await page.locator('main pre code .hljs-keyword').first()
+  .evaluate(el=>getComputedStyle(el).color)).toBe('rgb(76, 29, 149)');
+ await page.goto('/');
+ await input.fill('~~~js\nconst ready = true;\n~~~');
+ await page.waitForFunction(()=>Boolean(navigator.serviceWorker?.controller));
+ await context.setOffline(true);
+ try{
+  await page.reload({waitUntil:'domcontentloaded'});
+  await expect(page.locator('#markdown-preview .hljs-keyword')).toHaveCount(1);
+ }finally{await context.setOffline(false);}
+});

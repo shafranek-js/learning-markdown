@@ -1,4 +1,5 @@
 import {sanitizeHTML} from '../core/sanitize.js';
+import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
 import {marked} from 'marked';
 import {state} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
@@ -14,7 +15,7 @@ export function markdownToHTML(text,dialect=state.dialect){
  const options=DIALECT_OPTIONS[dialect]||DIALECT_OPTIONS.gfm;
  const raw=marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
- return sanitizeHTML(raw);
+ return highlightCodeBlocks(sanitizeHTML(raw));
 }
 function enableTaskInputs(preview,source){
  if(state.dialect!=='gfm')return;
@@ -57,5 +58,19 @@ export function initPreviewAnchors(){
   if(target){event.preventDefault();target.scrollIntoView({block:'nearest',behavior:'smooth'});}
  });
 }
-export function updatePreview(text){lastHtml=markdownToHTML(text);const target=document.getElementById('markdown-preview');target.innerHTML=lastHtml;enableTaskInputs(target,text);syncTableEditorPreview();document.getElementById('raw-html-preview').textContent=lastHtml.trim();}
+export function updatePreview(text){
+ lastHtml=markdownToHTML(text);
+ const target=document.getElementById('markdown-preview');
+ target.innerHTML=lastHtml;
+ for(const code of target.querySelectorAll('pre > code[class]')){
+  const language=highlightLanguage(code.className);
+  if(!language||!code.querySelector('[class^="hljs-"]'))continue;
+  const tip=highlightTooltip(language,state.lang);
+  code.parentElement.title=tip;
+  code.parentElement.setAttribute('aria-label',tip);
+ }
+ enableTaskInputs(target,text);
+ syncTableEditorPreview();
+ document.getElementById('raw-html-preview').textContent=lastHtml.trim();
+}
 export const currentHtml=()=>lastHtml;
