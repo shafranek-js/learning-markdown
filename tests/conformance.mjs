@@ -1,6 +1,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
 import {join} from 'node:path';
+import {marked as modernMarked} from 'marked';
 import {compareHtml,CATEGORIES} from './html-compare.mjs';
 (async function audit() {
  const SOURCES=[
@@ -37,20 +38,29 @@ import {compareHtml,CATEGORIES} from './html-compare.mjs';
   if(spec.length<100000||spec.length>2000000)throw Error('Unexpected upstream spec length');
   const cases=parseSpec(spec),failures=[],totalBySection=new Map(),passesBySection=new Map();
   let passed=0;const classified=Object.fromEntries(CATEGORIES.map(x=>[x,0]));
+  const modernClassified=Object.fromEntries(CATEGORIES.map(x=>[x,0]));let improved=0,regressed=0;
   for(const item of cases){
    let html='',error='';
    try{html=context.marked.parse(item.markdown,{gfm:source.gfm,pedantic:false,breaks:false,headerIds:false,mangle:false});}
    catch(e){error=String(e);}
    const category=compareHtml(item.expected,html,error);
    classified[category]++;
+   let modern='',modernError='';
+   try{modern=modernMarked.parse(item.markdown,{gfm:source.gfm,pedantic:false,breaks:false});}
+   catch(e){modernError=String(e);}
+   const newClass=compareHtml(item.expected,modern,modernError);
+   modernClassified[newClass]++;
+   const matches=k=>k==='exact'||k==='dom-equivalent';
+   if(matches(newClass)&&!matches(category))improved++;
+   if(matches(category)&&!matches(newClass))regressed++;
    const ok=category==='exact';
    totalBySection.set(item.section,(totalBySection.get(item.section)||0)+1);
    if(ok){passed++;passesBySection.set(item.section,(passesBySection.get(item.section)||0)+1);}
-   else failures.push({...item,actual:html,error,category});
+   else failures.push({...item,actual:html,error,category,modernCategory:newClass,modernActual:modern});
   }
   out.push({name:source.label,source:source.url,total:cases.length,passed,failed:failures.length,
    percent:Math.round(passed*10000/cases.length)/100,
-   categories:classified,
+   categories:classified,modernCategories:modernClassified,modernImproved:improved,modernRegressed:regressed,
    sections:[...totalBySection].map(([name,total])=>({name,total,passed:passesBySection.get(name)||0})),failures});
  }
  const dir='conformance-report';await mkdir(dir,{recursive:true});
@@ -62,6 +72,11 @@ import {compareHtml,CATEGORIES} from './html-compare.mjs';
   '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
   ...out.map(data=>'| '+data.name+' | '+CATEGORIES.map(k=>data.categories[k]).join(' | ')+' |'),'',
   'DOM-equivalent means the parsed browser document trees are identical despite different HTML strings. Other categories are diagnostic, not automatically defects.','');
+ md.push('','## Parser upgrade experiment (not applied to the app)','',
+ '| Dataset | Current exact + DOM-equivalent | marked 18.1.1 exact + DOM-equivalent | Improved cases | Regressed cases |',
+ '| --- | ---: | ---: | ---: | ---: |',
+ ...out.map(d=>'| '+d.name+' | '+(d.categories.exact+d.categories['dom-equivalent'])+' | '+(d.modernCategories.exact+d.modernCategories['dom-equivalent'])+' | '+d.modernImproved+' | '+d.modernRegressed+' |'),'');
+
  for(const data of out){
   md.push('### '+data.name,'','| Section | Matched | Total |','| --- | ---: | ---: |',...data.sections.map(x=>'| '+x.name.replaceAll('|','\\|')+' | '+x.passed+' | '+x.total+' |'),'','First ten deviations:','');
   for(const f of data.failures.slice(0,10))md.push('- Example '+f.number+', '+f.section+', spec line '+f.startLine);
@@ -81,6 +96,7 @@ import {compareHtml,CATEGORIES} from './html-compare.mjs';
  for(const x of out){
   console.log(x.name+': '+x.passed+'/'+x.total+' exact HTML matches ('+x.percent+'%)');
   console.log('AUDIT '+x.name+' '+CATEGORIES.map(k=>k+'='+x.categories[k]).join(', '));
+  console.log('EXPERIMENT marked@18.1.1 '+x.name+' '+CATEGORIES.map(k=>k+'='+x.modernCategories[k]).join(', ')+' improved='+x.modernImproved+' regressed='+x.modernRegressed);
   const sections=x.sections.map(s=>({...s,diff:s.total-s.passed})).sort((a,b)=>b.diff-a.diff).slice(0,7);
   console.log('TOP SECTIONS '+x.name+' '+sections.map(s=>s.name+':'+s.diff+'/'+s.total).join('; '));
   for(const category of CATEGORIES.filter(x=>x!=='exact')){
