@@ -18,6 +18,7 @@ export function renderMultiCursorUI(){
 export const multiWrap=(a,b,placeholder)=>multiActive()?multi.multiCursorWrap(a,b,placeholder):false;
 export const multiInsert=(s,newline)=>multiActive()?multi.multiCursorInsert(s,newline):false;
 export const multiHeading=level=>multiActive()?multi.multiCursorHeading(level):false;
+export const multiLineFormat=kind=>multiActive()?multi.multiCursorLineFormat(kind):false;
 export const multiPreset=(cssClass,isBlock)=>multiActive()?multi.multiCursorPreset(cssClass,isBlock):false;
 export const multiRich=(group,id)=>multiActive()?multi.multiCursorRichContent(group,id):false;
 export function registerEditorShortcut(handler){multiShortcut=handler;if(multi)multi.registerMultiCursorShortcut(handler);}
