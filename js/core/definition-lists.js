@@ -83,7 +83,7 @@ export function mergeAdjacentDefinitionLists(safeHTML){
  const root=document.createElement('div');
  root.innerHTML=safeHTML; // Caller passes strictly sanitized markup.
  for(const current of [...root.querySelectorAll('dl.md-definition-list')]){
-  if(!current.isConnected)continue;
+  if(!root.contains(current))continue;
   let next=current.nextElementSibling;
   while(next?.matches('dl.md-definition-list')){
    let sibling=current.nextSibling,onlyWhitespace=true;
