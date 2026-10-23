@@ -1,6 +1,6 @@
 export const STORAGE_KEY='md_course_state_v1';
 const LEGACY_KEY='learning_markdown_studio_v3';
-export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,dialect:'gfm',deepPracticeExpanded:false,advancedToolsOpen:false,advancedLabExpanded:false,advancedPresetChoices:{},advancedRichChoices:{},layoutMode:'split',mobileTab:'editor',name:''};
+export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],completedAdvancedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,dialect:'gfm',deepPracticeExpanded:false,advancedToolsOpen:false,advancedLabExpanded:false,advancedPresetChoices:{},advancedRichChoices:{},layoutMode:'split',mobileTab:'editor',name:''};
 const LANGS=new Set(['en','cs','uk','ro','ru']);
 export const DIALECTS=new Set(['gfm','commonmark','original']);
 const THEMES=new Set(['codepen','midnight','daylight','dracula','nord','solarized']);
@@ -11,8 +11,9 @@ function fromStorage(){
   return {
    ...defaults,...saved,
    lang:LANGS.has(saved.lang)?saved.lang:'en',theme:THEMES.has(saved.theme)?saved.theme:'codepen',dialect:DIALECTS.has(saved.dialect)?saved.dialect:'gfm',
-   currentLessonIndex:Number.isInteger(saved.currentLessonIndex)&&saved.currentLessonIndex>=-1&&saved.currentLessonIndex<8?saved.currentLessonIndex:0,
+   currentLessonIndex:Number.isInteger(saved.currentLessonIndex)&&saved.currentLessonIndex>=-1&&saved.currentLessonIndex<15?saved.currentLessonIndex:0,
    completedLessons:Array.isArray(saved.completedLessons)?[...new Set(saved.completedLessons.filter(v=>Number.isInteger(v)&&v>=1&&v<=8))]:[],
+   completedAdvancedLessons:Array.isArray(saved.completedAdvancedLessons)?[...new Set(saved.completedAdvancedLessons.filter(v=>typeof v==='string'&&/^04_0[1-7]$/.test(v)))]:[],
    savedDrafts:saved.savedDrafts&&typeof saved.savedDrafts==='object'&&!Array.isArray(saved.savedDrafts)?saved.savedDrafts:{},
    editorRatio:Math.max(.18,Math.min(.82,Number(saved.editorRatio)||.5)),
    guideWidth:Math.max(240,Math.min(620,Number(saved.guideWidth)||350)),
@@ -29,5 +30,5 @@ export const state=fromStorage();
 const observers=new Set();
 export function subscribe(fn){observers.add(fn);return ()=>observers.delete(fn);}
 export function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(error){console.warn('Unable to save progress:',error);}observers.forEach(fn=>fn(state));}
-export function resetCourse(){state.completedLessons=[];state.savedDrafts={};state.currentLessonIndex=0;save();}
-export const docKey=()=>state.currentLessonIndex===-1?`sandbox_${state.lang}`:`lesson_${state.currentLessonIndex+1}_${state.lang}`;
+export function resetCourse(){state.completedLessons=[];for(const key of Object.keys(state.savedDrafts))if(!key.startsWith('advanced_'))delete state.savedDrafts[key];state.currentLessonIndex=0;save();}
+export const docKey=()=>state.currentLessonIndex===-1?`sandbox_${state.lang}`:state.currentLessonIndex>=8?`advanced_${state.currentLessonIndex-7}_${state.lang}`:`lesson_${state.currentLessonIndex+1}_${state.lang}`;

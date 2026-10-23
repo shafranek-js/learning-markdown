@@ -1,4 +1,4 @@
-export const LESSON_IDS=['01_01','01_02','01_03','01_04','02_01','02_02','02_03','03_01'];
+export const LESSON_IDS=['01_01','01_02','01_03','01_04','02_01','02_02','02_03','03_01','04_01','04_02','04_03','04_04','04_05','04_06','04_07'];
 const validLang=new Set(['en','cs','uk','ro','ru']),validThemes=new Set(['codepen','midnight','daylight','dracula','nord','solarized']);
 const validDialects=new Set(['gfm','commonmark','original']);
 export function readRoute(){const p=new URLSearchParams(location.hash.slice(1));const id=p.get('lesson');const index=id==='sandbox'?-1:LESSON_IDS.includes(id)?LESSON_IDS.indexOf(id):null;

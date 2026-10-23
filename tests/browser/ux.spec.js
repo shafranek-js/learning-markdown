@@ -362,3 +362,89 @@ test('mobile rich templates remain operable without expanding standard toolbar',
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
  await expect(page.locator('#markdown-preview .af-callout-success')).toBeVisible();
 });
+
+
+test('Advanced curriculum navigation keeps the base course progress separate',async({page})=>{
+ await page.goto('/');
+ const base=await page.locator('#progress-label').innerText();
+ await page.locator('#advanced-course-btn').click();
+ await expect(page.locator('#lesson-badge')).toContainText('1 / 7');
+ await expect(page.locator('#lesson-nav-list button')).toHaveCount(15);
+ await expect(page.locator('#lesson-title')).toContainText('Portability');
+ await expect(page.locator('#advanced-toolbar')).toBeVisible();
+ await expect(page.locator('#deep-practice')).toBeHidden();
+ await expect(page.locator('#progress-label')).toHaveText(base);
+ await expect(page.locator('#advanced-progress-label')).toContainText('0 / 7');
+});
+
+test('All seven Beyond Markdown lesson solutions earn an independent 7/7 certificate',async({page})=>{
+ await page.goto('/');
+ const basicProgress=await page.locator('#progress-label').innerText();
+ await page.locator('#advanced-course-btn').click();
+ for(let i=0;i<7;i++){
+  if(i>0)await page.locator('#lesson-nav-list button').nth(8+i).click();
+  await page.locator('#toggle-hint-btn').click();
+  await page.locator('#insert-solution-btn').click();
+  const count=i===6?6:3;
+  await expect(page.locator('#tasks-counter-badge')).toHaveText(count+' / '+count);
+  await expect(page.locator('#lesson-status-pill')).toContainText('Completed');
+ }
+ await expect(page.locator('#advanced-progress-label')).toContainText('7 / 7');
+ await expect(page.locator('#progress-label')).toHaveText(basicProgress);
+ await page.locator('#advanced-cert-btn').click();
+ await expect(page.locator('#advanced-cert-count')).toHaveText('7 / 7');
+ await expect(page.locator('#download-advanced-cert')).toBeEnabled();
+ await expect(page.locator('#copy-advanced-cert')).toBeEnabled();
+});
+
+test('Advanced drafts and completion are independent and persist after reload',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-course-btn').click();
+ await page.locator('#markdown-input').fill('<u>Persisted advanced draft</u>');
+ await expect(page.locator('#tasks-counter-badge')).toHaveText('1 / 3');
+ await page.reload();
+ await expect(page.locator('#markdown-input')).toHaveValue('<u>Persisted advanced draft</u>');
+ await expect(page.locator('#lesson-badge')).toContainText('1 / 7');
+ await page.locator('#contents-toggle-btn').click();
+ await expect(page.locator('#lesson-nav-list button')).toHaveCount(15);
+ await page.locator('#lesson-nav-list button').first().click();
+ await expect(page.locator('#markdown-input')).not.toHaveValue('<u>Persisted advanced draft</u>');
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#lesson-nav-list button').nth(8).click();
+ await expect(page.locator('#markdown-input')).toHaveValue('<u>Persisted advanced draft</u>');
+});
+
+test('Advanced certificate cannot be downloaded before completion and escapes user name',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-cert-btn').click();
+ await expect(page.locator('#download-advanced-cert')).toBeDisabled();
+ await expect(page.locator('#copy-advanced-cert')).toBeDisabled();
+ await page.locator('#close-advanced-certificate-btn').click();
+ await page.evaluate(()=>{
+  const state=JSON.parse(localStorage.getItem('md_course_state_v1'));
+  state.completedAdvancedLessons=['04_01','04_02','04_03','04_04','04_05','04_06','04_07'];
+  localStorage.setItem('md_course_state_v1',JSON.stringify(state));
+ });
+ await page.reload();
+ await page.locator('#advanced-cert-btn').click();
+ await page.locator('#advanced-cert-name').fill('<img src=x onerror=alert(1)>');
+ const waiting=page.waitForEvent('download');
+ await page.locator('#download-advanced-cert').click();
+ const download=await waiting;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await download.path(),'utf8');
+ expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+ expect(html).not.toContain('<img src=x');
+ expect(html).toContain('7 / 7');
+ expect(html).not.toContain('onclick=');
+});
+
+test('All advanced lessons translate into Czech, Ukrainian, Romanian and Russian',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-course-btn').click();
+ for(const [lang,title] of [['ru','HTML и совместимость'],['cs','HTML a přenositelnost'],['uk','HTML і сумісність'],['ro','HTML și compatibilitate']]){
+  await page.locator('#lang-selector').selectOption(lang);
+  await expect(page.locator('#lesson-title')).toHaveText(title);
+  await expect(page.locator('#tasks-counter-badge')).toHaveText('0 / 3');
+ }
+});

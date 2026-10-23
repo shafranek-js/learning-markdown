@@ -180,3 +180,26 @@ invalid IDs, allows only safe list types, and strips arbitrary `style`, scripts
 and `on*` handlers. Templates are not a visual table-merge editor: merge values
 can be adjusted manually in the HTML source. Other Markdown renderers may
 strip the HTML features or the CSS classes.
+
+## Beyond Markdown advanced curriculum (Issue #4)
+
+Separate seven-lesson track, ids `04_01`–`04_07`, accessible in Contents or with
+the top **Beyond Markdown** control. It covers HTML portability, semantic text
+styling, layout/print formatting, merged tables, callouts/details/internal
+anchors, custom ordered lists, and a capstone document.
+
+Each lesson contains five-language theory, examples, a prefilled draft,
+hints/solutions, and live DOM-based checks (3 per lesson, 6 in the capstone:
+24 checks). Verification runs against sanitized preview output: raw tags
+inside fenced code blocks do not count.
+
+Advanced completion `completedAdvancedLessons` (7 ids), source drafts
+`advanced_<n>_<lang>`, routing and certificate are independent of the
+original eight lessons, their completion and original certificate. Reset
+of the core course does not erase advanced drafts or achievements.
+
+The advanced certificate is a printable self-contained HTML download unlocked
+at 7/7 and can be printed to PDF with Ctrl+P in the browser; recipient names
+are HTML-escaped. It is a course-generated completion certificate, not an
+external professional accreditation. Both course and certificate use all
+five supported interface languages.

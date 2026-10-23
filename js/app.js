@@ -3,6 +3,7 @@ import {clearHistory,ensureHistory} from './core/history.js';
 import {readRoute,syncRoute,onRouteChange} from './core/router.js';
 import {ui,t,lessonTranslations} from './i18n/index.js';
 import {LESSON_CORE,LINKEDIN_PROMPT_SAMPLE,lesson} from './data/lessons.js';
+import {advancedLesson,verifyAdvancedLesson,ADVANCED_IDS} from './data/advanced-lessons.js';
 import {verifyLesson} from './core/validator.js';
 import {initEditor,area,setEditorContent,refreshEditor,applyEdit} from './ui/editor.js';
 import {initToolbar,insertSnippet} from './ui/toolbar.js';
@@ -12,6 +13,7 @@ import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
 import {standaloneHTML} from './core/export-html.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
+import {initAdvancedCertificate,renderAdvancedCertificate,openAdvancedCertificate} from './ui/advanced-certificate.js';
 const $=id=>document.getElementById(id);
 let currentChecks=[];
 const DIALECT_UI={
@@ -22,6 +24,13 @@ const DIALECT_UI={
  ru:{label:'Стандарт',title:'Диалект Markdown',warning:'Этот урок использует конструкции, поддерживаемые только GFM. Для завершения заданий выберите GFM.'}
 };
 const DIALECT_NAMES={gfm:'GFM',commonmark:'CommonMark',original:'Original · Legacy'};
+const TRACK_TEXT={
+ en:{core:'Core Markdown · 8 lessons',advanced:'Beyond Markdown · 7 lessons',module:'Advanced lesson',alert:'Extended HTML/CSS may be filtered by other Markdown platforms.'},
+ cs:{core:'Základy Markdownu · 8 lekcí',advanced:'Nad rámec Markdownu · 7 lekcí',module:'Pokročilá lekce',alert:'Jiné platformy Markdown mohou HTML a CSS odfiltrovat.'},
+ uk:{core:'Основи Markdown · 8 уроків',advanced:'Поза Markdown · 7 уроків',module:'Додатковий урок',alert:'Інші Markdown-платформи можуть фільтрувати HTML і CSS.'},
+ ro:{core:'Markdown de bază · 8 lecții',advanced:'Dincolo de Markdown · 7 lecții',module:'Lecție avansată',alert:'Alte platforme Markdown pot filtra HTML și CSS.'},
+ ru:{core:'Основы Markdown · 8 уроков',advanced:'За пределами Markdown · 7 уроков',module:'Продвинутый урок',alert:'Другие платформы Markdown могут удалять HTML и CSS.'}
+};
 function renderDialectUI(){
  const el=$('dialect-selector'),locale=DIALECT_UI[state.lang]||DIALECT_UI.en;
  el.value=state.dialect;el.title=locale.title;el.setAttribute('aria-label',locale.title);
@@ -29,12 +38,14 @@ function renderDialectUI(){
  document.querySelector('[data-i18n="dialectLabel"]').textContent=locale.label;
  $('preview-pane-title').textContent=ui(state.lang).previewHeader.replace(/\s*\(GFM\)/i,'')+' ('+DIALECT_NAMES[state.dialect]+')';
 }
-const getLesson=i=>lesson(i,state.lang,lessonTranslations);
+const getLesson=i=>i>=8?advancedLesson(i-8,state.lang):lesson(i,state.lang,lessonTranslations);
+const isAdvanced=i=>i>=8;
 const escapeHTML=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 function progress(){const strings=ui(state.lang),done=state.completedLessons.length,pct=Math.round(done/8*100);
- $('progress-bar').style.width=pct+'%';$('progress-label').textContent=strings.completedOf(done,8);$('progress-percentage').textContent=pct+'%';updateCertificate();}
-function drawContents(){const nav=$('lesson-nav-list');nav.replaceChildren();for(let i=0;i<LESSON_CORE.length;i++){
- const l=getLesson(i),done=state.completedLessons.includes(l.id),b=document.createElement('button');b.type='button';b.className=`w-full text-left px-3 py-2.5 rounded-xl transition flex items-center gap-2 border ${state.currentLessonIndex===i?'theme-accent-soft border-current':'theme-panel border-transparent hover:opacity-80'}`;
+ $('progress-bar').style.width=pct+'%';$('progress-label').textContent=strings.completedOf(done,8);$('progress-percentage').textContent=pct+'%';updateCertificate();renderAdvancedCertificate();}
+function drawContents(){const nav=$('lesson-nav-list');nav.replaceChildren();for(let i=0;i<LESSON_CORE.length+ADVANCED_IDS.length;i++){
+ if(i===0||i===8){const heading=document.createElement('h3');heading.className='text-[11px] font-extrabold uppercase tracking-widest theme-muted px-2 pt-3 pb-1';heading.textContent=i===0?TRACK_TEXT[state.lang].core:TRACK_TEXT[state.lang].advanced;nav.append(heading);}
+ const l=getLesson(i),done=isAdvanced(i)?state.completedAdvancedLessons.includes(l.id):state.completedLessons.includes(l.id),b=document.createElement('button');b.type='button';b.className=`w-full text-left px-3 py-2.5 rounded-xl transition flex items-center gap-2 border ${state.currentLessonIndex===i?'theme-accent-soft border-current':'theme-panel border-transparent hover:opacity-80'}`;
  const tag=document.createElement('span');tag.className='w-7 h-7 rounded-lg theme-panel-alt flex items-center justify-center shrink-0 text-xs';tag.textContent=done?'✓':String(i+1);
  const text=document.createElement('span');text.className='min-w-0 flex-1';const title=document.createElement('strong');title.className='block text-xs truncate';title.textContent=`${l.tab} — ${l.title}`;
  const subtitle=document.createElement('span');subtitle.className='block text-[11px] theme-muted truncate';subtitle.textContent=l.subtitle;
@@ -45,7 +56,8 @@ function renderLocalization(){const strings=ui(state.lang);document.documentElem
  document.querySelectorAll('[data-i18n]').forEach(e=>{const val=strings[e.dataset.i18n];if(typeof val==='string')e.textContent=val;});
  $('theme-selector').value=state.theme;$('lang-selector').value=state.lang;
  $('download-html-btn').title=t(state.lang,'exportHTML');$('print-cert-btn').textContent=t(state.lang,'print');$('student-name-input').placeholder=t(state.lang,'name');
- document.querySelector('[data-mobile-tab="guide"]').textContent=t(state.lang,'guide');document.querySelector('[data-mobile-tab="editor"]').textContent=t(state.lang,'editor');document.querySelector('[data-mobile-tab="preview"]').textContent=strings.previewView;
+ document.querySelector('[data-mobile-tab="guide"]').textContent=t(state.lang,'guide');
+ renderAdvancedCertificate();document.querySelector('[data-mobile-tab="editor"]').textContent=t(state.lang,'editor');document.querySelector('[data-mobile-tab="preview"]').textContent=strings.previewView;
  const tip={
  en:['Undo','Redo','Heading 1','Heading 2','Heading 3','Heading 4','Heading 5','Heading 6','Bold','Italic','Strikethrough','Quote','Bullet list','Numbered list','Task list','Inline code','Code block','Link','Image','Table','Divider'],
  cs:['Zpět','Znovu','Nadpis 1','Nadpis 2','Nadpis 3','Nadpis 4','Nadpis 5','Nadpis 6','Tučné','Kurzíva','Přeškrtnutí','Citace','Odrážky','Číslovaný seznam','Úkoly','Kód v řádku','Blok kódu','Odkaz','Obrázek','Tabulka','Oddělovač'],
@@ -63,10 +75,13 @@ function renderLocalization(){const strings=ui(state.lang);document.documentElem
  renderCheats();renderDialectUI();renderAdvancedUI();
 }
 function selectLesson(index,{route=true,scroll=true}={}){
- if(index<-1||index>=LESSON_CORE.length)return;state.currentLessonIndex=index;save();if(route)syncRoute(state,{push:true});
+ if(index<-1||index>=LESSON_CORE.length+ADVANCED_IDS.length)return;state.currentLessonIndex=index;
+ if(isAdvanced(index))state.advancedToolsOpen=true;
+ save();if(route)syncRoute(state,{push:true});
  if(index===-1){$('active-tab-title').textContent='00_00 AI Prompt Sandbox';$('editor-mode-status').textContent='Sandbox';showGuide(false);}
  else {const l=getLesson(index),strings=ui(state.lang);
-  $('active-tab-title').textContent=l.tab;$('editor-mode-status').textContent=l.tab;$('lesson-badge').textContent=strings.moduleOf(index+1,8);
+  $('active-tab-title').textContent=l.tab;$('editor-mode-status').textContent=l.tab;
+  $('lesson-badge').textContent=isAdvanced(index)?TRACK_TEXT[state.lang].module+' '+(index-7)+' / 7':strings.moduleOf(index+1,8);
   $('lesson-title').textContent=l.title;$('lesson-subtitle').textContent=l.subtitle;
   // Theory is bundled trusted HTML; never interpolate editor content into it.
   $('lesson-theory').innerHTML=l.theory;$('hint-content').textContent=l.hint;$('hint-box').classList.add('hidden');
@@ -80,25 +95,31 @@ function selectLesson(index,{route=true,scroll=true}={}){
    b.title=t(state.lang,'insertHint');b.setAttribute('aria-label',t(state.lang,'insert')+': '+ex.label);
    b.addEventListener('click',()=>insertSnippet(ex.code+'\n'));examples.appendChild(b);
   }
-  $('prev-lesson-btn').disabled=index===0;showGuide(state.guideVisible);
+  $('prev-lesson-btn').disabled=index===0||index===8;
+  $('deep-practice').classList.toggle('hidden',isAdvanced(index));
+  if(isAdvanced(index))renderAdvancedUI();
+  showGuide(state.guideVisible);
  }
  const saved=state.savedDrafts[docKey()],content=saved!==undefined?saved:index===-1?LINKEDIN_PROMPT_SAMPLE:getLesson(index).initial;
  setEditorContent(content);drawContents();progress();
  if(scroll){$('theory-panel').querySelector('.overflow-y-auto')?.scrollTo(0,0);}
 }
 function evaluate(text){updatePreview(text);
- if(state.currentLessonIndex>=0)renderPractice(state.currentLessonIndex+1,text,currentHtml());
+ if(state.currentLessonIndex>=0&&!isAdvanced(state.currentLessonIndex))renderPractice(state.currentLessonIndex+1,text,currentHtml());
  if(state.currentLessonIndex===-1){$('lesson-complete-banner').classList.add('hidden');return;}
- const l=getLesson(state.currentLessonIndex),checks=verifyLesson(l,text,state.dialect);currentChecks=checks;
- const warning=$('dialect-warning');warning.classList.toggle('hidden',state.dialect==='gfm'||![2,7,8].includes(l.id));warning.textContent=(DIALECT_UI[state.lang]||DIALECT_UI.en).warning;
+ const l=getLesson(state.currentLessonIndex),advanced=isAdvanced(state.currentLessonIndex);
+ const checks=advanced?verifyAdvancedLesson(l,text,currentHtml()):verifyLesson(l,text,state.dialect);currentChecks=checks;
+ const warning=$('dialect-warning');warning.classList.toggle('hidden',!advanced&&(state.dialect==='gfm'||![2,7,8].includes(l.id)));
+ warning.textContent=advanced?TRACK_TEXT[state.lang].alert:(DIALECT_UI[state.lang]||DIALECT_UI.en).warning;
  const list=$('task-checklist');list.replaceChildren();let done=0;
  for(const c of checks){if(c.passed)done++;const item=document.createElement('li');item.className=`p-2 rounded-lg border text-xs flex items-start gap-2 transition ${c.passed?'bg-emerald-500/15 border-emerald-500/40 text-emerald-300':'theme-panel border-transparent'}`;
  const mark=document.createElement('span');mark.className='w-4 h-4 rounded shrink-0 font-semibold';mark.textContent=c.passed?'✓':'○';
  const label=document.createElement('span');label.textContent=c.text;item.append(mark,label);list.append(item);}
  $('tasks-counter-badge').textContent=`${done} / ${checks.length}`;
  const completed=done===checks.length,banner=$('lesson-complete-banner'),pill=$('lesson-status-pill');banner.classList.toggle('hidden',!completed);
- pill.textContent=completed||state.completedLessons.includes(l.id)?ui(state.lang).statusDone:ui(state.lang).statusInProgress;
- if(completed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();drawContents();progress();}
+ const collection=advanced?state.completedAdvancedLessons:state.completedLessons;
+ pill.textContent=completed||collection.includes(l.id)?ui(state.lang).statusDone:ui(state.lang).statusInProgress;
+ if(completed&&!collection.includes(l.id)){collection.push(l.id);save();drawContents();progress();}
 }
 function setDialect(mode){if(!['gfm','commonmark','original'].includes(mode))return;state.dialect=mode;save();renderDialectUI();syncRoute(state);evaluate(area().value);}
 function setTheme(theme){state.theme=theme;document.documentElement.dataset.theme=theme;save();syncRoute(state);}
@@ -111,11 +132,12 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initResizers();initModals();initPreviewAnchors();initAdvancedUI();
+ initEditor(evaluate);initToolbar();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
  selectLesson(state.currentLessonIndex,{route:false});syncRoute(state);onRouteChange(setFromRoute);
+ document.addEventListener('advanced-course-open',()=>{selectLesson(8);toggleContents(false);if(window.matchMedia('(max-width:767px)').matches)setMobileTab('guide');});
  $('theme-selector').addEventListener('change',e=>setTheme(e.target.value));$('dialect-selector').addEventListener('change',e=>setDialect(e.target.value));$('lang-selector').addEventListener('change',e=>setLanguage(e.target.value));
  $('theory-pane-toggle-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1){selectLesson(0);return;}state.guideVisible=!state.guideVisible;showGuide(state.guideVisible);save();});
  $('sandbox-mode-btn').addEventListener('click',()=>{selectLesson(state.currentLessonIndex===-1?0:-1);if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');});
@@ -123,8 +145,8 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
  $('insert-solution-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1)return;const txt=getLesson(state.currentLessonIndex).hint;applyEdit(txt,txt.length,txt.length);});
  $('clear-editor-btn').addEventListener('click',()=>applyEdit('',0,0));
  $('reset-lesson-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1)return;const txt=getLesson(state.currentLessonIndex).initial;applyEdit(txt,txt.length,txt.length);});
- $('prev-lesson-btn').addEventListener('click',()=>selectLesson(Math.max(0,state.currentLessonIndex-1)));
- const next=()=>{if(state.currentLessonIndex<7)selectLesson(state.currentLessonIndex+1);else{$('certificate-btn').click();}};
+ $('prev-lesson-btn').addEventListener('click',()=>selectLesson(Math.max(isAdvanced(state.currentLessonIndex)?8:0,state.currentLessonIndex-1)));
+ const next=()=>{if(state.currentLessonIndex===14)openAdvancedCertificate();else if(state.currentLessonIndex===7)$('certificate-btn').click();else if(state.currentLessonIndex>=0)selectLesson(state.currentLessonIndex+1);};
  $('next-lesson-btn').addEventListener('click',next);$('banner-next-btn').addEventListener('click',next);
  for(const key of ['split','preview','html'])$(`layout-${key}-btn`).addEventListener('click',()=>setLayoutMode(key));
  $('font-dec-btn').addEventListener('click',()=>{state.fontSize=Math.max(12,state.fontSize-1);document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);refreshEditor({notify:false});save();});
