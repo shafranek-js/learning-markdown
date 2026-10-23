@@ -22,6 +22,24 @@ function mirror(){
  const r=view.state.selection.main;
  input.setSelectionRange(r.from,r.to);
 }
+// VS Code-style Shift+Alt+I: a caret at the end of each selected line.
+// A selection ending at column 1 of the next line does not include that line.
+export function insertCursorsAtLineEnds(editor){
+ const doc=editor.state.doc;
+ const lineNumbers=new Set();
+ for(const range of editor.state.selection.ranges){
+  const first=doc.lineAt(range.from).number;
+  let last=doc.lineAt(range.to).number;
+  if(!range.empty && last>first && range.to===doc.line(last).from)last--;
+  for(let n=first;n<=last;n++)lineNumbers.add(n);
+ }
+ const cursors=[...lineNumbers].sort((a,b)=>a-b)
+  .map(n=>EditorSelection.cursor(doc.line(n).to));
+ if(!cursors.length)return false;
+ editor.dispatch({selection:EditorSelection.create(cursors,cursors.length-1),scrollIntoView:true});
+ return true;
+}
+
 function extensions(){
  return [
   lineNumbers(),highlightSpecialChars(),history(),drawSelection(),
@@ -32,6 +50,7 @@ function extensions(){
   markdown(),
   keymap.of([
    {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
+   {key:'Shift-Alt-i',run:insertCursorsAtLineEnds,preventDefault:true},
    {key:'Mod-Alt-ArrowDown',run:addCursorBelow,preventDefault:true},
    {key:'Mod-Alt-ArrowUp',run:addCursorAbove,preventDefault:true},
    ...['b','i','k','1','2','3','4','5','6'].map(key=>({
