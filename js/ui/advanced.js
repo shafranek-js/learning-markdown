@@ -1,5 +1,6 @@
 import {state,save} from '../core/state.js';
-import {insertSnippet} from './toolbar.js';
+import {insertSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolbar.js';
+import {ADVANCED_PRESETS} from '../core/advanced-presets.js';
 
 const $=id=>document.getElementById(id);
 export const ADVANCED_EXAMPLES=[
@@ -26,6 +27,45 @@ const TEXT={
    lab:'За пределами Markdown · HTML Lab',description:'Дополнительные HTML-примеры. Основные уроки и сертификат не изменяются.',
    insert:'Вставить',actions:['Подчёркивание','Верхний индекс','Нижний индекс','Выделение','Раскрывающийся блок']}
 };
+
+const PRESET_GROUPS=Object.keys(ADVANCED_PRESETS);
+export const ADVANCED_PRESET_TEXT={"en":{"names":["Text","Highlight","Font","Size","Align","Indent","Line spacing"],"apply":"Apply","pageBreak":"Page break (print/PDF)","options":{"color":["Ink","Red","Blue","Green","Purple"],"background":["Yellow","Mint","Rose","Sky"],"font":["Sans-serif","Serif","Monospace"],"size":["Small","Normal","Large","Extra large"],"align":["Left","Center","Right","Justify"],"indent":["None","Small","Medium","Large"],"spacing":["Compact","Normal","Relaxed","Double"]}},"cs":{"names":["Text","Zvýraznění","Písmo","Velikost","Zarovnání","Odsazení","Řádkování"],"apply":"Použít","pageBreak":"Konec stránky (tisk/PDF)","options":{"color":["Tmavá","Červená","Modrá","Zelená","Fialová"],"background":["Žlutá","Mátová","Růžová","Světle modrá"],"font":["Bezpatkové","Patkové","Neproporcionální"],"size":["Malá","Normální","Velká","Velmi velká"],"align":["Vlevo","Na střed","Vpravo","Do bloku"],"indent":["Žádné","Malé","Střední","Velké"],"spacing":["Kompaktní","Normální","Volné","Dvojité"]}},"uk":{"names":["Колір","Тло","Шрифт","Розмір","Вирівнювання","Відступ","Інтервал"],"apply":"Застосувати","pageBreak":"Розрив сторінки (друк/PDF)","options":{"color":["Темний","Червоний","Синій","Зелений","Фіолетовий"],"background":["Жовтий","М’ятний","Рожевий","Блакитний"],"font":["Без зарубок","Із зарубками","Моноширинний"],"size":["Малий","Звичайний","Великий","Дуже великий"],"align":["Ліворуч","По центру","Праворуч","За шириною"],"indent":["Без відступу","Малий","Середній","Великий"],"spacing":["Щільний","Звичайний","Вільний","Подвійний"]}},"ro":{"names":["Culoare","Fundal","Font","Mărime","Aliniere","Indentare","Spațiere"],"apply":"Aplică","pageBreak":"Pagină nouă (tipărire/PDF)","options":{"color":["Închis","Roșu","Albastru","Verde","Violet"],"background":["Galben","Mentă","Roz","Albastru pal"],"font":["Fără serife","Cu serife","Monospațiat"],"size":["Mic","Normal","Mare","Foarte mare"],"align":["Stânga","Centru","Dreapta","Justificat"],"indent":["Fără","Mică","Medie","Mare"],"spacing":["Compactă","Normală","Aerisit","Dublă"]}},"ru":{"names":["Цвет текста","Фон","Шрифт","Размер","Выравнивание","Отступ","Интервал"],"apply":"Применить","pageBreak":"Разрыв страницы (печать/PDF)","options":{"color":["Тёмный","Красный","Синий","Зелёный","Фиолетовый"],"background":["Жёлтый","Мятный","Розовый","Голубой"],"font":["Без засечек","С засечками","Моноширинный"],"size":["Маленький","Обычный","Большой","Очень большой"],"align":["Влево","По центру","Вправо","По ширине"],"indent":["Без отступа","Маленький","Средний","Большой"],"spacing":["Компактный","Обычный","Свободный","Двойной"]}}};
+function renderPresetControls(){
+ const words=ADVANCED_PRESET_TEXT[state.lang]||ADVANCED_PRESET_TEXT.en;
+ const root=$('advanced-preset-controls');root.replaceChildren();
+ PRESET_GROUPS.forEach((group,index)=>{
+  const label=document.createElement('label');
+  label.className='flex items-center gap-1 shrink-0 text-[11px] font-semibold theme-muted';
+  const name=document.createElement('span');name.textContent=words.names[index];
+  const select=document.createElement('select');select.id='advanced-'+group;
+  select.className='rounded-md theme-panel-alt border theme-border px-1.5 py-1 text-[11px] cursor-pointer';
+  select.setAttribute('aria-label',words.names[index]);
+  const values=ADVANCED_PRESETS[group];
+  values.forEach((value,i)=>{
+   const option=document.createElement('option');option.value=value;
+   option.textContent=words.options[group][i]||value;select.append(option);
+  });
+  const choice=state.advancedPresetChoices?.[group];
+  select.value=values.includes(choice)?choice:values[0];
+  select.addEventListener('change',()=>{
+   if(!state.advancedPresetChoices||typeof state.advancedPresetChoices!=='object')state.advancedPresetChoices={};
+   state.advancedPresetChoices[group]=select.value;save();
+  });
+  const apply=document.createElement('button');apply.type='button';
+  apply.className='rounded-md border theme-border theme-accent-soft px-1.5 py-1 text-[10px] font-bold';
+  apply.textContent=words.apply;apply.dataset.advancedApply=group;
+  apply.setAttribute('aria-label',words.apply+': '+words.names[index]);
+  apply.title=words.names[index]+' · HTML/CSS';
+  apply.addEventListener('click',()=>applyAdvancedPreset(group,select.value));
+  label.append(name,select,apply);root.append(label);
+ });
+ const pageBreak=document.createElement('button');pageBreak.type='button';
+ pageBreak.id='advanced-page-break';
+ pageBreak.className='shrink-0 rounded-md border theme-border theme-accent-soft px-2 py-1 text-[11px] font-semibold';
+ pageBreak.textContent=words.pageBreak;pageBreak.title=words.pageBreak;
+ pageBreak.addEventListener('click',insertAdvancedPageBreak);root.append(pageBreak);
+}
+
 export const advancedLabels=lang=>TEXT[lang]||TEXT.en;
 function applyAdvancedVisibility(){
  const panel=$('advanced-toolbar'),open=state.advancedToolsOpen;
@@ -38,6 +78,7 @@ export function renderAdvancedUI(){
  const words=advancedLabels(state.lang);
  applyAdvancedVisibility();
  $('advanced-toolbar-warning').textContent=words.warning;
+ renderPresetControls();
  $('advanced-lab-title').textContent=words.lab;
  $('advanced-lab-description').textContent=words.description;
  const root=$('advanced-lab-examples');root.replaceChildren();

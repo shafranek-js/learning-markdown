@@ -137,3 +137,94 @@ test('advanced HTML Lab is separate from course progress and localized',async({p
  await expect(page.locator('#markdown-preview u')).toHaveCount(1);
  await expect(page.locator('#progress-label')).toHaveText(before);
 });
+
+
+test('Advanced presets apply foreground and highlight colors through safe classes, with Undo',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ const editor=page.locator('#markdown-input');
+ await editor.fill('Sample');
+ await editor.selectText();
+ await page.locator('#advanced-color').selectOption('blue');
+ await page.locator('[data-advanced-apply="color"]').click();
+ await expect(editor).toHaveValue('<span class="af-color-blue">Sample</span>');
+ await expect(page.locator('#markdown-preview span.af-color-blue')).toHaveText('Sample');
+ const foreground=await page.locator('#markdown-preview span.af-color-blue').evaluate(el=>getComputedStyle(el).color);
+ expect(foreground).toBe('rgb(23, 85, 165)');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue('Sample');
+ await page.locator('#redo-btn').click();
+ await expect(editor).toHaveValue('<span class="af-color-blue">Sample</span>');
+ await editor.fill('Marked');
+ await editor.selectText();
+ await page.locator('#advanced-background').selectOption('yellow');
+ await page.locator('[data-advanced-apply="background"]').click();
+ await expect(page.locator('#markdown-preview .af-background-yellow')).toHaveText('Marked');
+});
+
+test('Font family, size and layout presets render using allowlisted styles',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ const editor=page.locator('#markdown-input');
+ await editor.fill('Typography');
+ await editor.selectText();
+ await page.locator('#advanced-font').selectOption('serif');
+ await page.locator('[data-advanced-apply="font"]').click();
+ await expect(page.locator('#markdown-preview span.af-font-serif')).toHaveText('Typography');
+ await editor.fill('Large text');
+ await editor.selectText();
+ await page.locator('#advanced-size').selectOption('xlarge');
+ await page.locator('[data-advanced-apply="size"]').click();
+ await expect(page.locator('#markdown-preview .af-size-xlarge')).toHaveText('Large text');
+ await editor.fill('Centered paragraph');
+ await editor.selectText();
+ await page.locator('#advanced-align').selectOption('center');
+ await page.locator('[data-advanced-apply="align"]').click();
+ await expect(page.locator('#markdown-preview div.af-align-center')).toHaveText('Centered paragraph');
+ await editor.fill('Indented text');
+ await editor.selectText();
+ await page.locator('#advanced-indent').selectOption('medium');
+ await page.locator('[data-advanced-apply="indent"]').click();
+ await expect(page.locator('#markdown-preview div.af-indent-medium')).toHaveText('Indented text');
+ await editor.fill('Spaced');
+ await editor.selectText();
+ await page.locator('#advanced-spacing').selectOption('double');
+ await page.locator('[data-advanced-apply="spacing"]').click();
+ await expect(page.locator('#markdown-preview div.af-spacing-double')).toHaveText('Spaced');
+});
+
+test('Advanced preset values persist and localize without changing regular progress',async({page})=>{
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#advanced-tools-toggle').click();
+ const prior=await page.locator('#progress-label').innerText();
+ await page.locator('#advanced-color').selectOption('purple');
+ await page.reload();
+ await expect(page.locator('#advanced-toolbar')).toBeVisible();
+ await expect(page.locator('#advanced-color')).toHaveValue('purple');
+ await expect(page.locator('[data-advanced-apply="color"]')).toHaveText('Применить');
+ await expect(page.locator('#progress-label')).toHaveText(prior);
+});
+
+test('HTML export keeps safe preset CSS and print page breaks but strips unsafe HTML',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#markdown-input').fill('<span class="af-color-blue evil-class" style="color:red" onclick="alert(1)">Safe</span>\n\n<div class="af-page-break"></div>');
+ const span=page.locator('#markdown-preview span.af-color-blue');
+ await expect(span).toHaveText('Safe');
+ await expect(span).toHaveAttribute('class','af-color-blue');
+ await expect(span).not.toHaveAttribute('style',/./);
+ await expect(span).not.toHaveAttribute('onclick',/./);
+ await expect(page.locator('#markdown-preview div.af-page-break')).toHaveCount(1);
+ const promise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const dl=await promise;
+ const {readFile}=await import('node:fs/promises');
+ const exported=await readFile(await dl.path(),'utf8');
+ expect(exported).toContain('class="md-preview"');
+ expect(exported).toContain('.md-preview .af-color-blue');
+ expect(exported).toContain('break-after:page');
+ expect(exported).toContain('class="af-page-break"');
+ expect(exported).not.toContain('onclick="alert');
+ expect(exported).not.toContain('evil-class');
+});

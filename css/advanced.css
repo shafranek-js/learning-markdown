@@ -1,0 +1,37 @@
+/* Advanced authoring styles — fixed tokens only, never arbitrary user CSS.
+   Scoped to the document preview and to the standalone HTML export. */
+.md-preview .af-color-ink{color:#17212f}
+.md-preview .af-color-red{color:#b42332}
+.md-preview .af-color-blue{color:#1755a5}
+.md-preview .af-color-green{color:#177245}
+.md-preview .af-color-purple{color:#6a329d}
+.md-preview .af-background-yellow{background-color:#fff1a8}
+.md-preview .af-background-mint{background-color:#c6f4d9}
+.md-preview .af-background-rose{background-color:#ffcfdd}
+.md-preview .af-background-sky{background-color:#d1eaff}
+.md-preview .af-font-sans{font-family:Arial,Helvetica,sans-serif}
+.md-preview .af-font-serif{font-family:Georgia,'Times New Roman',serif}
+.md-preview .af-font-mono{font-family:'Courier New',monospace}
+.md-preview .af-size-small{font-size:.85em}
+.md-preview .af-size-normal{font-size:1em}
+.md-preview .af-size-large{font-size:1.25em}
+.md-preview .af-size-xlarge{font-size:1.6em}
+.md-preview .af-align-left{text-align:left}
+.md-preview .af-align-center{text-align:center}
+.md-preview .af-align-right{text-align:right}
+.md-preview .af-align-justify{text-align:justify}
+.md-preview .af-indent-none{padding-left:0}
+.md-preview .af-indent-small{padding-left:1.5em}
+.md-preview .af-indent-medium{padding-left:3em}
+.md-preview .af-indent-large{padding-left:5em}
+.md-preview .af-spacing-compact{line-height:1.2}
+.md-preview .af-spacing-normal{line-height:1.6}
+.md-preview .af-spacing-relaxed{line-height:1.9}
+.md-preview .af-spacing-double{line-height:2}
+.md-preview .af-page-break{display:block;position:relative;min-height:1.25rem;margin:1.1rem 0;border-top:2px dashed #94a3b8}
+.md-preview .af-page-break::after{content:'Page break · print/PDF';position:absolute;top:-.62rem;left:50%;transform:translateX(-50%);padding:0 .65rem;background:var(--bg-preview,#f5f2eb);color:var(--preview-text,#27272a);font:600 10px Arial,sans-serif;white-space:nowrap}
+@media print{
+ .md-preview .af-page-break{border:0;min-height:0;height:0;margin:0;break-after:page;page-break-after:always}
+ .md-preview .af-page-break::after{content:none}
+ .md-preview{color:#18181b!important}
+}

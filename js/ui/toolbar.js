@@ -1,4 +1,5 @@
 import {area,applyEdit,undoOrRedo} from './editor.js';
+import {presetClass} from '../core/advanced-presets.js';
 const FENCE='```';
 export function setHeading(level){const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value;const begin=v.lastIndexOf('\n',s-1)+1;let finish=v.indexOf('\n',e);if(finish<0)finish=v.length;
  const line=v.slice(begin,finish),m=line.match(/^(#{1,6})[ \t]*(.*)$/),content=m?m[2]:line.trim();
@@ -8,6 +9,22 @@ export function setHeading(level){const a=area(),s=a.selectionStart,e=a.selectio
 export function insertSnippet(snippet,newline=true){const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,p=newline&&s>0&&v[s-1]!=='\n'?'\n':'';const value=p+snippet,pos=s+value.length;applyEdit(v.slice(0,s)+value+v.slice(e),pos,pos);}
 function wrap(prefix,suffix=prefix,placeholder='text'){const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,selection=v.slice(s,e)||placeholder;
  const next=v.slice(0,s)+prefix+selection+suffix+v.slice(e);applyEdit(next,s+prefix.length,s+prefix.length+selection.length);
+}
+export function applyAdvancedPreset(group,value){
+ const cssClass=presetClass(group,value);
+ if(!cssClass)return false;
+ const a=area(),start=a.selectionStart,end=a.selectionEnd,text=a.value,selected=text.slice(start,end);
+ const isBlock=['align','indent','spacing'].includes(group);
+ const sample=isBlock?'Formatted paragraph':'formatted text';
+ const content=selected||sample;
+ const before=isBlock?'\n\n<div class="'+cssClass+'">':'<span class="'+cssClass+'">';
+ const after=isBlock?'</div>\n\n':'</span>';
+ const next=text.slice(0,start)+before+content+after+text.slice(end);
+ applyEdit(next,start+before.length,start+before.length+content.length);
+ return true;
+}
+export function insertAdvancedPageBreak(){
+ insertSnippet('\n<div class="af-page-break"></div>\n',true);
 }
 export function toolbarAction(action){switch(action){
  case 'h1':case 'h2':case 'h3':case 'h4':case 'h5':case 'h6':setHeading(Number(action[1]));break;

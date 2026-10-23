@@ -10,7 +10,8 @@ export const DIALECT_OPTIONS={
 export function markdownToHTML(text,dialect=state.dialect){
  const options=DIALECT_OPTIONS[dialect]||DIALECT_OPTIONS.gfm;
  const raw=marked.parse(text,options);
- return window.DOMPurify ? window.DOMPurify.sanitize(raw,{USE_PROFILES:{html:true},FORBID_TAGS:['style','iframe','form'],FORBID_ATTR:['style']}) : sanitizeHTML(raw);
+ // Use the same strict class/attribute allowlist for every preview and export.
+ return sanitizeHTML(raw);
 }
 export function updatePreview(text){lastHtml=markdownToHTML(text);document.getElementById('markdown-preview').innerHTML=lastHtml;document.getElementById('raw-html-preview').textContent=lastHtml.trim();}
 export const currentHtml=()=>lastHtml;

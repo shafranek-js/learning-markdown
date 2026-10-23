@@ -1,3 +1,4 @@
+import {filterAdvancedClasses} from './advanced-presets.js';
 // Offline-safe HTML allowlist. Discard potentially executable elements rather than unwrapping them.
 // When DOMPurify is present, preview.js uses it; this is the bundled safe fallback.
 const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
@@ -18,6 +19,10 @@ export function sanitizeHTML(html){
   if(tag==='input'){if(node.getAttribute('type')!=='checkbox')return;el.setAttribute('type','checkbox');el.disabled=true;if(node.checked)el.checked=true;}
   if(['td','th'].includes(tag)){for(const name of ['colspan','rowspan']){const value=Number(node.getAttribute(name));if(Number.isInteger(value)&&value>0&&value<=20)el.setAttribute(name,String(value));}}
   if(tag==='code'){const cls=node.getAttribute('class')||'';if(/^language-[\w-]{1,30}$/.test(cls))el.className=cls;}
+  if(['span','div'].includes(tag)){
+   const safe=filterAdvancedClasses(node.getAttribute('class')||'');
+   if(safe)el.className=safe;
+  }
   if(!VOID.has(tag)){[...node.childNodes].forEach(c=>visit(c,el));}
   parent.appendChild(el);
  }

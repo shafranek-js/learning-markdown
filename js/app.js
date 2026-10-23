@@ -9,6 +9,7 @@ import {initToolbar,insertSnippet} from './ui/toolbar.js';
 import {renderPractice} from './ui/deep-practice.js';
 import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
 import {updatePreview,currentHtml} from './ui/preview.js';
+import {standaloneHTML} from './core/export-html.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
 const $=id=>document.getElementById(id);
@@ -130,7 +131,7 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
  $('font-inc-btn').addEventListener('click',()=>{state.fontSize=Math.min(22,state.fontSize+1);document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);refreshEditor({notify:false});save();});
  $('copy-md-btn').addEventListener('click',()=>copy(area().value));
  $('download-md-btn').addEventListener('click',()=>download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8'));
- $('download-html-btn').addEventListener('click',()=>download(`<!DOCTYPE html>\n<html lang="${state.lang}"><head><meta charset="utf-8"><title>Markdown export</title></head><body>\n${currentHtml()}\n</body></html>`, 'markdown-export.html','text/html;charset=utf-8'));
+ $('download-html-btn').addEventListener('click',()=>download(standaloneHTML(currentHtml(),state.lang),'markdown-export.html','text/html;charset=utf-8'));
  $('reset-course-btn').addEventListener('click',()=>{if(!confirm(t(state.lang,'confirmReset')))return;resetCourse();clearHistory();selectLesson(0,{route:false});syncRoute(state);toggleContents(false);});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.activeElement!==area())area().blur();});
  if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));

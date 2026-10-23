@@ -148,3 +148,17 @@ Official example audits now classify mismatches as exact HTML, DOM-equivalent ma
 The compact **HTML / Advanced** toggle opens a physically separate toolbar for safe raw HTML authoring: underline, subscript, superscript, highlighted text and native expandable details. The Lesson Guide also includes a separate, optional **Beyond Markdown · HTML Lab** with examples. Both controls are localized in EN/CS/UK/RO/RU and their expanded/collapsed states persist independently.
 
 Raw HTML is **not an interoperable Markdown formatting standard**: GFM/CommonMark allow HTML syntax in certain contexts, but hosting platforms may filter it. The app sanitizer permits only safe semantic tags for this phase; scripts, event attributes and arbitrary inline styles remain forbidden. Tools write editable HTML into the Markdown source and are undoable; existing eight-lesson completion and certificate remain unchanged. The remaining Word-like functionality and full advanced lessons are tracked in [Epic #1](https://github.com/shafranek-js/learning-markdown/issues/1).
+
+## Advanced Formatting — Issue #2: safe typography and paragraph presets
+
+The separate Advanced HTML toolbar now includes fixed presets for foreground and
+background colors, font families/sizes, paragraph alignment, indentation,
+line-height and print/PDF page breaks. All controls are labeled in five supported
+languages and insert editable HTML with `af-*` class tokens, never inline `style`.
+Only allowlisted class names survive the preview sanitizer. User-provided
+script/event handlers, arbitrary classes and CSS are removed. Preset choices
+and toolbar visibility persist locally without affecting eight-lesson progress.
+
+HTML downloads are self-contained, with bundled advanced/preview CSS and
+print-only page breaks, while `.md` remains a plain-text export. Other Markdown
+renderers may strip the HTML classes, so styled output is **not portable Markdown**.
