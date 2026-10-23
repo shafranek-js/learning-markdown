@@ -3,6 +3,8 @@ import {filterAdvancedClasses} from './advanced-presets.js';
 const TAGS=new Set('p br h1 h2 h3 h4 h5 h6 section strong b em i u sup sub mark details summary del s strike blockquote pre code ul ol li input a img table thead tbody tfoot tr th td hr span div'.split(' '));
 const DROP=new Set('script style iframe object embed svg math form button textarea select link meta base template noscript audio video canvas'.split(' '));
 const VOID=new Set(['br','hr','img','input']);
+// Strict Unicode-aware ID shape for safe multilingual heading anchors.
+const SAFE_ID=/^\p{L}[\p{L}\p{M}\p{N}_-]{0,63}$/u;
 // Fixed classes emitted by registered highlight.js grammars.
 // Only meaningful within <pre><code>, never arbitrary user-defined CSS.
 const CODE_TOKEN_CLASSES=new Set('keyword built_in type literal number string regexp subst symbol variable title section comment meta attr attribute name tag selector-tag selector-id selector-class selector-attr selector-pseudo selector-pseudo-class selector-pseudo-element property params function class operator punctuation template-variable template-tag link bullet addition deletion quote formula emphasis strong doctag'.split(' ').map(x=>'hljs-'+x));
@@ -54,7 +56,7 @@ export function sanitizeHTML(html){
   }
   if(['span','div','h1','h2','h3','h4','h5','h6','a','li'].includes(tag)){
    const id=node.getAttribute('id')||'';
-   if(/^[a-z][a-z0-9_-]{0,63}$/.test(id)&&!usedIds.has(id)){el.id=id;usedIds.add(id);}
+   if(SAFE_ID.test(id)&&!usedIds.has(id)){el.id=id;usedIds.add(id);}
   }
   if(tag==='section'&&node.getAttribute('class')==='md-footnotes')el.className='md-footnotes';
   if(tag==='h2'&&node.getAttribute('class')==='fn-visually-hidden')el.className='fn-visually-hidden';

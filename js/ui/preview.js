@@ -1,6 +1,8 @@
 import {sanitizeHTML} from '../core/sanitize.js';
 import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
 import {renderFootnotedMarkdown} from '../core/footnotes.js';
+import {addHeadingAnchors} from '../core/heading-anchors.js';
+import {renderTOC} from './toc.js';
 import {extensionEnabled} from '../core/extensions.js';
 import {marked} from 'marked';
 import {state,docKey} from '../core/state.js';
@@ -20,7 +22,10 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  const raw=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'footnotes')
   ?renderFootnotedMarkdown(text,options,state.lang):marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
- return highlightCodeBlocks(sanitizeHTML(raw));
+ const safe=highlightCodeBlocks(sanitizeHTML(raw));
+ return addHeadingAnchors(safe,{
+  customIds:extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'headingIds')
+ });
 }
 function enableTaskInputs(preview,source){
  if(state.dialect!=='gfm')return;
@@ -54,14 +59,17 @@ function handleTaskChange(event){
 // Links to a document anchor must not overwrite the app's lesson route in location.hash.
 export function initPreviewAnchors(){
  document.getElementById('markdown-preview').addEventListener('change',handleTaskChange);
- document.getElementById('markdown-preview').addEventListener('click',event=>{
+ const followDocumentAnchor=event=>{
   const link=event.target.closest?.('a[href^="#"]');
   if(!link)return;
-  const id=link.getAttribute('href').slice(1);
-  if(!/^[a-z][a-z0-9_-]{0,63}$/.test(id))return;
+  let id;
+  try{id=decodeURIComponent(link.getAttribute('href').slice(1));}catch{return;}
+  if(id.length>128)return;
   const target=[...document.getElementById('markdown-preview').querySelectorAll('[id]')].find(el=>el.id===id);
   if(target){event.preventDefault();target.scrollIntoView({block:'nearest',behavior:'smooth'});}
- });
+ };
+ document.getElementById('markdown-preview').addEventListener('click',followDocumentAnchor);
+ document.getElementById('toc-nav').addEventListener('click',followDocumentAnchor);
 }
 export function updatePreview(text){
  lastHtml=markdownToHTML(text);
@@ -75,6 +83,7 @@ export function updatePreview(text){
   code.parentElement.setAttribute('aria-label',tip);
  }
  enableTaskInputs(target,text);
+ renderTOC(target);
  syncTableEditorPreview();
  document.getElementById('raw-html-preview').textContent=lastHtml.trim();
 }

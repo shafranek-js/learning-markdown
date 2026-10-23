@@ -13,6 +13,7 @@ import {initTableEditor,renderTableEditorLanguage} from './ui/table-editor.js';
 import {renderPractice} from './ui/deep-practice.js';
 import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
 import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
+import {initTOC} from './ui/toc.js';
 import {standaloneHTML} from './core/export-html.js';
 import {renderPortability,portabilityStatus,portabilityLabels,initExtensionSettings} from './ui/compatibility.js';
 import {extensionText,footnoteText} from './core/extensions.js';
@@ -137,7 +138,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'));
+ initEditor(evaluate);initToolbar();initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initTOC({insertMarkdown:insertSnippet});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');

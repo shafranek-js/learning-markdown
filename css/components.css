@@ -127,3 +127,15 @@
 .advanced-category-nav{display:flex;flex-wrap:nowrap;gap:3px;align-items:center;border-right:1px solid var(--border-ui);padding-right:7px}
 .advanced-category-nav button{white-space:nowrap;transition:opacity .15s}
 .advanced-category-nav button[aria-pressed="true"]{outline:1px solid var(--accent)}
+
+
+/* #12: compact, keyboard-accessible outline in the Preview chrome */
+#toc-list{list-style:none;margin:0;padding:0}
+#toc-list .toc-entry{min-width:0}
+#toc-list .toc-link{display:block;padding:4px 8px;border-radius:5px;
+ text-decoration:none;color:var(--text-ui);font-size:11px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#toc-list .toc-link:hover,#toc-list .toc-link:focus-visible{
+ background:var(--bg-panel-alt);outline:1px solid var(--accent)}
+#toc-panel button:disabled{opacity:.45;cursor:not-allowed}
+.md-preview :is(h1,h2,h3,h4,h5,h6)[id]{scroll-margin-top:20px}

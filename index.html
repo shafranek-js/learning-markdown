@@ -434,6 +434,30 @@
                     </div>
                 </details>
 
+                <details id="toc-panel" class="shrink-0 border-b theme-border theme-panel-alt text-xs">
+                    <summary class="px-3 py-2 cursor-pointer font-semibold flex items-center gap-2">
+                        <span id="toc-title">Document outline</span>
+                        <span id="toc-count" class="theme-muted text-[10px]" aria-live="polite"></span>
+                    </summary>
+                    <div class="px-3 pb-3 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <label id="toc-depth-label" for="toc-depth" class="theme-muted text-[11px]">Maximum heading level</label>
+                            <select id="toc-depth" class="theme-panel border theme-border rounded px-2 py-1 text-xs" aria-controls="toc-list">
+                                <option value="1">H1</option><option value="2">H2</option><option value="3">H3</option>
+                                <option value="4">H4</option><option value="5">H5</option><option value="6">H6</option>
+                            </select>
+                        </div>
+                        <nav id="toc-nav" aria-label="Document headings" class="max-h-44 overflow-y-auto">
+                            <ol id="toc-list" class="space-y-0.5"></ol>
+                        </nav>
+                        <p id="toc-empty" class="text-[11px] theme-muted"></p>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="toc-insert" type="button" class="theme-panel border theme-border rounded px-2 py-1 text-[11px] hover:opacity-80">Insert static Markdown TOC</button>
+                            <button id="toc-example" type="button" class="theme-panel border theme-border rounded px-2 py-1 text-[11px] hover:opacity-80">Try headings</button>
+                        </div>
+                    </div>
+                </details>
+
                 <!-- Rendered Output Scroll Area -->
                 <div class="flex-1 p-6 sm:p-8 overflow-y-auto">
                     <div id="markdown-preview" aria-live="polite" class="md-preview max-w-none"></div>
