@@ -58,7 +58,10 @@ export function refreshEditor({notify=true}={}){
  el('cursor-position').textContent=`Ln ${l.length}, Col ${[...l.at(-1)].length+1}`;
  const h=multiActive()?multi.multiCursorStatus():status(docKey());el('undo-btn').disabled=!h.canUndo;el('redo-btn').disabled=!h.canRedo;
  el('history-status').textContent=`History: ${h.pointer}/${h.total}`;
- state.savedDrafts[docKey()]=text;save();
+ // Selection-only changes must not synchronously rewrite localStorage.
+ // Multi-cursor navigation can produce hundreds of selection transactions.
+ const key=docKey();
+ if(state.savedDrafts[key]!==text){state.savedDrafts[key]=text;save();}
  if(notify)onChange(text);
 }
 export function setEditorContent(value,{resetSelection=true}={}){const a=area();a.value=value;if(resetSelection)a.setSelectionRange(value.length,value.length);ensureHistory(docKey(),value);if(multiActive())multi.loadMultiCursorDocument(value,resetSelection);refreshEditor();}
