@@ -77,3 +77,23 @@ test('narrow viewport keeps editor navigation available',async({page})=>{
  await page.locator('#mobile-tabs button[data-mobile-tab="editor"]').click();
  await expect(page.locator('#markdown-input')).toBeVisible();
 });
+
+
+test('modern parser handles multiline Setext headings and hard line breaks',async({page})=>{
+ await page.goto('/');
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ const source='Foo *bar\nbaz*\n====\n\nFirst line\\\nSecond line\n';
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview h1')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview h1 em')).toContainText('bar');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+});
+
+test('unsafe raw HTML is removed from rendered preview',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('<script>window.__markdownXss = true</script>\n\n<img src="missing-image.png" onerror="window.__markdownXss=true" alt="Demo">');
+ await expect(page.locator('#markdown-preview script')).toHaveCount(0);
+ await expect(page.locator('#markdown-preview img')).toHaveAttribute('alt','Demo');
+ await expect(page.locator('#markdown-preview img')).not.toHaveAttribute('onerror',/./);
+ expect(await page.evaluate(()=>window.__markdownXss)).toBeUndefined();
+});
