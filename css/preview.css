@@ -267,3 +267,17 @@
  .md-preview figure.af-figure figcaption{color:#334155!important;opacity:1}
  .md-preview figure.af-figure-fixed img{max-height:20cm}
 }
+
+
+/* #14 Semantic definition lists: available in sanitized HTML and opt-in GFM. */
+.md-preview dl{margin:1.1rem 0;max-width:100%;overflow-wrap:anywhere}
+.md-preview dl dt{font-weight:700;margin:.75rem 0 .2rem;line-height:1.55}
+.md-preview dl dd{margin:.15rem 0 .5rem 1.5rem;padding:0 0 .15rem .85rem;
+ border-left:2px solid var(--preview-quote-border);line-height:1.55}
+.md-preview dl dd+dd{margin-top:.3rem}
+@media(max-width:600px){.md-preview dl dd{margin-left:.6rem;padding-left:.6rem}}
+@media print{
+ .md-preview dl dt{break-after:avoid-page;page-break-after:avoid}
+ .md-preview dl dd{break-inside:avoid-page}
+ .md-preview dl dd{border-color:#94a3b8}
+}

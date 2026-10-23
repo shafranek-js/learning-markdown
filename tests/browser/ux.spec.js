@@ -1550,7 +1550,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await expect(input).toHaveValue(source);
- await expect(page.locator('#extension-matrix-body tr')).toHaveCount(6);
+ await expect(page.locator('#extension-matrix-body tr')).toHaveCount(7);
  await page.reload();
  await expect(toggle).toHaveValue('on');
  // The <details> panel intentionally collapses after a page reload.

@@ -1,6 +1,6 @@
 import {inspectPortability} from '../core/compatibility.js';
 import {state,docKey,save} from '../core/state.js';
-import {extensionEnabled,changeExtension,extensionText,footnoteText} from '../core/extensions.js';
+import {extensionEnabled,changeExtension,extensionText,footnoteText,definitionText} from '../core/extensions.js';
 import {TOC_TEXT} from './toc.js';
 export const PORTABILITY_TEXT={
   "en": {
@@ -93,7 +93,7 @@ export const portabilityLabels=lang=>PORTABILITY_TEXT[lang]||PORTABILITY_TEXT.en
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 let last=null;
-export function initExtensionSettings(onChange,onInsertFootnoteExample){
+export function initExtensionSettings(onChange,onInsertFootnoteExample,onInsertDefinitionExample){
  $('extension-softbreaks-toggle').addEventListener('change',event=>{
   if(state.dialect!=='gfm')return;
   state.extensionSettingsByDocument=changeExtension(
@@ -106,6 +106,16 @@ export function initExtensionSettings(onChange,onInsertFootnoteExample){
    state.extensionSettingsByDocument,docKey(),'headingIds',event.target.value==='on');
   save();onChange();
  });
+ $('extension-definitions-toggle').addEventListener('change',event=>{
+  if(state.dialect!=='gfm')return;
+  state.extensionSettingsByDocument=changeExtension(
+   state.extensionSettingsByDocument,docKey(),'definitionLists',event.target.value==='on');
+  save();onChange();
+ });
+ $('extension-definitions-demo').addEventListener('click',()=>{
+  if(!extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'definitionLists'))return;
+  onInsertDefinitionExample();
+ });
  $('extension-footnotes-toggle').addEventListener('change',event=>{
   if(state.dialect!=='gfm')return;
   state.extensionSettingsByDocument=changeExtension(
@@ -117,7 +127,7 @@ export function initExtensionSettings(onChange,onInsertFootnoteExample){
   onInsertFootnoteExample();
  });
 }
-function renderExtensionMatrix(w,enabled,footnoteOn,customOn){
+function renderExtensionMatrix(w,enabled,footnoteOn,customOn,definitionsOn){
  const toggle=$('extension-softbreaks-toggle');
  toggle.disabled=state.dialect!=='gfm';
  toggle.value=enabled?'on':'off';
@@ -136,7 +146,8 @@ function renderExtensionMatrix(w,enabled,footnoteOn,customOn){
   [w.breaks,w.no,w.no,w.varies,enabled?w.yes:w.no],
   [w.html,w.varies,w.varies,w.varies,w.yes],
   [w.footnotes,w.no,w.no,w.yes,footnoteOn?w.yes:w.no],
-  [TOC_TEXT[state.lang]?.custom||TOC_TEXT.en.custom,w.no,w.no,w.no,customOn?w.yes:w.no]
+  [TOC_TEXT[state.lang]?.custom||TOC_TEXT.en.custom,w.no,w.no,w.no,customOn?w.yes:w.no],
+  [definitionText(state.lang).label,w.no,w.no,w.no,definitionsOn?w.yes:w.no]
  ];
  const tbody=$('extension-matrix-body');tbody.replaceChildren();
  for(const cells of rows){
@@ -155,6 +166,22 @@ export function renderPortability(source){
  const enabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'softbreaks');
  const notesEnabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'footnotes');
  const customEnabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'headingIds');
+ const definitionsEnabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'definitionLists');
+ const dw=definitionText(state.lang),dToggle=$('extension-definitions-toggle');
+ dToggle.disabled=state.dialect!=='gfm';
+ dToggle.value=definitionsEnabled?'on':'off';
+ dToggle.options[0].textContent=extensionText(state.lang).off;
+ dToggle.options[1].textContent=extensionText(state.lang).on;
+ $('extension-definitions-label').textContent=dw.label;
+ $('extension-definitions-note').textContent=dToggle.disabled?extensionText(state.lang).unavailable:dw.note;
+ $('extension-definitions-demo').textContent=dw.sample;
+ $('extension-definitions-demo').hidden=!definitionsEnabled;
+ $('extension-definitions-demo').disabled=!definitionsEnabled;
+ const practice=$('extension-definitions-practice');
+ practice.hidden=!definitionsEnabled;
+ const preview=document.getElementById('markdown-preview');
+ const completed=[...preview.querySelectorAll('dl.md-definition-list')].some(dl=>dl.querySelectorAll('dt').length>=1&&dl.querySelectorAll('dd').length>=2);
+ practice.textContent=dw.practice+' — '+(completed?dw.done:dw.pending);
  const headingsLabels=TOC_TEXT[state.lang]||TOC_TEXT.en;
  const customControl=$('extension-headingids-toggle');
  customControl.disabled=state.dialect!=='gfm';
@@ -181,8 +208,8 @@ export function renderPortability(source){
  const targets=refs.map(el=>el.getAttribute('href'));
  const repeated=targets.some((href,i)=>targets.indexOf(href)<i);
  practice.textContent=notes.exercise+' — '+(repeated?notes.done:notes.pending);
- last={...inspectPortability(source),extensionActive:enabled,footnotesActive:notesEnabled,customHeadingIdsActive:customEnabled};
- renderExtensionMatrix(labels,enabled,notesEnabled,customEnabled);
+ last={...inspectPortability(source),extensionActive:enabled,footnotesActive:notesEnabled,customHeadingIdsActive:customEnabled,definitionListsActive:definitionsEnabled};
+ renderExtensionMatrix(labels,enabled,notesEnabled,customEnabled,definitionsEnabled);
  set('compatibility-title',words.title);
  set('compatibility-description',words.summary);
  set('compatibility-core',words.core);

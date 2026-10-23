@@ -1,4 +1,5 @@
 import {state,save} from '../core/state.js';
+import {definitionText} from '../core/extensions.js';
 import {insertSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolbar.js';
 import {ADVANCED_PRESETS} from '../core/advanced-presets.js';
 import {RICH_CONTENT,RICH_GROUPS,richLabels} from '../data/rich-content.js';
@@ -187,6 +188,8 @@ export function renderAdvancedUI(){
  const words=advancedLabels(state.lang);
  applyAdvancedVisibility();
  $('advanced-toolbar-warning').textContent=words.warning;
+ $('definition-html-insert').textContent=definitionText(state.lang).html;
+ $('definition-html-insert').title=definitionText(state.lang).htmlWarning;
  renderPresetControls();
  renderRichControls();
  renderAdvancedCategoryControls();
@@ -209,6 +212,9 @@ export function renderAdvancedUI(){
  });
 }
 export function initAdvancedUI(){
+ $('definition-html-insert').addEventListener('click',()=>{
+  insertSnippet('\n\n<dl>\n  <dt>Term A</dt>\n  <dd>First <strong>definition</strong>.</dd>\n  <dd>Second definition.</dd>\n  <dt>Term B</dt>\n  <dd>Another explanation.</dd>\n</dl>\n\n');
+ });
  const button=$('advanced-tools-toggle');
  button.addEventListener('click',()=>{
   state.advancedToolsOpen=!state.advancedToolsOpen;
