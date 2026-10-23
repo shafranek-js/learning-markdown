@@ -1,0 +1,113 @@
+import {inspectPortability} from '../core/compatibility.js';
+import {state} from '../core/state.js';
+export const PORTABILITY_TEXT={
+  "en": {
+    "title": "Compatibility & export",
+    "summary": "Check how this document may behave on other Markdown platforms.",
+    "core": "Basic Markdown",
+    "gfm": "GFM-specific rendering",
+    "advanced": "Advanced HTML / CSS",
+    "standalone": "Standalone HTML (with bundled CSS)",
+    "available": "Available",
+    "difference": "May differ",
+    "none": "Not detected",
+    "notPortable": "May be removed by other renderers",
+    "mdWarning": "This document uses Advanced HTML/CSS. A .md file preserves the source, but other Markdown applications may remove the tags or ignore CSS classes. Export HTML for more consistent appearance. Download the .md anyway?",
+    "print": "Print / PDF",
+    "printTip": "Open a standalone print-ready HTML version; use Ctrl+P to save as PDF.",
+    "external": "External image URLs still require a network connection.",
+    "notice": "Compatibility is indicative, not a formal CommonMark/GFM certification."
+  },
+  "cs": {
+    "title": "Kompatibilita a export",
+    "summary": "Jak se dokument může zobrazit na jiných Markdown platformách.",
+    "core": "Základní Markdown",
+    "gfm": "Vykreslení specifické pro GFM",
+    "advanced": "Rozšířené HTML / CSS",
+    "standalone": "Samostatné HTML (s CSS)",
+    "available": "K dispozici",
+    "difference": "Může se lišit",
+    "none": "Nezjištěno",
+    "notPortable": "Jiné platformy mohou obsah odstranit",
+    "mdWarning": "Dokument používá pokročilé HTML/CSS. Soubor .md zachová zdroj, ale jiné aplikace mohou odstranit značky či ignorovat styly. Pro věrný vzhled exportujte HTML. Stáhnout .md přesto?",
+    "print": "Tisk / PDF",
+    "printTip": "Otevřít HTML připravené k tisku a uložit přes Ctrl+P.",
+    "external": "Externí obrázky vyžadují připojení k internetu.",
+    "notice": "Kompatibilita je orientační, nikoliv certifikace."
+  },
+  "uk": {
+    "title": "Сумісність та експорт",
+    "summary": "Як документ може відображатися на інших Markdown-платформах.",
+    "core": "Базовий Markdown",
+    "gfm": "Особливості GFM",
+    "advanced": "Розширений HTML / CSS",
+    "standalone": "Самостійний HTML (із CSS)",
+    "available": "Доступно",
+    "difference": "Можуть бути відмінності",
+    "none": "Не знайдено",
+    "notPortable": "Інші платформи можуть видаляти форматування",
+    "mdWarning": "Документ містить розширений HTML/CSS. Файл .md збереже вихідний текст, але інші застосунки можуть видалити теги чи стилі. Експортуйте HTML для точного вигляду. Завантажити .md?",
+    "print": "Друк / PDF",
+    "printTip": "Відкрити HTML для друку і зберегти PDF через Ctrl+P.",
+    "external": "Зовнішні зображення потребують інтернету.",
+    "notice": "Оцінка сумісності орієнтовна, а не сертифікат стандарту."
+  },
+  "ro": {
+    "title": "Compatibilitate și export",
+    "summary": "Cum se poate afișa documentul pe alte platforme Markdown.",
+    "core": "Markdown de bază",
+    "gfm": "Redare specifică GFM",
+    "advanced": "HTML / CSS avansat",
+    "standalone": "HTML independent (cu CSS)",
+    "available": "Disponibil",
+    "difference": "Poate varia",
+    "none": "Nu a fost detectat",
+    "notPortable": "Alte platforme pot elimina formatarea",
+    "mdWarning": "Acest document folosește HTML/CSS avansat. Fișierul .md păstrează sursa, dar alte aplicații pot elimina etichete sau ignora clasele CSS. Exportați HTML pentru aspect fidel. Descărcați oricum .md?",
+    "print": "Tipărire / PDF",
+    "printTip": "Deschideți HTML pregătit pentru tipărire, apoi Ctrl+P.",
+    "external": "Imaginile externe necesită internet.",
+    "notice": "Compatibilitatea este orientativă, nu o certificare."
+  },
+  "ru": {
+    "title": "Совместимость и экспорт",
+    "summary": "Как документ может выглядеть в других Markdown-приложениях.",
+    "core": "Базовый Markdown",
+    "gfm": "Особенности GFM",
+    "advanced": "Расширенное HTML / CSS",
+    "standalone": "Автономный HTML (со встроенными стилями)",
+    "available": "Доступно",
+    "difference": "Может отличаться",
+    "none": "Не обнаружено",
+    "notPortable": "Другие платформы могут удалять оформление",
+    "mdWarning": "Документ использует расширенное HTML/CSS. Файл .md сохранит исходный код, но другие приложения могут удалить HTML-теги или проигнорировать CSS-классы. Для сохранения оформления лучше экспортировать HTML. Всё равно скачать .md?",
+    "print": "Печать / PDF",
+    "printTip": "Открыть HTML с оформлением и сохранить PDF через Ctrl+P.",
+    "external": "Для внешних изображений потребуется интернет.",
+    "notice": "Это ориентировочная оценка, а не сертификат соответствия стандартам."
+  }
+};
+export const portabilityLabels=lang=>PORTABILITY_TEXT[lang]||PORTABILITY_TEXT.en;
+const $=id=>document.getElementById(id);
+const set=(id,value)=>{$(id).textContent=value;};
+let last=null;
+export function renderPortability(source){
+ const words=portabilityLabels(state.lang);
+ last=inspectPortability(source);
+ set('compatibility-title',words.title);
+ set('compatibility-description',words.summary);
+ set('compatibility-core',words.core);
+ set('compatibility-gfm',words.gfm);
+ set('compatibility-advanced',words.advanced);
+ set('compatibility-html',words.standalone);
+ set('compatibility-core-status',words.available);
+ set('compatibility-gfm-status',last.gfmDifference?words.difference:words.none);
+ set('compatibility-advanced-status',last.advanced?words.notPortable:words.none);
+ set('compatibility-html-status',words.available);
+ set('compatibility-footnote',words.notice);
+ set('compatibility-external',words.external);
+ $('print-document-btn').textContent=words.print;
+ $('print-document-btn').title=words.printTip;
+ return last;
+}
+export function portabilityStatus(){return last;}
