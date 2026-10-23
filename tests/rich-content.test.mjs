@@ -32,7 +32,8 @@ output=safe(makeRichSnippet('tables','borderless'));
 assert.match(output,/class="af-table-borderless"/);
 for(const listType of ['a','A','i','I']){
  output=safe(makeRichSnippet('numbering',listType));
- assert(output.includes('<ol type="'+listType+'">'),listType);
+ const listElement=new DOMParser().parseFromString(output,'text/html').querySelector('ol');
+ assert.equal(listElement?.getAttribute('type'),listType,'List numbering type '+listType);
 }
 let anchor=makeRichSnippet('blocks','anchor','Target <script>','');
 assert(anchor.includes('id="advanced-section"')&&anchor.includes('&lt;script&gt;'));
