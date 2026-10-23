@@ -58,8 +58,10 @@ export function sanitizeHTML(html){
   if(['span','div','table','td','th'].includes(tag)){
    const classes=node.getAttribute('class')||'';
    const safe=filterAdvancedClasses(classes);
-   // Highlight scopes are allowed only inside code blocks, after sanitizing.
-   const tokens=tag==='span'&&parent.closest('pre > code')
+   // Build-tree parents are detached until recursion completes; closest('code')
+   // remains valid even before the <code> is appended to its <pre>.
+   // Token classes only receive styling under pre > code in preview CSS.
+   const tokens=tag==='span'&&parent.closest('code')
     ?[...new Set(classes.split(/\s+/).filter(x=>CODE_TOKEN_CLASSES.has(x)))].join(' ')
     :'';
    if(safe||tokens)el.className=[safe,tokens].filter(Boolean).join(' ');
