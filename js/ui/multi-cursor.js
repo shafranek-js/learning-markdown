@@ -208,3 +208,31 @@ export function multiCursorHeading(level){
  view.dispatch({changes:[...changes.values()].sort((a,b)=>a.from-b.from)});
  view.focus();return true;
 }
+
+// Apply line-based Markdown formatting to every selected line, even when
+// multiple selections touch the same line. All changes form one undo step.
+export function multiCursorLineFormat(kind){
+ if(!active)return false;
+ if(!['ul','ol','task','quote'].includes(kind))return false;
+ const doc=view.state.doc,lines=new Set();
+ for(const r of view.state.selection.ranges){
+  const first=doc.lineAt(r.from).number,last=doc.lineAt(r.to).number;
+  const end=r.to>r.from&&doc.line(last).from===r.to?last-1:last;
+  for(let n=first;n<=Math.max(first,end);n++)lines.add(n);
+ }
+ const edits=[];let ordinal=0;
+ for(const n of [...lines].sort((a,b)=>a-b)){
+  const line=doc.line(n),value=line.text;
+  const indent=value.match(/^[ \t]*/)[0],body=value.slice(indent.length);
+  // Replace existing Markdown list/quote markers instead of nesting them.
+  const bare=body.replace(/^(?:>\s*)+/, '')
+   .replace(/^(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/, '');
+  let prefix;
+  if(kind==='ol')prefix=(++ordinal)+'. ';
+  else prefix={ul:'- ',task:'- [ ] ',quote:'> '}[kind];
+  const next=indent+prefix+bare;
+  if(next!==value)edits.push({from:line.from,to:line.to,insert:next});
+ }
+ if(edits.length)view.dispatch({changes:edits});
+ view.focus();return true;
+}
