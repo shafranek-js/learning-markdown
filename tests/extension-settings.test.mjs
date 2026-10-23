@@ -21,7 +21,7 @@ assert.equal(extensionEnabled(other,'lesson_2_en','gfm','softbreaks'),true);
 assert.equal(extensionEnabled(clean,'lesson_2_en','gfm','softbreaks'),false);
 assert.equal(Object.hasOwn(changeExtension(other,'lesson_2_en','softbreaks',false),'lesson_2_en'),false);
 assert(!Object.hasOwn(changeExtension(other,'lesson_3_en','evil',true),'lesson_3_en'));
-assert.equal(Object.keys(EXTENSIONS).length,2);
+assert.equal(Object.keys(EXTENSIONS).length,3);
 for(const lang of ['en','cs','uk','ro','ru']){
  const text=EXTENSION_TEXT[lang];
  assert(text.title&&text.warning&&text.matrix&&text.planned);

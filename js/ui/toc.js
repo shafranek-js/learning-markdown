@@ -2,19 +2,19 @@ import {state,save} from '../core/state.js';
 import {headingOutline,staticMarkdownTOC} from '../core/heading-anchors.js';
 const el=id=>document.getElementById(id);
 export const TOC_TEXT={
- en:{title:'Document outline',depth:'Maximum heading level',insert:'Insert static Markdown TOC',
+ en:{custom:'Custom {#id} heading suffix (app-only)',customNote:'Not part of CommonMark or GFM. Enabled only in GFM.',customWarning:'Custom heading IDs are app-specific. Other Markdown processors may show the literal {#id} text. The .md source stays unchanged. Download anyway?',portability:'TOC links use this app’s heading IDs. Other Markdown processors may generate different anchors.',title:'Document outline',depth:'Maximum heading level',insert:'Insert static Markdown TOC',
   sample:'Try headings',empty:'No headings in this document',count:n=>n+' headings',
   nav:'Document headings',example:'# Introduction\n\n## Details\n\n## Details\n\n### More details\n\n'},
- cs:{title:'Obsah dokumentu',depth:'Maximální úroveň nadpisu',insert:'Vložit statický Markdown obsah',
+ cs:{custom:'Vlastní {#id} u nadpisů (jen aplikace)',customNote:'Není součástí CommonMark ani GFM. Jen v GFM.',customWarning:'Vlastní ID nadpisů jsou specifická pro aplikaci. Jiné procesory mohou zobrazit {#id} jako text. Zdroj .md se nemění. Stáhnout?',portability:'Odkazy obsahu používají ID této aplikace. Jiné procesory mohou používat jiné kotvy.',title:'Obsah dokumentu',depth:'Maximální úroveň nadpisu',insert:'Vložit statický Markdown obsah',
   sample:'Vyzkoušet nadpisy',empty:'Dokument nemá nadpisy',count:n=>n+' nadpisů',
   nav:'Nadpisy dokumentu',example:'# Úvod\n\n## Detaily\n\n## Detaily\n\n### Více podrobností\n\n'},
- uk:{title:'Зміст документа',depth:'Максимальний рівень заголовка',insert:'Вставити статичний зміст Markdown',
+ uk:{custom:'Власний {#id} для заголовків (лише застосунок)',customNote:'Не входить до CommonMark чи GFM. Лише у GFM.',customWarning:'Власні ID заголовків працюють тільки в цьому застосунку. Інші процесори можуть показувати {#id} як текст. Завантажити?',portability:'Посилання змісту використовують ID застосунку. Інші процесори можуть створювати інші якорі.',title:'Зміст документа',depth:'Максимальний рівень заголовка',insert:'Вставити статичний зміст Markdown',
   sample:'Спробувати заголовки',empty:'У документі немає заголовків',count:n=>n+' заголовків',
   nav:'Заголовки документа',example:'# Вступ\n\n## Деталі\n\n## Деталі\n\n### Докладніше\n\n'},
- ro:{title:'Cuprinsul documentului',depth:'Nivelul maxim al titlului',insert:'Inserează cuprins Markdown static',
+ ro:{custom:'ID {#id} pentru titluri (doar aplicație)',customNote:'Nu face parte din CommonMark/GFM; doar în GFM.',customWarning:'ID-urile titlurilor sunt specifice aplicației. Alte procesoare pot afișa {#id} ca text. Descărcați?',portability:'Linkurile cuprinsului folosesc ID-urile acestei aplicații. Alte procesoare pot genera alte ancore.',title:'Cuprinsul documentului',depth:'Nivelul maxim al titlului',insert:'Inserează cuprins Markdown static',
   sample:'Încearcă titluri',empty:'Documentul nu are titluri',count:n=>n+' titluri',
   nav:'Titlurile documentului',example:'# Introducere\n\n## Detalii\n\n## Detalii\n\n### Mai multe detalii\n\n'},
- ru:{title:'Оглавление документа',depth:'Максимальный уровень заголовков',insert:'Вставить оглавление в Markdown',
+ ru:{custom:'Собственные ID заголовков {#id} (только приложение)',customNote:'Не входит в CommonMark или GFM. Доступно только в режиме GFM.',customWarning:'Собственные ID заголовков работают только в этом приложении. Другие Markdown-процессоры могут показать {#id} как текст. Скачать?',portability:'Ссылки оглавления используют ID этого приложения; другие Markdown-процессоры могут создавать другие якоря.',title:'Оглавление документа',depth:'Максимальный уровень заголовков',insert:'Вставить оглавление в Markdown',
   sample:'Попробовать заголовки',empty:'В документе пока нет заголовков',count:n=>n+' заголовков',
   nav:'Заголовки документа',example:'# Введение\n\n## Подробности\n\n## Подробности\n\n### Дополнительно\n\n'}
 };
@@ -33,6 +33,7 @@ export function renderTOC(preview){
  const visible=current.filter(h=>h.level<=depth);
  el('toc-count').textContent=w.count(visible.length);
  el('toc-empty').textContent=w.empty;
+ el('toc-portability').textContent=w.portability;
  el('toc-empty').hidden=visible.length>0;
  el('toc-insert').disabled=!visible.length;
  nav.replaceChildren();

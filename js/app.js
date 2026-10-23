@@ -13,7 +13,7 @@ import {initTableEditor,renderTableEditorLanguage} from './ui/table-editor.js';
 import {renderPractice} from './ui/deep-practice.js';
 import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
 import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
-import {initTOC} from './ui/toc.js';
+import {initTOC,TOC_TEXT} from './ui/toc.js';
 import {standaloneHTML} from './core/export-html.js';
 import {renderPortability,portabilityStatus,portabilityLabels,initExtensionSettings} from './ui/compatibility.js';
 import {extensionText,footnoteText} from './core/extensions.js';
@@ -162,6 +162,7 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
   if(portabilityStatus()?.advanced && !confirm(portabilityLabels(state.lang).mdWarning))return;
   if(portabilityStatus()?.extensionActive && !confirm(extensionText(state.lang).warning))return;
   if(portabilityStatus()?.footnotesActive && !confirm(footnoteText(state.lang).warning))return;
+  if(portabilityStatus()?.customHeadingIdsActive && !confirm((TOC_TEXT[state.lang]||TOC_TEXT.en).customWarning))return;
   download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8');
  });
  $('download-html-btn').addEventListener('click',()=>download(standaloneHTML(currentHtml(),state.lang),'markdown-export.html','text/html;charset=utf-8'));

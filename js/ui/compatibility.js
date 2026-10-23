@@ -1,6 +1,7 @@
 import {inspectPortability} from '../core/compatibility.js';
 import {state,docKey,save} from '../core/state.js';
 import {extensionEnabled,changeExtension,extensionText,footnoteText} from '../core/extensions.js';
+import {TOC_TEXT} from './toc.js';
 export const PORTABILITY_TEXT={
   "en": {
     "title": "Compatibility & export",
@@ -99,6 +100,12 @@ export function initExtensionSettings(onChange,onInsertFootnoteExample){
    state.extensionSettingsByDocument,docKey(),'softbreaks',event.target.value==='on');
   save();onChange();
  });
+ $('extension-headingids-toggle').addEventListener('change',event=>{
+  if(state.dialect!=='gfm')return;
+  state.extensionSettingsByDocument=changeExtension(
+   state.extensionSettingsByDocument,docKey(),'headingIds',event.target.value==='on');
+  save();onChange();
+ });
  $('extension-footnotes-toggle').addEventListener('change',event=>{
   if(state.dialect!=='gfm')return;
   state.extensionSettingsByDocument=changeExtension(
@@ -110,7 +117,7 @@ export function initExtensionSettings(onChange,onInsertFootnoteExample){
   onInsertFootnoteExample();
  });
 }
-function renderExtensionMatrix(w,enabled,footnoteOn){
+function renderExtensionMatrix(w,enabled,footnoteOn,customOn){
  const toggle=$('extension-softbreaks-toggle');
  toggle.disabled=state.dialect!=='gfm';
  toggle.value=enabled?'on':'off';
@@ -128,7 +135,8 @@ function renderExtensionMatrix(w,enabled,footnoteOn){
   [w.tables,w.no,w.yes,w.yes,w.yes],
   [w.breaks,w.no,w.no,w.varies,enabled?w.yes:w.no],
   [w.html,w.varies,w.varies,w.varies,w.yes],
-  [w.footnotes,w.no,w.no,w.yes,footnoteOn?w.yes:w.no]
+  [w.footnotes,w.no,w.no,w.yes,footnoteOn?w.yes:w.no],
+  [TOC_TEXT[state.lang]?.custom||TOC_TEXT.en.custom,w.no,w.no,w.no,customOn?w.yes:w.no]
  ];
  const tbody=$('extension-matrix-body');tbody.replaceChildren();
  for(const cells of rows){
@@ -146,6 +154,16 @@ export function renderPortability(source){
  const words=portabilityLabels(state.lang);
  const enabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'softbreaks');
  const notesEnabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'footnotes');
+ const customEnabled=extensionEnabled(state.extensionSettingsByDocument,docKey(),state.dialect,'headingIds');
+ const headingsLabels=TOC_TEXT[state.lang]||TOC_TEXT.en;
+ const customControl=$('extension-headingids-toggle');
+ customControl.disabled=state.dialect!=='gfm';
+ customControl.value=customEnabled?'on':'off';
+ customControl.options[0].textContent=extensionText(state.lang).off;
+ customControl.options[1].textContent=extensionText(state.lang).on;
+ $('extension-headingids-label').textContent=headingsLabels.custom;
+ $('extension-headingids-note').textContent=customControl.disabled
+  ?extensionText(state.lang).unavailable:headingsLabels.customNote;
  const labels=extensionText(state.lang),notes=footnoteText(state.lang);
  const control=$('extension-footnotes-toggle');
  control.disabled=state.dialect!=='gfm';
@@ -163,8 +181,8 @@ export function renderPortability(source){
  const targets=refs.map(el=>el.getAttribute('href'));
  const repeated=targets.some((href,i)=>targets.indexOf(href)<i);
  practice.textContent=notes.exercise+' — '+(repeated?notes.done:notes.pending);
- last={...inspectPortability(source),extensionActive:enabled,footnotesActive:notesEnabled};
- renderExtensionMatrix(labels,enabled,notesEnabled);
+ last={...inspectPortability(source),extensionActive:enabled,footnotesActive:notesEnabled,customHeadingIdsActive:customEnabled};
+ renderExtensionMatrix(labels,enabled,notesEnabled,customEnabled);
  set('compatibility-title',words.title);
  set('compatibility-description',words.summary);
  set('compatibility-core',words.core);
