@@ -205,6 +205,7 @@
     <div id="advanced-rich-toolbar" class="advanced-tools-strip hidden theme-panel border-b theme-border px-3 py-1.5 gap-3 items-center overflow-x-auto" role="group" aria-label="Rich tables, callouts, anchors and custom lists">
         <span id="advanced-rich-heading" class="shrink-0 text-[11px] font-bold theme-muted">Rich HTML</span>
         <div id="advanced-rich-controls" class="flex items-center gap-3 shrink-0"></div>
+        <button id="figure-dialog-trigger" type="button" class="px-2 py-1 shrink-0 text-[11px] rounded border theme-border theme-panel-alt hover:opacity-90" aria-haspopup="dialog" aria-controls="figure-dialog">Figure / Image</button>
     </div>
 
     <nav id="mobile-tabs" class="mobile-tabs" aria-label="Workspace panels"><button data-mobile-tab="guide">Guide</button><button data-mobile-tab="editor">Editor</button><button data-mobile-tab="preview">Preview</button></nav>
@@ -569,5 +570,42 @@
 
     
     <script type="module" src="./js/app.js"></script>
+
+    <!-- HTML figure builder is outside the scrolling advanced toolbar. -->
+    <dialog id="figure-dialog" aria-labelledby="figure-dialog-title" class="figure-dialog theme-panel theme-border">
+      <form id="figure-form" novalidate>
+        <div class="figure-dialog-head">
+          <strong id="figure-dialog-title"></strong>
+          <button id="figure-cancel-top" type="button" aria-label="Close">×</button>
+        </div>
+        <p id="figure-description" class="theme-muted text-[11px]"></p>
+        <label for="figure-url" id="figure-url-label"></label>
+        <input id="figure-url" type="url" inputmode="url" required autocomplete="off" placeholder="https://example.com/image.png">
+        <label for="figure-alt" id="figure-alt-label"></label>
+        <input id="figure-alt" type="text" maxlength="400" required>
+        <label class="figure-check"><input type="checkbox" id="figure-decorative"><span id="figure-decorative-label"></span></label>
+        <div class="figure-columns">
+          <div><label for="figure-width-preset" id="figure-width-label"></label>
+            <select id="figure-width-preset"><option value="320">320 px</option><option value="640" selected>640 px</option><option value="960">960 px</option><option value="custom">Custom</option></select>
+          </div>
+          <div><label for="figure-width-custom" id="figure-width-custom-label"></label>
+            <input id="figure-width-custom" type="number" min="1" max="1600" step="1" value="640" disabled>
+          </div>
+        </div>
+        <label class="figure-check"><input type="checkbox" id="figure-natural" checked><span id="figure-natural-label"></span></label>
+        <label for="figure-height" id="figure-height-label"></label>
+        <input id="figure-height" type="number" min="1" max="1600" step="1" value="320" disabled>
+        <label for="figure-caption" id="figure-caption-label"></label>
+        <textarea id="figure-caption" rows="2" maxlength="500"></textarea>
+        <p id="figure-external-warning" class="theme-muted text-[11px]"></p>
+        <p id="figure-error" class="figure-error" role="alert" aria-live="polite"></p>
+        <div class="figure-dialog-actions">
+          <button type="button" id="figure-cancel"></button>
+          <button type="submit" data-format="markdown" id="figure-markdown"></button>
+          <button type="submit" data-format="html" id="figure-insert"></button>
+        </div>
+      </form>
+    </dialog>
+
 </body>
 </html>
