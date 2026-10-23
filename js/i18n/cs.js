@@ -13,7 +13,7 @@ export const ui = {
                 previewView: "Náhled",
                 curriculumTitle: "Obsah kurzu",
                 curriculumSub: "8 interaktivních modulů + Pískoviště",
-                resetAllBtn: "Resetovat postup",
+                resetAllBtn: "Resetovat základní kurz",
                 snippetsLabel: "Interaktivní ukázky",
                 clickToInsert: "Kliknutím vložíte",
                 tasksTitle: "Praktický úkol",

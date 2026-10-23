@@ -13,7 +13,7 @@ export const ui = {
                 previewView: "Preview",
                 curriculumTitle: "Course Contents",
                 curriculumSub: "8 Interactive Modules + AI Prompt Sandbox",
-                resetAllBtn: "Reset All Progress",
+                resetAllBtn: "Reset Core Course",
                 snippetsLabel: "Interactive Snippets",
                 clickToInsert: "Click to insert",
                 tasksTitle: "Practice Checklist",

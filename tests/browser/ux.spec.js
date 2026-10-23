@@ -448,3 +448,21 @@ test('All advanced lessons translate into Czech, Ukrainian, Romanian and Russian
   await expect(page.locator('#tasks-counter-badge')).toHaveText('0 / 3');
  }
 });
+
+
+test('Resetting core course preserves advanced completion and advanced drafts',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-course-btn').click();
+ await page.locator('#markdown-input').fill('<u>Saved advanced draft</u>');
+ await expect(page.locator('#tasks-counter-badge')).toHaveText('1 / 3');
+ await page.locator('#toggle-hint-btn').click();
+ await page.locator('#insert-solution-btn').click();
+ await expect(page.locator('#advanced-progress-label')).toContainText('1 / 7');
+ await page.locator('#contents-toggle-btn').click();
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#reset-course-btn').click();
+ await expect(page.locator('#progress-label')).toContainText('0');
+ await expect(page.locator('#advanced-progress-label')).toContainText('1 / 7');
+ await page.locator('#advanced-course-btn').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(/Saved advanced draft/);
+});

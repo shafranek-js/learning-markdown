@@ -36,6 +36,7 @@ const sandbox=verifyAdvancedLesson(advancedLesson(0,'en'),'<script>alert(1)</scr
 assert(!sandbox.some(x=>x.passed));
 const storageSource=await import('node:fs/promises').then(m=>m.readFile(new URL('../js/core/state.js',import.meta.url),'utf8'));
 assert(storageSource.includes('advanced_')&&storageSource.includes('completedAdvancedLessons'));
+assert(storageSource.includes("!key.startsWith('advanced_')"),'Core reset must preserve advanced drafts');
 const route=await import('../js/core/router.js');
 assert(route.LESSON_IDS.slice(-7).join(',')===ADVANCED_IDS.join(','));
 console.log('PASS: seven advanced lessons x five languages, 120 checks, safe preview, routing and independent storage');

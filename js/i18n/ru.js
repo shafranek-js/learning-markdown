@@ -13,7 +13,7 @@ export const ui = {
                 previewView: "Превью",
                 curriculumTitle: "Программа курса",
                 curriculumSub: "8 интерактивных модулей + Песочница",
-                resetAllBtn: "Сбросить весь прогресс",
+                resetAllBtn: "Сбросить базовый курс",
                 snippetsLabel: "Интерактивные сниппеты",
                 clickToInsert: "Нажмите для вставки",
                 tasksTitle: "Практическое задание",

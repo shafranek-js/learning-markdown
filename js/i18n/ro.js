@@ -13,7 +13,7 @@ export const ui = {
                 previewView: "Previzualizare",
                 curriculumTitle: "Cuprinsul cursului",
                 curriculumSub: "8 module interactive + Sandbox",
-                resetAllBtn: "Resetează progresul",
+                resetAllBtn: "Resetează cursul de bază",
                 snippetsLabel: "Fragmente interactive",
                 clickToInsert: "Click pentru inserare",
                 tasksTitle: "Listă practică",
