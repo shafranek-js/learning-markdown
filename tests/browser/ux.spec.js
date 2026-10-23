@@ -1553,6 +1553,9 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await expect(page.locator('#extension-matrix-body tr')).toHaveCount(5);
  await page.reload();
  await expect(toggle).toHaveValue('on');
+ // The <details> panel intentionally collapses after a page reload.
+ await page.locator('#compatibility-panel summary').click();
+ await expect(toggle).toBeVisible();
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await page.locator('#dialect-selector').selectOption('commonmark');
  await expect(toggle).toBeDisabled();
