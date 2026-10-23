@@ -1787,3 +1787,108 @@ test('issue #12 mobile and 150-heading outline remains usable',async({page})=>{
  await page.locator('#toc-example').click();
  await expect(page.locator('#markdown-input')).toHaveValue(/# Introduction/);
 });
+
+
+test('issue #13 advanced image builder creates accessible responsive figures with Undo/Redo',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('A short introduction.');
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#figure-dialog-trigger').click();
+ await expect(page.locator('#figure-dialog')).toBeVisible();
+ await page.locator('#figure-url').fill('https://example.org/diagram.png');
+ await page.locator('#figure-alt').fill('A flow diagram');
+ await page.locator('#figure-width-preset').selectOption('custom');
+ await page.locator('#figure-width-custom').fill('800');
+ await page.locator('#figure-natural').uncheck();
+ await page.locator('#figure-height').fill('340');
+ await page.locator('#figure-caption').fill('Figure 1: A & B < C');
+ await page.locator('#figure-insert').click();
+ await expect(page.locator('#figure-dialog')).not.toBeVisible();
+ await expect(input).toHaveValue(/<figure class="af-figure af-figure-fixed">/);
+ await expect(input).toHaveValue(/width="800" height="340"/);
+ const picture=page.locator('#markdown-preview figure.af-figure');
+ await expect(picture).toHaveCount(1);
+ await expect(picture.locator('img')).toHaveAttribute('alt','A flow diagram');
+ await expect(picture.locator('img')).toHaveAttribute('width','800');
+ await expect(picture.locator('img')).toHaveAttribute('height','340');
+ await expect(picture.locator('figcaption')).toHaveText('Figure 1: A & B < C');
+ expect(await picture.locator('img').evaluate(el=>getComputedStyle(el).objectFit)).toBe('contain');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('A short introduction.');
+ await expect(page.locator('#markdown-preview figure')).toHaveCount(0);
+ await page.locator('#redo-btn').click();
+ await expect(picture).toHaveCount(1);
+});
+
+test('issue #13 image builder rejects invalid sizes and URLs, supports decorative alt',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#figure-dialog-trigger').click();
+ await page.locator('#figure-url').fill('javascript:alert(1)');
+ await page.locator('#figure-alt').fill('Test image');
+ await page.locator('#figure-insert').click();
+ await expect(page.locator('#figure-error')).not.toBeEmpty();
+ await expect(page.locator('#figure-dialog')).toBeVisible();
+ await page.locator('#figure-url').fill('https://example.org/test.png');
+ await page.locator('#figure-width-preset').selectOption('custom');
+ await page.locator('#figure-width-custom').fill('1601');
+ await page.locator('#figure-insert').click();
+ await expect(page.locator('#figure-error')).toContainText('1600');
+ await page.locator('#figure-width-custom').fill('640');
+ await page.locator('#figure-decorative').check();
+ await expect(page.locator('#figure-alt')).toBeDisabled();
+ await page.locator('#figure-insert').click();
+ await expect(page.locator('#figure-dialog')).not.toBeVisible();
+ await expect(page.locator('#markdown-preview figure img')).toHaveAttribute('alt','');
+ await expect(page.locator('#markdown-preview figure img')).toHaveAttribute('width','640');
+});
+
+test('issue #13 figures survive standalone HTML and print, and portable Markdown remains untouched',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#figure-dialog-trigger').click();
+ await page.locator('#figure-url').fill('https://example.org/photo.png');
+ await page.locator('#figure-alt').fill('A photo');
+ await page.locator('#figure-caption').fill('Simple caption');
+ await page.locator('#figure-insert').click();
+ const source=await page.locator('#markdown-input').inputValue();
+ const download=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await download;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await file.path(),'utf8');
+ expect(html).toContain('<figure class="af-figure">');
+ expect(html).toContain('<figcaption>Simple caption</figcaption>');
+ expect(html).toContain('max-width:100%');
+ expect(html).not.toContain('<script');
+ await page.setContent(html);
+ await expect(page.locator('main.md-preview figure figcaption')).toHaveText('Simple caption');
+ await page.emulateMedia({media:'print'});
+ await expect(page.locator('main.md-preview figure img')).toHaveAttribute('width','640');
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('');
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#figure-dialog-trigger').click();
+ await page.locator('#figure-url').fill('https://example.org/photo.png');
+ await page.locator('#figure-alt').fill('A photo');
+ await page.locator('#figure-markdown').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(/!\[A photo\]\(https:\/\/example.org\/photo.png\)/);
+ await expect(page.locator('#markdown-preview figure')).toHaveCount(0);
+ await expect(page.locator('#markdown-preview img')).toHaveCount(1);
+ expect(source).not.toBe('');
+});
+
+test('issue #13 wide figures and captions never overflow the mobile preview',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('<figure class="af-figure"><img src="https://example.org/diagram.png" width="1600" alt="Very wide diagram"><figcaption>Long explanatory caption associated with the image.</figcaption></figure>');
+ await page.locator('[data-mobile-tab="preview"]').click();
+ const measure=await page.locator('#markdown-preview figure').evaluate(el=>{
+  const figure=el.getBoundingClientRect(),container=el.closest('#markdown-preview').getBoundingClientRect();
+  return {figureWidth:figure.width,containerWidth:container.width,right:figure.right,containerRight:container.right};
+ });
+ expect(measure.figureWidth).toBeLessThanOrEqual(measure.containerWidth+1);
+ expect(measure.right).toBeLessThanOrEqual(measure.containerRight+1);
+ await expect(page.locator('#markdown-preview figure figcaption')).toContainText('Long explanatory caption');
+});
