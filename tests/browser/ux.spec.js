@@ -382,7 +382,7 @@ test('All seven Beyond Markdown lesson solutions earn an independent 7/7 certifi
  const basicProgress=await page.locator('#progress-label').innerText();
  await page.locator('#advanced-course-btn').click();
  for(let i=0;i<7;i++){
-  if(i>0)await page.locator('#lesson-nav-list button').nth(8+i).click();
+  if(i>0)await page.locator('#next-lesson-btn').click();
   await page.locator('#toggle-hint-btn').click();
   await page.locator('#insert-solution-btn').click();
   const count=i===6?6:3;
@@ -391,7 +391,7 @@ test('All seven Beyond Markdown lesson solutions earn an independent 7/7 certifi
  }
  await expect(page.locator('#advanced-progress-label')).toContainText('7 / 7');
  await expect(page.locator('#progress-label')).toHaveText(basicProgress);
- await page.locator('#advanced-cert-btn').click();
+ await page.locator('#advanced-cert-top-btn').click();
  await expect(page.locator('#advanced-cert-count')).toHaveText('7 / 7');
  await expect(page.locator('#download-advanced-cert')).toBeEnabled();
  await expect(page.locator('#copy-advanced-cert')).toBeEnabled();
@@ -416,7 +416,7 @@ test('Advanced drafts and completion are independent and persist after reload',a
 
 test('Advanced certificate cannot be downloaded before completion and escapes user name',async({page})=>{
  await page.goto('/');
- await page.locator('#advanced-cert-btn').click();
+ await page.locator('#advanced-cert-top-btn').click();
  await expect(page.locator('#download-advanced-cert')).toBeDisabled();
  await expect(page.locator('#copy-advanced-cert')).toBeDisabled();
  await page.locator('#close-advanced-certificate-btn').click();
@@ -426,7 +426,7 @@ test('Advanced certificate cannot be downloaded before completion and escapes us
   localStorage.setItem('md_course_state_v1',JSON.stringify(state));
  });
  await page.reload();
- await page.locator('#advanced-cert-btn').click();
+ await page.locator('#advanced-cert-top-btn').click();
  await page.locator('#advanced-cert-name').fill('<img src=x onerror=alert(1)>');
  const waiting=page.waitForEvent('download');
  await page.locator('#download-advanced-cert').click();

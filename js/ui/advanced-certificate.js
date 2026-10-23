@@ -32,6 +32,8 @@ export function renderAdvancedCertificate(){
  $('advanced-course-button-text').textContent=locale.start;
  $('advanced-progress-label').textContent=locale.progress+': '+num+' / 7';
  $('advanced-cert-btn').textContent='🏅 '+locale.certificate;
+ $('advanced-cert-top-btn').title=locale.certificate;
+ $('advanced-cert-top-btn').setAttribute('aria-label',locale.certificate);
  $('advanced-cert-heading').textContent=locale.certificate;
  $('advanced-cert-description').textContent=locale.subtitle;
  $('advanced-cert-count').textContent=num+' / 7';
@@ -47,6 +49,7 @@ export function renderAdvancedCertificate(){
 export function openAdvancedCertificate(){renderAdvancedCertificate();$('advanced-certificate-modal').classList.remove('hidden');$('close-advanced-certificate-btn').focus();}
 export function initAdvancedCertificate(){
  $('advanced-cert-btn').addEventListener('click',openAdvancedCertificate);
+ $('advanced-cert-top-btn').addEventListener('click',openAdvancedCertificate);
  $('close-advanced-certificate-btn').addEventListener('click',()=>$('advanced-certificate-modal').classList.add('hidden'));
  $('advanced-certificate-modal').addEventListener('click',e=>{if(e.target===$('advanced-certificate-modal'))$('advanced-certificate-modal').classList.add('hidden');});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')$('advanced-certificate-modal').classList.add('hidden');});
