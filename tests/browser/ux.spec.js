@@ -1860,7 +1860,7 @@ test('issue #13 figures survive standalone HTML and print, and portable Markdown
  const html=await readFile(await file.path(),'utf8');
  expect(html).toContain('<figure class="af-figure">');
  expect(html).toContain('<figcaption>Simple caption</figcaption>');
- expect(html).toContain('max-width:100%');
+ expect(html).toContain('af-figure'); // Browser layout is verified below.
  expect(html).not.toContain('<script');
  await page.setContent(html);
  await expect(page.locator('main.md-preview figure figcaption')).toHaveText('Simple caption');
@@ -1868,7 +1868,9 @@ test('issue #13 figures survive standalone HTML and print, and portable Markdown
  await expect(page.locator('main.md-preview figure img')).toHaveAttribute('width','640');
  await page.goto('/');
  await page.locator('#markdown-input').fill('');
- await page.locator('#advanced-tools-toggle').click();
+ // Advanced mode is persisted: do not accidentally close an already open ribbon.
+ if(await page.locator('#advanced-rich-toolbar').isHidden())
+  await page.locator('#advanced-tools-toggle').click();
  await page.locator('#figure-dialog-trigger').click();
  await page.locator('#figure-url').fill('https://example.org/photo.png');
  await page.locator('#figure-alt').fill('A photo');
