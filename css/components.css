@@ -122,3 +122,8 @@
 .table-edit-content-form button:disabled{opacity:.5;cursor:not-allowed}
 #table-edit-content-warning{color:var(--text-ui-muted);font-size:10px;margin-top:3px}
 @media(max-width:480px){.table-edit-content-form{flex-wrap:wrap}.table-edit-content-form input{min-width:55%}}
+
+/* Optional group filter for compact Advanced ribbon: existing All layout remains available. */
+.advanced-category-nav{display:flex;flex-wrap:nowrap;gap:3px;align-items:center;border-right:1px solid var(--border-ui);padding-right:7px}
+.advanced-category-nav button{white-space:nowrap;transition:opacity .15s}
+.advanced-category-nav button[aria-pressed="true"]{outline:1px solid var(--accent)}

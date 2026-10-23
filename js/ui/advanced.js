@@ -30,6 +30,66 @@ const TEXT={
    insert:'Вставить',actions:['Подчёркивание','Верхний индекс','Нижний индекс','Выделение','Раскрывающийся блок']}
 };
 
+
+const CATEGORY_LABELS={
+ en:['All','Text','Paragraph','Tables','Blocks','Lists'],
+ cs:['Vše','Text','Odstavec','Tabulky','Bloky','Seznamy'],
+ uk:['Усе','Текст','Абзац','Таблиці','Блоки','Списки'],
+ ro:['Toate','Text','Paragraf','Tabele','Blocuri','Liste'],
+ ru:['Все','Текст','Абзац','Таблицы','Блоки','Списки']
+};
+const CATEGORIES=['all','text','paragraph','tables','blocks','lists'];
+const PRESET_CATEGORIES={color:'text',background:'text',font:'text',size:'text',align:'paragraph',indent:'paragraph',spacing:'paragraph'};
+function applyCategoryVisibility(){
+ const current=CATEGORIES.includes(state.advancedCategory)?state.advancedCategory:'all';
+ const all=current==='all',root=$('advanced-toolbar'),rich=$('advanced-rich-toolbar');
+ root.querySelectorAll('[data-action^="adv-"]').forEach(button=>{
+  const group=button.dataset.action==='adv-spoiler'?'blocks':'text';
+  button.classList.toggle('hidden',!all&&current!==group);
+ });
+ const actionStrip=root.querySelector('[data-action="adv-underline"]')?.parentElement;
+ if(actionStrip)actionStrip.classList.toggle('hidden',!all&&!['text','blocks'].includes(current));
+ for(const [group,category] of Object.entries(PRESET_CATEGORIES)){
+  const label=$('advanced-'+group)?.closest('label');
+  if(label)label.classList.toggle('hidden',!all&&current!==category);
+ }
+ $('advanced-page-break')?.classList.toggle('hidden',!all&&current!=='paragraph');
+ const presetRoot=$('advanced-preset-controls');
+ presetRoot.classList.toggle('hidden',!all&&!['text','paragraph'].includes(current));
+ rich.classList.toggle('hidden',!state.advancedToolsOpen||(!all&&!['tables','blocks','lists'].includes(current)));
+ for(const group of RICH_GROUPS){
+  const label=$('rich-'+group)?.closest('label');
+  if(label)label.classList.toggle('hidden',!all&&current!==group);
+ }
+ $('advanced-rich-heading').textContent=(richLabels(state.lang).groups[RICH_GROUPS.indexOf(current)]||richLabels(state.lang).heading);
+ $('advanced-category-nav')?.querySelectorAll('[data-advanced-category]').forEach(button=>{
+  const active=button.dataset.advancedCategory===current;
+  button.setAttribute('aria-pressed',String(active));
+  button.classList.toggle('theme-accent-soft',active);
+  button.classList.toggle('theme-panel-alt',!active);
+ });
+}
+function renderAdvancedCategoryControls(){
+ let nav=$('advanced-category-nav');
+ if(!nav){
+  nav=document.createElement('div');nav.id='advanced-category-nav';
+  nav.className='advanced-category-nav shrink-0';
+  nav.setAttribute('role','group');
+  $('advanced-toolbar-warning').after(nav);
+ }
+ nav.replaceChildren();
+ const texts=CATEGORY_LABELS[state.lang]||CATEGORY_LABELS.en;
+ nav.setAttribute('aria-label','Advanced formatting groups');
+ CATEGORIES.forEach((category,i)=>{
+  const button=document.createElement('button');button.type='button';
+  button.dataset.advancedCategory=category;
+  button.textContent=texts[i];button.className='px-2 py-1 text-[11px] font-semibold rounded-md border theme-border';
+  button.addEventListener('click',()=>{state.advancedCategory=category;save();applyCategoryVisibility();});
+  nav.append(button);
+ });
+ applyCategoryVisibility();
+}
+
 const PRESET_GROUPS=Object.keys(ADVANCED_PRESETS);
 export const ADVANCED_PRESET_TEXT={"en":{"names":["Text","Highlight","Font","Size","Align","Indent","Line spacing"],"apply":"Apply","pageBreak":"Page break (print/PDF)","options":{"color":["Ink","Red","Blue","Green","Purple"],"background":["Yellow","Mint","Rose","Sky"],"font":["Sans-serif","Serif","Monospace"],"size":["Small","Normal","Large","Extra large"],"align":["Left","Center","Right","Justify"],"indent":["None","Small","Medium","Large"],"spacing":["Compact","Normal","Relaxed","Double"]}},"cs":{"names":["Text","Zvýraznění","Písmo","Velikost","Zarovnání","Odsazení","Řádkování"],"apply":"Použít","pageBreak":"Konec stránky (tisk/PDF)","options":{"color":["Tmavá","Červená","Modrá","Zelená","Fialová"],"background":["Žlutá","Mátová","Růžová","Světle modrá"],"font":["Bezpatkové","Patkové","Neproporcionální"],"size":["Malá","Normální","Velká","Velmi velká"],"align":["Vlevo","Na střed","Vpravo","Do bloku"],"indent":["Žádné","Malé","Střední","Velké"],"spacing":["Kompaktní","Normální","Volné","Dvojité"]}},"uk":{"names":["Колір","Тло","Шрифт","Розмір","Вирівнювання","Відступ","Інтервал"],"apply":"Застосувати","pageBreak":"Розрив сторінки (друк/PDF)","options":{"color":["Темний","Червоний","Синій","Зелений","Фіолетовий"],"background":["Жовтий","М’ятний","Рожевий","Блакитний"],"font":["Без зарубок","Із зарубками","Моноширинний"],"size":["Малий","Звичайний","Великий","Дуже великий"],"align":["Ліворуч","По центру","Праворуч","За шириною"],"indent":["Без відступу","Малий","Середній","Великий"],"spacing":["Щільний","Звичайний","Вільний","Подвійний"]}},"ro":{"names":["Culoare","Fundal","Font","Mărime","Aliniere","Indentare","Spațiere"],"apply":"Aplică","pageBreak":"Pagină nouă (tipărire/PDF)","options":{"color":["Închis","Roșu","Albastru","Verde","Violet"],"background":["Galben","Mentă","Roz","Albastru pal"],"font":["Fără serife","Cu serife","Monospațiat"],"size":["Mic","Normal","Mare","Foarte mare"],"align":["Stânga","Centru","Dreapta","Justificat"],"indent":["Fără","Mică","Medie","Mare"],"spacing":["Compactă","Normală","Aerisit","Dublă"]}},"ru":{"names":["Цвет текста","Фон","Шрифт","Размер","Выравнивание","Отступ","Интервал"],"apply":"Применить","pageBreak":"Разрыв страницы (печать/PDF)","options":{"color":["Тёмный","Красный","Синий","Зелёный","Фиолетовый"],"background":["Жёлтый","Мятный","Розовый","Голубой"],"font":["Без засечек","С засечками","Моноширинный"],"size":["Маленький","Обычный","Большой","Очень большой"],"align":["Влево","По центру","Вправо","По ширине"],"indent":["Без отступа","Маленький","Средний","Большой"],"spacing":["Компактный","Обычный","Свободный","Двойной"]}}};
 function renderPresetControls(){
@@ -118,6 +178,7 @@ function applyAdvancedVisibility(){
  const panel=$('advanced-toolbar'),open=state.advancedToolsOpen;
  panel.classList.toggle('hidden',!open);
  $('advanced-rich-toolbar').classList.toggle('hidden',!open);
+ if($('advanced-category-nav'))applyCategoryVisibility();
  const toggle=$('advanced-tools-toggle');
  toggle.setAttribute('aria-expanded',String(open));
  toggle.textContent=advancedLabels(state.lang).toggle+(open?' ▴':' ▾');
@@ -128,6 +189,7 @@ export function renderAdvancedUI(){
  $('advanced-toolbar-warning').textContent=words.warning;
  renderPresetControls();
  renderRichControls();
+ renderAdvancedCategoryControls();
  $('advanced-lab-title').textContent=words.lab;
  $('advanced-lab-description').textContent=words.description;
  const root=$('advanced-lab-examples');root.replaceChildren();

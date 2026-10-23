@@ -1,6 +1,6 @@
 export const STORAGE_KEY='md_course_state_v1';
 const LEGACY_KEY='learning_markdown_studio_v3';
-export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],completedAdvancedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,dialect:'gfm',deepPracticeExpanded:false,advancedToolsOpen:false,advancedLabExpanded:false,advancedPresetChoices:{},advancedRichChoices:{},layoutMode:'split',mobileTab:'editor',name:''};
+export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],completedAdvancedLessons:[],savedDrafts:{},guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,dialect:'gfm',deepPracticeExpanded:false,advancedToolsOpen:false,advancedCategory:'all',advancedLabExpanded:false,advancedPresetChoices:{},advancedRichChoices:{},layoutMode:'split',mobileTab:'editor',name:''};
 const LANGS=new Set(['en','cs','uk','ro','ru']);
 export const DIALECTS=new Set(['gfm','commonmark','original']);
 const THEMES=new Set(['codepen','midnight','daylight','dracula','nord','solarized']);
@@ -20,6 +20,7 @@ function fromStorage(){
    fontSize:Math.max(12,Math.min(22,Number(saved.fontSize)||15)),
    deepPracticeExpanded:Boolean(saved.deepPracticeExpanded),
    advancedToolsOpen:Boolean(saved.advancedToolsOpen),
+   advancedCategory:['all','text','paragraph','tables','blocks','lists'].includes(saved.advancedCategory)?saved.advancedCategory:'all',
    advancedLabExpanded:Boolean(saved.advancedLabExpanded),
    advancedPresetChoices:saved.advancedPresetChoices&&typeof saved.advancedPresetChoices==='object'&&!Array.isArray(saved.advancedPresetChoices)?saved.advancedPresetChoices:{},
    advancedRichChoices:saved.advancedRichChoices&&typeof saved.advancedRichChoices==='object'&&!Array.isArray(saved.advancedRichChoices)?saved.advancedRichChoices:{}

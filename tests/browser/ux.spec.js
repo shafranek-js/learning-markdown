@@ -801,3 +801,24 @@ test('table cell content editor works in Russian mobile Preview',async({page})=>
  await page.locator('#table-edit-content-input').press('Enter');
  await expect(page.locator('#markdown-preview tbody td')).toHaveText('Изменено');
 });
+
+
+test('Advanced formatting groups can filter ribbon controls and persist across reload',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await expect(page.locator('#advanced-category-nav button')).toHaveCount(6);
+ await page.locator('[data-advanced-category="tables"]').click();
+ await expect(page.locator('#rich-tables')).toBeVisible();
+ await expect(page.locator('#advanced-color')).toBeHidden();
+ await expect(page.locator('#rich-blocks')).toBeHidden();
+ await page.reload();
+ await expect(page.locator('[data-advanced-category="tables"]')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#rich-tables')).toBeVisible();
+ await page.locator('[data-advanced-category="paragraph"]').click();
+ await expect(page.locator('#advanced-align')).toBeVisible();
+ await expect(page.locator('#advanced-page-break')).toBeVisible();
+ await expect(page.locator('#rich-tables')).toBeHidden();
+ await page.locator('[data-advanced-category="all"]').click();
+ await expect(page.locator('#advanced-color')).toBeVisible();
+ await expect(page.locator('#rich-tables')).toBeVisible();
+});
