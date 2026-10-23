@@ -676,3 +676,74 @@ test('picker remains accessible on mobile and warns in non-GFM mode',async({page
  await page.locator('#table-picker-cancel').click();
  await expect(page.locator('#table-picker-popup')).toBeHidden();
 });
+
+
+test('Preview table context menu inserts/deletes GFM rows and columns with Undo',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ await editor.fill('| A | B |\n| --- | --- |\n| Alpha | Beta |');
+ await page.locator('#markdown-preview tbody td').first().click();
+ await expect(page.locator('#table-edit-bar')).toBeVisible();
+ await page.locator('#table-edit-rows').selectOption('row-below');
+ await expect(page.locator('#markdown-preview tbody tr')).toHaveCount(2);
+ await expect(editor).toHaveValue(/\| Alpha \| Beta \|/);
+ await page.locator('#undo-btn').click();
+ await expect(page.locator('#markdown-preview tbody tr')).toHaveCount(1);
+ await page.locator('#markdown-preview tbody td').first().click();
+ await page.locator('#table-edit-cols').selectOption('column-right');
+ await expect(page.locator('#markdown-preview thead th')).toHaveCount(3);
+ await page.locator('#markdown-preview tbody td').first().click();
+ await page.locator('#table-edit-cols').selectOption('delete-column');
+ await expect(page.locator('#markdown-preview thead th')).toHaveCount(2);
+});
+test('Shift-selection merges GFM cells as safe HTML, supports split and Undo',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ await editor.fill('| A | B |\n| --- | --- |\n| Alpha | Beta |');
+ const cells=page.locator('#markdown-preview tbody td');
+ await cells.first().click();
+ await cells.nth(1).click({modifiers:['Shift']});
+ await expect(page.locator('#markdown-preview .table-edit-selected')).toHaveCount(2);
+ await page.locator('#table-edit-merge').selectOption('merge');
+ await expect(page.locator('#markdown-preview td[colspan="2"]')).toHaveText('AlphaBeta');
+ await expect(editor).toHaveValue(/<table/);
+ await page.locator('#undo-btn').click();
+ await expect(editor).not.toHaveValue(/<table/);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview td[colspan="2"]')).toHaveCount(1);
+ await page.locator('#markdown-preview td[colspan="2"]').click();
+ await page.locator('#table-edit-merge').selectOption('split');
+ await expect(page.locator('#markdown-preview td[colspan="2"]')).toHaveCount(0);
+ await expect(page.locator('#markdown-preview tbody td')).toHaveCount(2);
+});
+test('HTML table formatting preserves cells, sanitizer and downloaded HTML',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ await editor.fill('<table class="af-table-outline"><tr><td>A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></table>');
+ await page.locator('#markdown-preview td').first().click();
+ await page.locator('#table-edit-style').selectOption('cell-blue');
+ await expect(page.locator('#markdown-preview td.af-cell-blue')).toHaveCount(1);
+ await page.locator('#markdown-preview td').first().click();
+ await page.locator('#table-edit-style').selectOption('borderless');
+ await expect(page.locator('#markdown-preview table.af-table-borderless')).toHaveCount(1);
+ const promise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const download=await promise;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await download.path(),'utf8');
+ expect(html).toContain('af-table-borderless');
+ expect(html).toContain('af-cell-blue');
+ expect(html).not.toContain('onclick=');
+});
+test('Existing table edit menu localizes and remains reachable on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#markdown-input').fill('| A | B |\n| --- | --- |\n| One | Two |');
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview tbody td').first().click();
+ await expect(page.locator('#table-edit-title')).toHaveText('Изменить таблицу');
+ await expect(page.locator('#table-edit-bar')).toBeInViewport();
+ await page.locator('#table-edit-close').click();
+ await expect(page.locator('#table-edit-bar')).toBeHidden();
+});

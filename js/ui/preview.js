@@ -3,6 +3,7 @@ import {marked} from 'marked';
 import {state} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
 import {scanTaskMarkers,switchTaskMarker} from '../core/task-markers.js';
+import {syncTableEditorPreview} from './table-editor.js';
 let lastHtml='';
 export const DIALECT_OPTIONS={
  gfm:{gfm:true,pedantic:false,breaks:false},
@@ -56,5 +57,5 @@ export function initPreviewAnchors(){
   if(target){event.preventDefault();target.scrollIntoView({block:'nearest',behavior:'smooth'});}
  });
 }
-export function updatePreview(text){lastHtml=markdownToHTML(text);const target=document.getElementById('markdown-preview');target.innerHTML=lastHtml;enableTaskInputs(target,text);document.getElementById('raw-html-preview').textContent=lastHtml.trim();}
+export function updatePreview(text){lastHtml=markdownToHTML(text);const target=document.getElementById('markdown-preview');target.innerHTML=lastHtml;enableTaskInputs(target,text);syncTableEditorPreview();document.getElementById('raw-html-preview').textContent=lastHtml.trim();}
 export const currentHtml=()=>lastHtml;
