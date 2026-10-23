@@ -40,6 +40,31 @@ export function insertCursorsAtLineEnds(editor){
  return true;
 }
 
+// Indent the union of selected lines once, preserving multiple carets.
+// With a single empty caret, Tab inserts two spaces at that caret.
+export function multiCursorIndent(editor,outdent=false){
+ const state=editor.state,doc=state.doc,ranges=state.selection.ranges;
+ if(!outdent&&ranges.length===1&&ranges[0].empty){
+  editor.dispatch(state.replaceSelection('  '));return true;
+ }
+ const numbers=new Set();
+ for(const r of ranges){
+  const first=doc.lineAt(r.from).number;
+  let last=doc.lineAt(r.to).number;
+  if(!r.empty&&last>first&&r.to===doc.line(last).from)last--;
+  for(let n=first;n<=last;n++)numbers.add(n);
+ }
+ const changes=[];
+ for(const n of [...numbers].sort((a,b)=>a-b)){
+  const line=doc.line(n);
+  if(!outdent){changes.push({from:line.from,insert:'  '});continue;}
+  const match=line.text.match(/^(?: {1,2}|\\t)/);
+  if(match)changes.push({from:line.from,to:line.from+match[0].length,insert:''});
+ }
+ if(changes.length)editor.dispatch({changes});
+ return true;
+}
+
 function extensions(){
  return [
   lineNumbers(),highlightSpecialChars(),history(),drawSelection(),
@@ -50,6 +75,8 @@ function extensions(){
   markdown(),
   keymap.of([
    {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
+   {key:'Tab',run:editor=>multiCursorIndent(editor),preventDefault:true},
+   {key:'Shift-Tab',run:editor=>multiCursorIndent(editor,true),preventDefault:true},
    {key:'Shift-Alt-i',run:insertCursorsAtLineEnds,preventDefault:true},
    {key:'Mod-Alt-ArrowDown',run:addCursorBelow,preventDefault:true},
    {key:'Mod-Alt-ArrowUp',run:addCursorAbove,preventDefault:true},
