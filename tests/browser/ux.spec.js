@@ -1653,7 +1653,7 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
  const input=page.locator('#markdown-input');
  await input.fill('');
  await page.locator('#extension-footnote-demo').click();
- await expect(input).toContainText('A documented claim[^source]');
+ await expect(input).toHaveValue(/A documented claim\[\^source\]/);
  await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
  await expect(page.locator('#markdown-preview .fn-backref')).toHaveCount(2);
  await expect(page.locator('#extension-footnote-practice')).toContainText('Complete');
