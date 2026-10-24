@@ -2,7 +2,7 @@ import {sanitizeHTML} from '../core/sanitize.js';
 import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
 import {renderFootnotedMarkdown} from '../core/footnotes.js';
 import {definitionListExtension,renderDefinitionLists,mergeAdjacentDefinitionLists} from '../core/definition-lists.js';
-import {emojiShortcodeExtension,renderEmojiShortcodes} from '../core/emoji-shortcodes.js';
+import {emojiShortcodeExtension,renderEmojiShortcodes,expandEmojiTextInHTML} from '../core/emoji-shortcodes.js';
 import {addHeadingAnchors} from '../core/heading-anchors.js';
 import {renderTOC} from './toc.js';
 import {extensionEnabled} from '../core/extensions.js';
@@ -24,7 +24,7 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  const footnotes=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'footnotes');
  const definitions=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'definitionLists');
  const shortcodes=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'emojiShortcodes');
- const extra=shortcodes?[emojiShortcodeExtension()]:[];
+ const extra=shortcodes&&!footnotes?[emojiShortcodeExtension()]:[];
  const raw=footnotes
   ?renderFootnotedMarkdown(text,options,state.lang,[...(definitions?[definitionListExtension()]:[]),...extra])
   :definitions?renderDefinitionLists(text,options,extra)
@@ -32,7 +32,8 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  // Use the same strict class/attribute allowlist for every preview and export.
  const safe=highlightCodeBlocks(sanitizeHTML(raw));
  const normalized=definitions?mergeAdjacentDefinitionLists(safe):safe;
- return addHeadingAnchors(normalized,{
+ const withEmoji=shortcodes&&footnotes?expandEmojiTextInHTML(normalized):normalized;
+ return addHeadingAnchors(withEmoji,{
   customIds:extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'headingIds')
  });
 }
