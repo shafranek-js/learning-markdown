@@ -2209,13 +2209,13 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  const modal=page.locator('#extensions-lab-modal');
  await expect(modal).toBeVisible();
  await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 13');
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
  const source=page.locator('#extensions-lab-source');
  await source.fill('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-preview th[align="center"]')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview td[align="right"]')).toHaveText('5');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13');
  await page.locator('#extensions-lab-close').click();
  await expect(modal).toBeHidden();
  await expect(main).toHaveValue(originalMarkdown);
@@ -2224,7 +2224,7 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  await expect(page.locator('#advanced-progress-label')).toHaveText(advancedProgress);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 6');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 13');
  await page.locator('#extensions-lab-open').click();
  await expect(source).toHaveValue('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-status')).toContainText('All checks pass');
@@ -2243,11 +2243,11 @@ test('issue #17 fenced examples cannot pass without rendered highlighting; succe
  await expect(page.locator('#extensions-lab-preview code.language-javascript')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview code.language-javascript .hljs-keyword')).toContainText('const');
  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ ']);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13');
  await page.locator('#extensions-lab-reset').click();
  await expect(source).toHaveValue(/^~~~\nconst answer/);
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6'); // historical achievement persists
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13'); // historical achievement persists
  await page.locator('#extensions-lab-close').click();
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
@@ -2326,13 +2326,13 @@ test('issue #17 second learning wave: four opt-in exercises pass with real sanit
    await expect(page.locator('#extensions-lab-preview dl.md-definition-list dd')).toHaveCount(2);
   }
  }
- await expect(page.locator('#extensions-lab-progress')).toHaveText('4 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('4 / 13');
  await page.locator('#extensions-lab-close').click();
  await expect(page.locator('#markdown-input')).toHaveValue(originalDraft);
  expect(new URL(page.url()).hash).toBe(originalHash);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 6');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 13');
  await page.locator('#extensions-lab-open').click();
  await expect(select).toHaveValue('definition-list');
  await expect(source).toHaveValue(/First \*\*definition\*\*/);
@@ -2364,13 +2364,13 @@ test('issue #17 second wave ignores fenced examples, strips scripts and keeps op
  await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(0);
 });
 
-test('issue #17 six exercises show localized titles and portability notes in five languages',async({page})=>{
+test('issue #17 all exercises show localized titles and portability notes in five languages',async({page})=>{
  await page.goto('/');
  for(const language of ['en','cs','uk','ro','ru']){
   await page.locator('#lang-selector').selectOption(language);
   await page.locator('#contents-toggle-btn').click();
   await page.locator('#extensions-lab-open').click();
-  await expect(page.locator('#extensions-lab-select option')).toHaveCount(6);
+  await expect(page.locator('#extensions-lab-select option')).toHaveCount(13);
   for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
    await page.locator('#extensions-lab-select').selectOption(id);
    await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
