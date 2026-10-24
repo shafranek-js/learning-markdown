@@ -2304,7 +2304,7 @@ test('issue #17 second learning wave: four opt-in exercises pass with real sanit
  await page.locator('#extensions-lab-open').click();
  const select=page.locator('#extensions-lab-select');
  const source=page.locator('#extensions-lab-source');
- await expect(select.locator('option')).toHaveCount(6);
+ await expect(select.locator('option')).toHaveCount(13);
  for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
   await select.selectOption(id);
   await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
