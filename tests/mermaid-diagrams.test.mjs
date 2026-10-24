@@ -33,6 +33,11 @@ const data=safeMermaidSvgImage(valid);
 assert(data.startsWith('data:image/svg+xml;charset=utf-8,'));
 assert(decodeURIComponent(data.split(',').slice(1).join(',')).includes('<svg'));
 assert(decodeURIComponent(data.split(',').slice(1).join(',')).includes('Safe'));
+const safeFilterSymbol='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="90">'
+ +'<defs><symbol id="safe-shape"><path d="M0,0 L6,3 L0,6"/></symbol>'
+ +'<filter id="soft-shadow"><feGaussianBlur stdDeviation="1"/></filter></defs>'
+ +'<use href="#safe-shape" filter="url(#soft-shadow)"/></svg>';
+assert(safeMermaidSvgImage(safeFilterSymbol).startsWith('data:image/svg+xml'));
 for(const malicious of [
  '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
  '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><body>Attack</body></foreignObject></svg>',
@@ -40,6 +45,7 @@ for(const malicious of [
  '<svg xmlns="http://www.w3.org/2000/svg"><image href="https://evil.test/a.png"/></svg>',
  '<svg xmlns="http://www.w3.org/2000/svg"><style>@import url(https://evil.test/evil.css);</style></svg>',
  '<svg xmlns="http://www.w3.org/2000/svg"><path fill="url(https://evil.test/id)" d="M0,0"/></svg>',
+ '<svg xmlns="http://www.w3.org/2000/svg"><use href="https://evil.test/icon.svg#id"/></svg>',
  '<svg xmlns="http://www.w3.org/2000/svg"><a href="javascript:alert(1)">Bad</a></svg>'
  ])assert.throws(()=>safeMermaidSvgImage(malicious),/Unsafe|Unsupported|Invalid/);
 assert.throws(()=>safeMermaidSvgImage('garbage'),/Invalid|exceeds/);
