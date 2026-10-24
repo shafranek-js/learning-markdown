@@ -16,7 +16,7 @@ Object.assign(globalThis,{
 const {state,resetCourse}=await import('../js/core/state.js');
 const {markdownToHTML}=await import('../js/ui/preview.js');
 assert.equal(EXTENSIONS_LABS.length,6);
-assert.equal(new Set(EXTENSIONS_LABS.map(x=>x.id)).size,2);
+assert.equal(new Set(EXTENSIONS_LABS.map(x=>x.id)).size,6);
 assert.equal(state.extensionsLabCurrent,EXTENSIONS_LABS[0].id);
 assert.deepEqual(state.extensionsLabCompleted,['gfm-table-alignment']);
 assert.equal(state.extensionsLabDrafts['gfm-table-alignment'],'saved work');
