@@ -18,10 +18,10 @@
 <body class="w-screen h-screen m-0 p-0 flex flex-col overflow-hidden font-sans antialiased select-none">
 
     <!-- ==================== FULL-WIDTH COURSE HEADER BAR (Screenshot Style) ==================== -->
-    <header class="h-14 w-full shrink-0 border-b theme-header px-3 sm:px-4 flex items-center justify-between gap-2 z-30">
+    <header class="app-header h-14 w-full shrink-0 border-b theme-header px-3 sm:px-4 flex items-center justify-between gap-2 z-30">
         
         <!-- Left: Contents Drawer Toggle + Course Title & Subtitle -->
-        <div class="flex items-center gap-3 min-w-0">
+        <div class="app-header-left flex items-center gap-3 min-w-0">
             <button id="contents-toggle-btn" type="button" class="px-3 py-1.5 rounded-lg theme-panel hover:opacity-90 border theme-border flex items-center gap-2 text-xs sm:text-sm font-bold transition shrink-0" title="Toggle Course Contents & Tasks">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h12"/>
@@ -34,7 +34,7 @@
                 <span data-i18n="guideBtn">Lesson Guide</span>
             </button>
 
-            <div class="min-w-0 border-l theme-border pl-3">
+            <div class="app-header-brand min-w-0 border-l theme-border pl-3">
                 <div class="flex items-center gap-2">
                     <h1 id="course-main-title" class="font-bold text-xs sm:text-sm md:text-base tracking-tight truncate">
                         Learning Markdown: Formatting Text without the Complexity
@@ -60,7 +60,7 @@
         </div>
 
         <!-- Right: Controls (Sandbox, CheatSheet, Certificate, Theme Selector, Language Selector) -->
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div class="app-header-actions flex items-center gap-1.5 sm:gap-2 shrink-0">
             <!-- Prompt / Sandbox Button -->
             <button id="sandbox-mode-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
                 <svg class="w-3.5 h-3.5" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,6 +233,10 @@
             </div>
             <nav id="lesson-nav-list" class="flex-1 overflow-y-auto p-3 space-y-1.5"></nav>
             <div class="px-4 py-3 border-t theme-border theme-panel-alt flex flex-col gap-2">
+                <button id="extensions-lab-open" type="button" class="w-full text-left px-3 py-2 rounded-lg border theme-border theme-panel hover:opacity-85 text-xs font-semibold" aria-haspopup="dialog" aria-controls="extensions-lab-modal">
+                    <span id="extensions-lab-open-label">Extensions &amp; Hacks · Practice</span>
+                    <span id="extensions-lab-open-progress" class="float-right theme-muted font-mono">0 / 2</span>
+                </button>
                 <span id="advanced-progress-label" class="text-xs font-bold theme-muted" aria-live="polite">Advanced: 0 / 7</span>
                 <button id="advanced-cert-btn" type="button" class="px-2 py-2 rounded-lg text-xs font-semibold border border-amber-500/40 text-amber-400 hover:bg-amber-500/10">🏅 Advanced Certificate</button>
             </div>
@@ -515,6 +519,56 @@
             <span id="active-dialect-status" style="color: var(--accent)" class="font-semibold" aria-live="polite">GFM</span>
         </div>
     </footer>
+
+    <!-- Optional Extensions & Hacks learning track (#17). Isolated from the main editor. -->
+    <div id="extensions-lab-modal" style="z-index:60" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-2 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="extensions-lab-title">
+        <div class="theme-panel border theme-border rounded-xl w-full max-w-6xl max-h-[94vh] flex flex-col overflow-hidden shadow-2xl">
+            <header class="p-3 sm:p-4 border-b theme-border flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <h2 id="extensions-lab-title" class="font-bold text-base">Extensions &amp; Hacks Lab</h2>
+                    <p id="extensions-lab-subtitle" class="text-xs theme-muted mt-1">Optional exercises · independent of certificates</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <span id="extensions-lab-progress" class="text-xs font-mono theme-muted" aria-live="polite">0 / 2</span>
+                    <button id="extensions-lab-close" type="button" class="px-2 py-1 rounded border theme-border theme-panel-alt text-xs">Close</button>
+                </div>
+            </header>
+            <div class="overflow-y-auto p-3 sm:p-5 space-y-3">
+                <div class="flex flex-wrap items-end gap-3">
+                    <label class="block text-xs font-semibold flex-1 min-w-[180px]" for="extensions-lab-select">
+                        <span id="extensions-lab-choice-label">Exercise</span>
+                        <select id="extensions-lab-select" class="block mt-1 w-full theme-panel-alt border theme-border rounded px-2 py-2 text-sm"></select>
+                    </label>
+                    <p id="extensions-lab-portability" class="text-xs theme-muted flex-1 min-w-[180px]"></p>
+                </div>
+                <p id="extensions-lab-description" class="text-sm leading-relaxed"></p>
+                <p id="extensions-lab-note" class="text-xs theme-muted"></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <section class="min-w-0" aria-labelledby="extensions-lab-source-label">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-1.5">
+                            <h3 id="extensions-lab-source-label" class="text-xs font-bold">Editable Markdown</h3>
+                            <div class="flex gap-2">
+                                <button id="extensions-lab-example" type="button" class="px-2 py-1 border theme-border rounded theme-panel-alt text-[11px]">Use working example</button>
+                                <button id="extensions-lab-reset" type="button" class="px-2 py-1 border theme-border rounded theme-panel-alt text-[11px]">Reset this exercise</button>
+                            </div>
+                        </div>
+                        <textarea id="extensions-lab-source" rows="12" spellcheck="false" aria-labelledby="extensions-lab-source-label" class="w-full min-h-[220px] p-3 font-mono text-sm theme-panel-alt border theme-border rounded-lg resize-y"></textarea>
+                    </section>
+                    <section class="min-w-0" aria-labelledby="extensions-lab-preview-label">
+                        <h3 id="extensions-lab-preview-label" class="text-xs font-bold mb-2">Safe live preview</h3>
+                        <div id="extensions-lab-preview" class="md-preview p-3 min-h-[220px] overflow-auto theme-panel-alt border theme-border rounded-lg"></div>
+                    </section>
+                </div>
+                <section aria-labelledby="extensions-lab-checks-label" class="border theme-border rounded-lg p-3">
+                    <div class="flex flex-wrap justify-between gap-2">
+                        <h3 id="extensions-lab-checks-label" class="text-xs font-bold">Live checks</h3>
+                        <strong id="extensions-lab-status" class="text-xs theme-muted" aria-live="polite"></strong>
+                    </div>
+                    <ul id="extensions-lab-checks" class="text-xs space-y-1 mt-2"></ul>
+                </section>
+            </div>
+        </div>
+    </div>
 
     <!-- ==================== MODAL 1: CHEAT SHEET ==================== -->
     <div id="cheatsheet-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs hidden flex items-center justify-center p-4 select-text">
