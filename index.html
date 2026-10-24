@@ -235,7 +235,7 @@
             <div class="px-4 py-3 border-t theme-border theme-panel-alt flex flex-col gap-2">
                 <button id="extensions-lab-open" type="button" class="w-full text-left px-3 py-2 rounded-lg border theme-border theme-panel hover:opacity-85 text-xs font-semibold" aria-haspopup="dialog" aria-controls="extensions-lab-modal">
                     <span id="extensions-lab-open-label">Extensions &amp; Hacks · Practice</span>
-                    <span id="extensions-lab-open-progress" class="float-right theme-muted font-mono" aria-label="Extensions Lab completion">0 / 2</span>
+                    <span id="extensions-lab-open-progress" class="float-right theme-muted font-mono">0 / 2</span>
                 </button>
                 <span id="advanced-progress-label" class="text-xs font-bold theme-muted" aria-live="polite">Advanced: 0 / 7</span>
                 <button id="advanced-cert-btn" type="button" class="px-2 py-2 rounded-lg text-xs font-semibold border border-amber-500/40 text-amber-400 hover:bg-amber-500/10">🏅 Advanced Certificate</button>
@@ -521,7 +521,7 @@
     </footer>
 
     <!-- Optional Extensions & Hacks learning track (#17). Isolated from the main editor. -->
-    <div id="extensions-lab-modal" class="fixed inset-0 z-[60] bg-black/80 hidden flex items-center justify-center p-2 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="extensions-lab-title">
+    <div id="extensions-lab-modal" style="z-index:60" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-2 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="extensions-lab-title">
         <div class="theme-panel border theme-border rounded-xl w-full max-w-6xl max-h-[94vh] flex flex-col overflow-hidden shadow-2xl">
             <header class="p-3 sm:p-4 border-b theme-border flex items-start justify-between gap-3">
                 <div class="min-w-0">
