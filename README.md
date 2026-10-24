@@ -328,3 +328,15 @@ Open **Contents → Extensions & Hacks · Practice** for a separate optional lea
 The lab uses normative GFM rendering for both examples and bundles syntax coloring offline. Fenced code syntax itself is CommonMark; the color treatment is this application's feature, **not a GFM syntax extension**. Rendering always uses the main sanitized parser with optional document-specific extensions disabled, so switching the active lesson or editor dialect cannot change these lab exercises.
 
 Lab drafts, selected exercise, and earned checks are saved locally in separate `extensionsLabDrafts`, `extensionsLabCurrent`, and `extensionsLabCompleted` fields. The original **8/8** and **7/7** progress, certificates, lesson router, and editor drafts remain independent; resetting the core course does not remove this lab's work. The lab is **not** a new certificate track. The rest of #17 (footnotes, TOC, figures, definition lists, Unicode, and practical hacks exercises) remains planned; Mermaid lessons depend on #18 and #19.
+
+
+#### Expanded Extensions & Hacks Lab: footnotes, heading links, figures and definition lists (#17)
+
+Four more exercises have been added to the optional lab (now **six** in total), localized across EN/CS/UK/RO/RU:
+
+- GitHub.com-style footnotes: two references to one note, each with an accessible back-reference. Not normative CommonMark/GFM.
+- Custom heading IDs and linked mini-TOC: `{#manual-overview}` is an app-specific GFM opt-in; ordinary anchor links use portable Markdown link syntax. Clicking lab anchors scrolls within the lab without rewriting the active course route.
+- Figure, alt and caption: sanitizer-approved HTML `<figure>`, `<figcaption>`, a descriptive `alt` and a constrained pixel width. External images require network access in exported HTML.
+- Definition lists: `Term` followed by `: Definition` lines is an app-specific opt-in grammar (not normative GFM/CommonMark). The lab checks semantic `<dl>/<dt>/<dd>` output, including inline bold and italic formatting.
+
+Lab-specific grammar is **only enabled in the lab rendering call**, with an explicit allowlist, and never writes to the active document's extension settings. Regular GFM/CommonMark/Original parsing and both certificate tracks remain unchanged. The exercises verify rendered DOM rather than syntax shown as code. Remaining #17 exercises cover Unicode, table tricks, portable callouts, comments and video links; Mermaid content still depends on #18/#19.
