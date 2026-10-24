@@ -81,6 +81,10 @@ async function renderOne(item,revision){
   complete(item,safe);
  }catch(error){
   if(revision!==version)return;
+  // Diagnostics are bounded; no untrusted exception markup enters Preview.
+  const detail=String(error?.message||error?.name||'unknown').slice(0,180);
+  item.card.dataset.mermaidFailure=detail;
+  console.warn('Mermaid Preview could not render:',detail);
   // Display the original fenced code on syntax errors, never raw parser HTML.
   showError(item,'invalid');
  }finally{host.remove();}
