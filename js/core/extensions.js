@@ -3,7 +3,8 @@ export const EXTENSIONS=Object.freeze({
  softbreaks:Object.freeze({id:'softbreaks',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({breaks:true})}),
  footnotes:Object.freeze({id:'footnotes',category:'github-platform',modes:Object.freeze(['gfm']),option:Object.freeze({})}),
  headingIds:Object.freeze({id:'headingIds',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})}),
- definitionLists:Object.freeze({id:'definitionLists',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})})
+ definitionLists:Object.freeze({id:'definitionLists',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})}),
+ emojiShortcodes:Object.freeze({id:'emojiShortcodes',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})})
 });
 const LANG='en|cs|uk|ro|ru';
 export const validDocumentKey=key=>new RegExp('^(?:sandbox|lesson_[1-8]|advanced_[1-7])_(?:'+LANG+')$').test(key);
@@ -17,6 +18,7 @@ export function normalizeExtensionSettings(data){
   if(options.footnotes===true)selected.footnotes=true;
   if(options.headingIds===true)selected.headingIds=true;
   if(options.definitionLists===true)selected.definitionLists=true;
+  if(options.emojiShortcodes===true)selected.emojiShortcodes=true;
   if(Object.keys(selected).length)out[key]=selected;
  }
  return out;

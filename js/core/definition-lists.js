@@ -70,8 +70,8 @@ export function definitionListExtension(){
   }
  }]};
 }
-export function renderDefinitionLists(source,options){
- return new Marked(definitionListExtension()).parse(source,options);
+export function renderDefinitionLists(source,options,moreExtensions=[]){
+ return new Marked(definitionListExtension(),...moreExtensions).parse(source,options);
 }
 
 
