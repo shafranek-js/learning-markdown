@@ -1,5 +1,7 @@
 // Optional learning track (#17): distinct from the 8 core and 7 advanced lessons.
 import {MORE_LABS,MORE_LAB_TEXT,MORE_LAB_NOTES,evaluateMoreLab} from './extensions-track-more.js';
+import {PRACTICE_LABS,PRACTICE_LAB_TEXT} from './extensions-track-practice.js';
+import {evaluatePracticeLab} from './extensions-track-practice-validate.js';
 const BASE_EXTENSIONS_LABS = Object.freeze([
   {
     "id": "gfm-table-alignment",
@@ -211,10 +213,10 @@ const BASE_EXTENSIONS_LAB_TEXT = Object.freeze({
     }
   }
 });
-export const EXTENSIONS_LABS = Object.freeze([...BASE_EXTENSIONS_LABS,...MORE_LABS]);
+export const EXTENSIONS_LABS = Object.freeze([...BASE_EXTENSIONS_LABS,...MORE_LABS,...PRACTICE_LABS]);
 export const EXTENSIONS_LAB_TEXT = Object.freeze(Object.fromEntries(
  Object.entries(BASE_EXTENSIONS_LAB_TEXT).map(([language,copy])=>[
-  language,{...copy,note:MORE_LAB_NOTES[language],entry:{...copy.entry,...MORE_LAB_TEXT[language]}}
+  language,{...copy,note:MORE_LAB_NOTES[language],entry:{...copy.entry,...MORE_LAB_TEXT[language],...PRACTICE_LAB_TEXT[language]}}
  ])
 ));
 export const extensionsLabText = lang => EXTENSIONS_LAB_TEXT[lang] || EXTENSIONS_LAB_TEXT.en;
@@ -222,7 +224,7 @@ export const extensionsLabIds = new Set(EXTENSIONS_LABS.map(lab=>lab.id));
 
 // Validation must inspect sanitized rendered semantics. A demonstration in a
 // Markdown code fence is not a rendered table or highlighted JavaScript.
-export function evaluateExtensionsLab(id,renderedHTML){
+export function evaluateExtensionsLab(id,renderedHTML,source=''){
  const doc=new DOMParser().parseFromString(String(renderedHTML??''),'text/html');
  if(id==='gfm-table-alignment'){
   const table=[...doc.querySelectorAll('table')].find(t=>t.querySelector('thead th')&&t.querySelector('tbody td'));
@@ -237,5 +239,6 @@ export function evaluateExtensionsLab(id,renderedHTML){
   if(!code)return [false,false];
   return [true,Boolean(code.querySelector('span.hljs-keyword'))];
  }
- return evaluateMoreLab(id,doc);
+ return PRACTICE_LABS.some(lab=>lab.id===id)
+  ?evaluatePracticeLab(id,doc,source):evaluateMoreLab(id,doc);
 }
