@@ -192,3 +192,16 @@
 .unicode-lesson-button{margin-top:4px}
 @media(max-width:400px){.unicode-picker-dialog{padding:10px}
  .unicode-results{grid-template-columns:repeat(4,minmax(0,1fr));max-height:34dvh}}
+
+
+/* #18: Mermaid is rasterized only as an inert, static SVG image in Preview.
+   Never style or directly inject untrusted SVG markup into the application. */
+#markdown-preview pre[hidden]{display:none!important}
+#markdown-preview .mermaid-preview-card{border:1px solid var(--border-ui);border-radius:10px;padding:10px;margin:12px 0 18px;overflow:hidden;min-width:0}
+#markdown-preview .mermaid-preview-status{font:600 12px/1.5 system-ui,sans-serif;color:var(--text-ui-muted);margin:0 0 8px}
+#markdown-preview .mermaid-preview-image{background:#fff;color:#111;border-radius:7px;overflow:auto;text-align:center;padding:10px}
+#markdown-preview .mermaid-preview-diagram{display:block;max-width:100%;width:auto;height:auto;margin:auto;min-width:0}
+#markdown-preview .mermaid-preview-source-toggle{margin-top:8px;font-size:11px;padding:4px 8px;border:1px solid var(--border-ui);border-radius:5px;color:var(--text-ui);background:var(--bg-panel)}
+#markdown-preview .mermaid-preview-source-toggle[hidden]{display:none}
+#markdown-preview .mermaid-preview-card[data-mermaid-status="error"] .mermaid-preview-status{color:#db7373}
+@media(max-width:767px){#markdown-preview .mermaid-preview-card{padding:6px;margin:8px 0}#markdown-preview .mermaid-preview-image{padding:4px}}
