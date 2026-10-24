@@ -35,7 +35,7 @@ assert(decodeURIComponent(data.split(',').slice(1).join(',')).includes('<svg'));
 assert(decodeURIComponent(data.split(',').slice(1).join(',')).includes('Safe'));
 const safeFilterSymbol='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="90">'
  +'<defs><symbol id="safe-shape"><path d="M0,0 L6,3 L0,6"/></symbol>'
- +'<filter id="soft-shadow"><feGaussianBlur stdDeviation="1"/></filter></defs>'
+ +'<filter id="soft-shadow"><feGaussianBlur stdDeviation="1"/><feDropShadow dx="1" dy="1" stdDeviation="1"/></filter></defs>'
  +'<use href="#safe-shape" filter="url(#soft-shadow)"/></svg>';
 assert(safeMermaidSvgImage(safeFilterSymbol).startsWith('data:image/svg+xml'));
 for(const malicious of [
