@@ -101,3 +101,23 @@ export function mergeAdjacentDefinitionLists(safeHTML){
  }
  return root.innerHTML;
 }
+
+
+/** Render only recognized definition-list tokens into semantic HTML BEFORE
+ * invoking the footnote parser. This avoids fragile ordering assumptions in
+ * marked-footnote's lexer while respecting fenced blocks and raw source text.
+ */
+export function preRenderDefinitionListsForFootnotes(source,options){
+ const parser=new Marked(definitionListExtension());
+ const tokens=parser.lexer(source,options);
+ let output='',cursor=0;
+ for(const token of tokens){
+  if(token.type!=='definitionList'||!token.raw)continue;
+  const start=source.indexOf(token.raw,cursor);
+  if(start<0)continue;
+  output+=source.slice(cursor,start);
+  output+=parser.parse(token.raw,options).trimEnd()+'\n';
+  cursor=start+token.raw.length;
+ }
+ return cursor?output+source.slice(cursor):source;
+}

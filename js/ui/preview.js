@@ -1,7 +1,7 @@
 import {sanitizeHTML} from '../core/sanitize.js';
 import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
 import {renderFootnotedMarkdown} from '../core/footnotes.js';
-import {definitionListExtension,renderDefinitionLists,mergeAdjacentDefinitionLists} from '../core/definition-lists.js';
+import {definitionListExtension,renderDefinitionLists,mergeAdjacentDefinitionLists,preRenderDefinitionListsForFootnotes} from '../core/definition-lists.js';
 import {emojiShortcodeExtension,renderEmojiShortcodes,expandEmojiTextInHTML} from '../core/emoji-shortcodes.js';
 import {addHeadingAnchors} from '../core/heading-anchors.js';
 import {renderTOC} from './toc.js';
@@ -25,8 +25,11 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  const definitions=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'definitionLists');
  const shortcodes=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'emojiShortcodes');
  const extra=shortcodes&&!footnotes?[emojiShortcodeExtension()]:[];
+ // The footnote parser assumes its accumulator is the initial lexer token.
+ // Pre-render semantic definition tokens rather than composing block plugins.
+ const input=footnotes&&definitions?preRenderDefinitionListsForFootnotes(text,options):text;
  const raw=footnotes
-  ?renderFootnotedMarkdown(text,options,state.lang,[...(definitions?[definitionListExtension()]:[]),...extra])
+  ?renderFootnotedMarkdown(input,options,state.lang)
   :definitions?renderDefinitionLists(text,options,extra)
   :shortcodes?renderEmojiShortcodes(text,options):marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
