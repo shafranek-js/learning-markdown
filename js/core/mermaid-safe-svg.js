@@ -6,7 +6,7 @@ const SVG_TAGS=new Set([
  'svg','g','defs','style','path','rect','circle','ellipse','line','polyline',
  'polygon','text','tspan','title','desc','marker','clippath','lineargradient','stop',
  'filter','fegaussianblur','feoffset','fecolormatrix','fecomposite','feblend',
- 'femerge','femergenode','feflood','symbol','use','mask','pattern'
+ 'femerge','femergenode','feflood','fedropshadow','symbol','use','mask','pattern'
 ]);
 const DANGEROUS_CSS=/(?:@import\b|@font-face\b|expression\s*\(|behavior\s*:|url\s*\(\s*(?!['"]?#))/i;
 const REMOTE_VALUE=/(?:javascript\s*:|data\s*:|https?\s*:|url\s*\(\s*(?!['"]?#))/i;
