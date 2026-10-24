@@ -1,7 +1,7 @@
 import {sanitizeHTML} from '../core/sanitize.js';
 import {highlightCodeBlocks,highlightLanguage,highlightTooltip} from '../core/highlight-code.js';
 import {renderFootnotedMarkdown} from '../core/footnotes.js';
-import {definitionListExtension,renderDefinitionLists,mergeAdjacentDefinitionLists,preRenderDefinitionListsForFootnotes} from '../core/definition-lists.js';
+import {definitionListExtension,renderDefinitionLists,mergeAdjacentDefinitionLists,preRenderDefinitionListsForFootnotes,completeDefinitionsWithFootnotes} from '../core/definition-lists.js';
 import {emojiShortcodeExtension,renderEmojiShortcodes,expandEmojiTextInHTML} from '../core/emoji-shortcodes.js';
 import {addHeadingAnchors} from '../core/heading-anchors.js';
 import {renderTOC} from './toc.js';
@@ -34,7 +34,8 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
   :shortcodes?renderEmojiShortcodes(text,options):marked.parse(text,options);
  // Use the same strict class/attribute allowlist for every preview and export.
  const safe=highlightCodeBlocks(sanitizeHTML(raw));
- const normalized=definitions?mergeAdjacentDefinitionLists(safe):safe;
+ const repaired=definitions&&footnotes?completeDefinitionsWithFootnotes(safe):safe;
+ const normalized=definitions?mergeAdjacentDefinitionLists(repaired):repaired;
  const withEmoji=shortcodes&&footnotes?expandEmojiTextInHTML(normalized):normalized;
  return addHeadingAnchors(withEmoji,{
   customIds:extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'headingIds')

@@ -45,7 +45,6 @@ assert(injection.querySelector('dd strong'));
 const sampleFootnotes='Word[^one].\n\n[^one]: Footnote content.\n\nTerm\n: Definition';
 state.extensionSettingsByDocument=changeExtension(state.extensionSettingsByDocument,key,'footnotes',true);
 const combined=render(sampleFootnotes);
-console.log('Combined footnote/definition HTML:',combined.body.innerHTML);
 assert(combined.querySelector('section.md-footnotes'));
 assert(combined.querySelector('dl.md-definition-list'));
 assert.equal(combined.querySelectorAll('a.fn-backref').length,1);

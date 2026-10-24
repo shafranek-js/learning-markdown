@@ -121,3 +121,40 @@ export function preRenderDefinitionListsForFootnotes(source,options){
  }
  return cursor?output+source.slice(cursor):source;
 }
+
+
+/** Footnote parsing can leave a Markdown definition block as a paragraph.
+ * Recover the same semantic dl/dt/dd structure from safe paragraph markup.
+ * Only run this in explicit GFM definition-list mode, after sanitization.
+ */
+export function completeDefinitionsWithFootnotes(safeHTML){
+ const root=document.createElement('div');root.innerHTML=safeHTML;
+ for(const paragraph of [...root.querySelectorAll('p')]){
+  const lines=paragraph.innerHTML.split(/\r?\n/);
+  if(lines.length<2||!lines.some(line=>/^ {0,3}:[ \t]+\S/.test(line)))continue;
+  const terms=[],definitions=[];let started=false,invalid=false;
+  for(const line of lines){
+   const match=/^ {0,3}:[ \t]+(\S.*)$/.exec(line);
+   if(match){started=true;definitions.push(match[1]);continue;}
+   if(!started){
+    if(!line.trim()||terms.length>=8){invalid=true;break;}
+    terms.push(line.trim());continue;
+   }
+   if(/^(?: {2,}|\t)\S/.test(line)&&definitions.length){
+    definitions[definitions.length-1]+='\n'+line.trim();continue;
+   }
+   invalid=true;break;
+  }
+  if(invalid||!terms.length||!definitions.length)continue;
+  const dl=document.createElement('dl');
+  dl.className='md-definition-list';
+  for(const term of terms){
+   const dt=document.createElement('dt');dt.innerHTML=term;dl.append(dt);
+  }
+  for(const meaning of definitions){
+   const dd=document.createElement('dd');dd.innerHTML=meaning;dl.append(dd);
+  }
+  paragraph.replaceWith(dl);
+ }
+ return root.innerHTML;
+}
