@@ -18,12 +18,19 @@ export const DIALECT_OPTIONS={
  commonmark:{gfm:false,pedantic:false,breaks:false},
  original:{gfm:false,pedantic:true,breaks:false}
 };
-export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
+export function markdownToHTML(text,dialect=state.dialect,{extensions=true,labFeatures=[]}={}){
  const base=DIALECT_OPTIONS[dialect]||DIALECT_OPTIONS.gfm;
  const options=extensions?{...base,...parserExtensionOptions(state.extensionSettingsByDocument,docKey(),dialect)}:base;
- const footnotes=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'footnotes');
- const definitions=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'definitionLists');
- const shortcodes=extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'emojiShortcodes');
+ // The optional learning lab may exercise selected already-reviewed grammar
+ // extensions without reading or mutating the current document's opt-ins.
+ // Never activate lab features in CommonMark, Original, or normal Preview.
+ const allowedLabFeatures=new Set(['footnotes','headingIds','definitionLists']);
+ const isolated=!extensions&&dialect==='gfm'&&Array.isArray(labFeatures)
+  ?new Set(labFeatures.filter(id=>allowedLabFeatures.has(id))):new Set();
+ const enabled=id=>isolated.has(id)||(extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,id));
+ const footnotes=enabled('footnotes');
+ const definitions=enabled('definitionLists');
+ const shortcodes=enabled('emojiShortcodes');
  const extra=shortcodes&&!footnotes?[emojiShortcodeExtension()]:[];
  // The footnote parser assumes its accumulator is the initial lexer token.
  // Pre-render semantic definition tokens rather than composing block plugins.
@@ -38,7 +45,7 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true}={}){
  const normalized=definitions?mergeAdjacentDefinitionLists(repaired):repaired;
  const withEmoji=shortcodes&&footnotes?expandEmojiTextInHTML(normalized):normalized;
  return addHeadingAnchors(withEmoji,{
-  customIds:extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,'headingIds')
+  customIds:enabled('headingIds')
  });
 }
 function enableTaskInputs(preview,source){
