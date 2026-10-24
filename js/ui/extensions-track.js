@@ -74,7 +74,8 @@ function close(){
  previousFocus=null;
 }
 function open(){
- previousFocus=document.activeElement;
+ // The launcher lives in a drawer that closes on open; restore visible focus.
+ previousFocus=$('contents-toggle-btn');
  $('extensions-lab-modal').classList.remove('hidden');
  renderExtensionsLabLanguage();
  $('extensions-lab-select').focus();
@@ -112,7 +113,7 @@ export function initExtensionsLab({closeContents}={}){
   if(!isOpen())return;
   if(event.key==='Escape'){event.preventDefault();close();return;}
   if(event.key!=='Tab')return;
-  const focusable=[...$('extensions-lab-modal').querySelectorAll('button:not([disabled]),select:not([disabled]),textarea:not([disabled])')];
+  const focusable=[...$('extensions-lab-modal').querySelectorAll('button:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],input:not([disabled])')];
   if(!focusable.length)return;
   const first=focusable[0],last=focusable[focusable.length-1];
   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
