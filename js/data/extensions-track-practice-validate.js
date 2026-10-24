@@ -42,7 +42,7 @@ export function evaluatePracticeLab(id,doc,source=''){
   const outer=[...doc.querySelectorAll('blockquote')].find(q=>!q.parentElement?.closest('blockquote'));
   const bold=outer?.querySelector('p > strong, p > b');
   return [Boolean(outer&&bold?.textContent.trim()==='Note:'),
-   Boolean(outer?.querySelector('blockquote > p')?.textContent.includes('A nested reply'))];
+   Boolean(outer?.querySelector('blockquote')?.textContent.includes('A nested reply'))];
  }
  if(id==='author-notes'){
   const tokens=marked.lexer(String(source),{gfm:true});
