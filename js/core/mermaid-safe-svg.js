@@ -26,7 +26,7 @@ export function safeMermaidSvgImage(svg){
    if(name==='xmlns:xlink'&&value==='http://www.w3.org/1999/xlink')continue;
    // SVG symbols may be reused within this one inert image; never external URLs.
    if(element.localName.toLowerCase()==='use'&&['href','xlink:href'].includes(name)
-    &&/^#[a-zA-Z][\\w:-]{0,127}$/.test(value))continue;
+    &&/^#[a-zA-Z][a-zA-Z0-9_:-]{0,127}$/.test(value))continue;
    if(name.startsWith('on')||name==='href'||name==='xlink:href'||name==='src'
     ||name==='xml:base'||name==='formaction'
     ||REMOTE_VALUE.test(value)||name==='style'&&DANGEROUS_CSS.test(value))
