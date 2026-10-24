@@ -2128,3 +2128,72 @@ test('issue #15 Unicode sample and Markdown/HTML export preserve source and rend
  expect(html).toContain('One 😂 © €');
  expect(html).not.toContain('<script');
 });
+
+test('issue #16 Practical Hacks are labeled, localized and undoable',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ await editor.fill('Existing content');
+ await page.locator('#cheatsheet-btn').click();
+ await expect(page.locator('#cheatsheet-grid [data-hack-id]')).toHaveCount(10);
+ await expect(page.locator('[data-hack-id="table-pipe"] [data-portability]')).toContainText('GFM only');
+ await expect(page.locator('[data-hack-id="author-html-comment"] [data-portability]')).toContainText('HTML');
+ const before=await editor.inputValue();
+ await page.locator('[data-hack-id="portable-callout"] button').click();
+ await expect(page.locator('#cheatsheet-modal')).toHaveClass(/hidden/);
+ await expect(editor).toHaveValue(/Keep the original Markdown source/);
+ await expect(page.locator('#markdown-preview blockquote strong')).toContainText('Note:');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue(before);
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#cheatsheet-btn').click();
+ await expect(page.locator('[data-hack-id="portable-callout"] h5')).toHaveText('Переносимое примечание');
+ await expect(page.locator('[data-hack-id="table-pipe"] [data-portability]')).toHaveText('Только GFM');
+ await expect(page.locator('[data-hack-id="video-thumbnail"] p').last()).toContainText('интернет');
+});
+
+test('issue #16 GFM table tricks render safely and retain dialect semantics',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('');
+ await page.locator('#cheatsheet-btn').click();
+ await page.locator('[data-hack-id="table-pipe"] button').click();
+ await expect(page.locator('#markdown-preview table')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview tbody td')).toHaveCount(4);
+ await expect(page.locator('#markdown-preview tbody td').first()).toContainText('A | B');
+ const source=await page.locator('#markdown-input').inputValue();
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await expect(page.locator('#markdown-preview table')).toHaveCount(0);
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
+ await page.locator('#dialect-selector').selectOption('gfm');
+ await page.locator('#markdown-input').fill('| Term | Notes |\n| --- | --- |\n| **Alpha** | First<br>Second |');
+ await expect(page.locator('#markdown-preview td br')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview td strong')).toContainText('Alpha');
+});
+
+test('issue #16 author notes stay in Markdown but not in safe HTML export; video links are not embeds',async({page})=>{
+ await page.goto('/');
+ const markdown='Public text.\n\n[editor-note]: # (Internal: not for publication)\n\n<!-- Editor: verify data -->\n\n[![Video preview](https://placehold.co/320x180/png)](https://example.com/watch)';
+ await page.locator('#markdown-input').fill(markdown);
+ await expect(page.locator('#markdown-preview')).not.toContainText('not for publication');
+ await expect(page.locator('#markdown-preview')).not.toContainText('Editor: verify data');
+ await expect(page.locator('#markdown-preview a[href="https://example.com/watch"] img')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview iframe')).toHaveCount(0);
+ const pending=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await pending;
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(await file.path(),'utf8');
+ expect(html).toContain('https://example.com/watch');
+ expect(html).not.toContain('Internal: not for publication');
+ expect(html).not.toContain('Editor: verify data');
+ expect(html).not.toMatch(/<iframe|<script/i);
+ await expect(page.locator('#markdown-input')).toHaveValue(markdown);
+});
+
+test('issue #16 practical hacks can be reached on a narrow viewport',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#cheatsheet-btn').click();
+ await expect(page.locator('[data-hack-id="entities-and-unicode"] button')).toBeAttached();
+ await page.locator('[data-hack-id="entities-and-unicode"] button').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(/Unicode: © ® ™ € π ° →/);
+});
