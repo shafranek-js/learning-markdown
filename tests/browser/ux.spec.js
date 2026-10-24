@@ -2027,7 +2027,8 @@ test('issue #15 Enter, Escape and keyboard search work in localized Unicode pale
  const search=page.locator('#unicode-search');
  await search.fill('стрелка');
  await expect(page.locator('#unicode-results button').first()).toBeVisible();
- await search.press('ArrowDown');
+ // All seven category buttons and the results are reachable by Tab.
+ for(let index=0;index<8;index++)await page.keyboard.press('Tab');
  await expect(page.locator('#unicode-results button').first()).toBeFocused();
  await page.keyboard.press('Enter');
  await expect(page.locator('#unicode-picker-dialog')).not.toBeVisible();
