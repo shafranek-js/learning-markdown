@@ -21,7 +21,7 @@ assert.equal(searchPalette('<script>').length,0);
 assert(searchPalette('','emoji').length>10);
 for(const lang of ['en','cs','uk','ro','ru']){
  const labels=paletteLabels(lang);
- assert(labels.trigger&&labels.search&&labels.shortcode&&labels.lessonText);
+ assert(labels.trigger&&labels.search&&labels.shortcode&&labels.lessonText&&labels.categoriesLabel&&labels.resultsLabel);
  assert(PALETTE_CATEGORIES.every(cat=>labels[cat]&&PALETTE_TRANSLATIONS[lang][cat]));
 }
 assert.equal(EMOJI_SHORTCODES.joy,'😂');

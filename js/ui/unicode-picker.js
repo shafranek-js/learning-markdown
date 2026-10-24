@@ -52,6 +52,8 @@ export function renderUnicodePickerLanguage(){
  $('unicode-hint').textContent=w.hint;
  $('unicode-empty').textContent=w.empty;
  $('unicode-close').textContent=w.close;
+ $('unicode-categories').setAttribute('aria-label',w.categoriesLabel);
+ $('unicode-results').setAttribute('aria-label',w.resultsLabel);
  renderCategories();
  renderResults();
 }

@@ -2024,6 +2024,8 @@ test('issue #15 Enter, Escape and keyboard search work in localized Unicode pale
  await page.locator('#lang-selector').selectOption('ru');
  await page.locator('#unicode-picker-trigger').click();
  await expect(page.locator('#unicode-picker-title')).toHaveText('Символы Unicode и emoji');
+ await expect(page.locator('#unicode-categories')).toHaveAttribute('aria-label','Категории символов');
+ await expect(page.locator('#unicode-results')).toHaveAttribute('aria-label','Результаты поиска');
  const search=page.locator('#unicode-search');
  await search.fill('стрелка');
  await expect(page.locator('#unicode-results button').first()).toBeVisible();
