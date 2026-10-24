@@ -18,7 +18,7 @@ export const PRACTICE_LABS = Object.freeze([
     "labFeatures": [
       "emojiShortcodes"
     ],
-    "starter": "Status: :rocket: :lock:",
+    "starter": "Status: :rocket:",
     "example": "Status: :rocket: :lock:\n\nLiteral code: `:rocket:`",
     "checks": [
       "expanded",
