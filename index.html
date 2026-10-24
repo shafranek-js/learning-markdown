@@ -571,6 +571,23 @@
         </div>
     </div>
 
+    <!-- Mermaid template picker; source stays editable Markdown in the main editor. -->
+    <div id="mermaid-dialog" role="dialog" aria-modal="true" aria-labelledby="mermaid-dialog-title" class="fixed inset-0 z-50 hidden bg-black/75 flex items-center justify-center p-3 sm:p-5">
+        <div class="theme-panel border theme-border rounded-xl shadow-2xl w-full max-w-lg p-4 space-y-3 overflow-y-auto max-h-[90vh]">
+            <h2 id="mermaid-dialog-title" class="text-base font-bold">Insert Mermaid diagram</h2>
+            <p id="mermaid-dialog-help" class="text-xs theme-muted"></p>
+            <label for="mermaid-dialog-type" class="text-xs font-semibold block">
+                <span id="mermaid-dialog-type-label">Diagram type</span>
+                <select id="mermaid-dialog-type" class="block w-full mt-1 p-2 rounded border theme-border theme-panel-alt text-sm"></select>
+            </label>
+            <pre id="mermaid-dialog-source" class="p-3 text-xs font-mono whitespace-pre-wrap break-words theme-panel-alt border theme-border rounded select-text max-h-52 overflow-auto"></pre>
+            <div class="flex justify-end gap-2">
+                <button id="mermaid-dialog-close" type="button" class="px-3 py-2 rounded border theme-border theme-panel-alt text-xs">Close</button>
+                <button id="mermaid-dialog-insert" type="button" class="px-3 py-2 rounded border theme-border font-semibold text-xs theme-accent-soft">Insert in editor</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MODAL 1: CHEAT SHEET ==================== -->
     <div id="cheatsheet-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs hidden flex items-center justify-center p-4 select-text">
         <div class="theme-panel border theme-border rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
