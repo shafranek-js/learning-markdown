@@ -5,6 +5,7 @@ import {definitionListExtension,renderDefinitionLists,mergeAdjacentDefinitionLis
 import {emojiShortcodeExtension,renderEmojiShortcodes,expandEmojiTextInHTML} from '../core/emoji-shortcodes.js';
 import {addHeadingAnchors} from '../core/heading-anchors.js';
 import {renderTOC} from './toc.js';
+import {scheduleMermaidPreview} from './mermaid-preview.js';
 import {extensionEnabled} from '../core/extensions.js';
 import {marked} from 'marked';
 import {state,docKey} from '../core/state.js';
@@ -106,6 +107,7 @@ export function updatePreview(text){
  enableTaskInputs(target,text);
  renderTOC(target);
  syncTableEditorPreview();
+ scheduleMermaidPreview(target);
  document.getElementById('raw-html-preview').textContent=lastHtml.trim();
 }
 export const currentHtml=()=>lastHtml;
