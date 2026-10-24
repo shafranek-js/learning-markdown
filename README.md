@@ -357,3 +357,14 @@ The optional lab now has **13 exercises**, including seven practical additions, 
 All examples remain editable in an independent, locally saved lab workspace and do not change the user's main Markdown source. The source-only author-note checks explicitly exclude code fences; all other validators inspect the **sanitized rendered DOM**. The existing parser allowlist prevents the app-specific emoji expansion from affecting normative GFM, CommonMark, Original or other lessons. Browser regression tests include all five languages, mobile view, safe HTML and local storage persistence.
 
 Issue #17's non-Mermaid practical curriculum is implemented. Any Mermaid-specific lab should wait for dedicated renderer/export work in issues #18 and #19.
+
+
+### Mermaid diagram creator (Issue #18 — Preview MVP)
+
+In **HTML / Advanced → Diagrams / Mermaid**, choose **Flowchart**, **Sequence diagram** or **Pie chart** and insert an ordinary `mermaid`-labeled fenced code block. The source is editable, saved in the existing lesson/sandbox draft, and supports the same Undo/Redo as every other Markdown snippet.
+
+The **Live Preview** lazily imports a locally bundled pinned Mermaid renderer only when a Mermaid block is present. It debounces source edits for 300 ms, renders up to six blocks per document (each limited to 4,000 characters), serializes Mermaid's globally stateful render calls, and discards stale async results. If a diagram is invalid or unavailable, its **original fenced code stays visible**; users can reveal the source for successful diagrams. Screen reader statuses and template controls are translated into EN, CS, UK, RO and RU.
+
+**Safety model:** `securityLevel: strict`, disabled HTML labels and clicks, controlled configuration, limits for nodes/edges and source length, explicit refusal of source-level configuration directives and hostile HTML. SVG returned by Mermaid is validated to reject active elements, event handlers, references to external resources and dangerous CSS, then shown only as an inert SVG **image**. Untrusted SVG is never injected as markup into the application's DOM or accepted through the ordinary Markdown sanitizer. No runtime CDN access is required; `postbuild` includes all Vite chunks in the versioned service-worker precache.
+
+**Portability and scope:** Markdown source stays canonical. GitHub supports `mermaid` fenced code blocks, but Mermaid is a platform/app-level extension, not normative GFM/CommonMark. **Standalone HTML and PDF diagram graphics, per-diagram SVG/PNG export, zoom and additional diagram templates are deferred to #19 and the later #18 slices.** Until #19 is implemented, exported HTML and Print/PDF show the original code blocks rather than silently embedding executable diagram scripts. Do not claim diagram-export fidelity yet.
