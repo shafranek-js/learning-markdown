@@ -19,7 +19,7 @@ function showProgress(){
 // No extension settings from the active core lesson are permitted to leak in.
 function checkLive(){
  const lab=selected(),source=$('extensions-lab-source').value;
- const html=markdownToHTML(source,'gfm',{extensions:false});
+ const html=markdownToHTML(source,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
  $('extensions-lab-preview').innerHTML=html;
  const checks=evaluateExtensionsLab(lab.id,html);
  const locale=extensionsLabText(state.lang),entry=locale.entry[lab.id];
@@ -81,6 +81,16 @@ function open(){
  $('extensions-lab-select').focus();
 }
 export function initExtensionsLab({closeContents}={}){
+ // Follow document-local anchors without replacing #lesson=... in the app route.
+ $('extensions-lab-preview').addEventListener('click',event=>{
+  const link=event.target.closest?.('a[href^="#"]');
+  if(!link)return;
+  let targetId;
+  try{targetId=decodeURIComponent(link.getAttribute('href').slice(1));}catch{return;}
+  if(!targetId||targetId.length>128)return;
+  const target=[...$('extensions-lab-preview').querySelectorAll('[id]')].find(el=>el.id===targetId);
+  if(target){event.preventDefault();target.scrollIntoView({block:'nearest'});}
+ });
  $('extensions-lab-open').addEventListener('click',()=>{
   closeContents?.();
   open();
