@@ -1,5 +1,6 @@
 import {LESSON_CORE} from '../data/lessons.js';
 import {cheats,titles} from '../data/cheatsheet.js';
+import {PRACTICAL_HACKS,practicalHacksText} from '../data/practical-hacks.js';
 import {state,save} from '../core/state.js';
 import {ui,t} from '../i18n/index.js';
 import {insertSnippet} from './toolbar.js';
@@ -14,7 +15,32 @@ export function renderCheats(){const root=$('cheatsheet-grid');if(!root)return;r
  btn.addEventListener('click',()=>{insertSnippet(item.code+'\n');toggleModal('cheatsheet-modal',false);});
  const pre=document.createElement('pre');pre.className='whitespace-pre-wrap break-words font-mono text-xs select-text';pre.textContent=item.code;
  header.append(heading,btn);card.append(header,pre);root.append(card);
- }}
+ }
+ // Keep practical tips discoverable in the existing Cheat Sheet, not in a
+ // second toolbar. All user-controlled content is inserted as plain source.
+ const language=practicalHacksText(state.lang);
+ const introduction=document.createElement('section');introduction.className='md:col-span-2 mt-2 space-y-1';
+ const groupTitle=document.createElement('h4');groupTitle.className='text-sm font-bold';groupTitle.textContent=language.heading;
+ const groupIntro=document.createElement('p');groupIntro.className='text-xs theme-muted';groupIntro.textContent=language.intro;
+ introduction.append(groupTitle,groupIntro);root.append(introduction);
+ for(const item of PRACTICAL_HACKS){
+  const label=language.entries[item.id],card=document.createElement('article');
+  card.dataset.hackId=item.id;card.className='p-3 rounded-xl theme-panel-alt border theme-border space-y-2';
+  const header=document.createElement('div');header.className='flex items-start justify-between gap-2';
+  const titleBox=document.createElement('div');titleBox.className='min-w-0';
+  const title=document.createElement('h5');title.className='font-bold text-xs';title.textContent=label.title;
+  const portability=document.createElement('p');portability.className='text-[11px] theme-muted mt-0.5';portability.textContent=language.levels[item.level];portability.dataset.portability=item.level;
+  titleBox.append(title,portability);
+  const insert=document.createElement('button');insert.type='button';insert.textContent=t(state.lang,'insert');
+  insert.className='shrink-0 text-[11px] font-semibold px-2 py-1 rounded theme-accent-soft';
+  insert.setAttribute('aria-label',t(state.lang,'insert')+': '+label.title);
+  insert.addEventListener('click',()=>{insertSnippet(item.code+'\n');toggleModal('cheatsheet-modal',false);});
+  header.append(titleBox,insert);
+  const source=document.createElement('pre');source.className='whitespace-pre-wrap break-words font-mono text-xs select-text';source.textContent=item.code;
+  const note=document.createElement('p');note.className='text-[11px] theme-muted leading-relaxed';note.textContent=label.note;
+  card.append(header,source,note);root.append(card);
+ }
+}
 export function updateCertificate(){const done=state.completedLessons.length===8;
  $('print-cert-btn').disabled=!done;
  $('copy-cert-md-btn').disabled=!done;
