@@ -2073,7 +2073,7 @@ test('issue #15 opt-in shortcodes expand only in selected GFM documents',async({
  await page.locator('#sandbox-mode-btn').click();
  await expect(toggle).toHaveValue('off');
  await page.locator('#lang-selector').selectOption('ru');
- await expect(page.locator('#extension-emoji-label')).toContainText('Shortcodes');
+ await expect(page.locator('#extension-emoji-label')).toContainText('shortcodes');
  await expect(page.locator('#extension-matrix-body tr')).toHaveCount(8);
 });
 

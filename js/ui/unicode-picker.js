@@ -70,6 +70,14 @@ export function initUnicodePicker({insertSnippet}){
   dialog.close();insert(paletteLabels(state.lang).lessonText,false);
  });
  search.addEventListener('input',renderResults);
+ // Attach directly to the search input: browser-native search-box arrow
+ // behavior can otherwise consume navigation before dialog bubbling.
+ search.addEventListener('keydown',event=>{
+  if(event.key==='ArrowDown'){
+   const first=$('unicode-results button');
+   if(first){event.preventDefault();event.stopPropagation();first.focus();}
+  }
+ });
  dialog.addEventListener('keydown',event=>{
   if(event.key==='Escape'){event.preventDefault();dialog.close();return;}
   if(event.target===search&&event.key==='ArrowDown'){
