@@ -1,8 +1,12 @@
 // Render Mermaid SVG ONLY as an inert image, never as app DOM/innerHTML.
 // SVG images do not execute scripts; fail closed on active nodes or resources.
+// Only static SVG graphics and constrained filter primitives emitted by Mermaid.
+// No scripts, animations, HTML foreignObjects, embedded images or active links.
 const SVG_TAGS=new Set([
  'svg','g','defs','style','path','rect','circle','ellipse','line','polyline',
- 'polygon','text','tspan','title','desc','marker','clippath','lineargradient','stop'
+ 'polygon','text','tspan','title','desc','marker','clippath','lineargradient','stop',
+ 'filter','fegaussianblur','feoffset','fecolormatrix','fecomposite','feblend',
+ 'femerge','femergenode','feflood','symbol','use','mask','pattern'
 ]);
 const DANGEROUS_CSS=/(?:@import\b|@font-face\b|expression\s*\(|behavior\s*:|url\s*\(\s*(?!['"]?#))/i;
 const REMOTE_VALUE=/(?:javascript\s*:|data\s*:|https?\s*:|url\s*\(\s*(?!['"]?#))/i;
@@ -20,6 +24,9 @@ export function safeMermaidSvgImage(svg){
    const name=attribute.name.toLowerCase(),value=attribute.value;
    if(name==='xmlns'&&value==='http://www.w3.org/2000/svg')continue;
    if(name==='xmlns:xlink'&&value==='http://www.w3.org/1999/xlink')continue;
+   // SVG symbols may be reused within this one inert image; never external URLs.
+   if(element.localName.toLowerCase()==='use'&&['href','xlink:href'].includes(name)
+    &&/^#[a-zA-Z][\\w:-]{0,127}$/.test(value))continue;
    if(name.startsWith('on')||name==='href'||name==='xlink:href'||name==='src'
     ||name==='xml:base'||name==='formaction'
     ||REMOTE_VALUE.test(value)||name==='style'&&DANGEROUS_CSS.test(value))
