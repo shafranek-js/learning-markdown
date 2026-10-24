@@ -2335,7 +2335,7 @@ test('issue #17 second learning wave: four opt-in exercises pass with real sanit
  await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 6');
  await page.locator('#extensions-lab-open').click();
  await expect(select).toHaveValue('definition-list');
- await expect(source).toContainText('First **definition**');
+ await expect(source).toHaveValue(/First \*\*definition\*\*/);
 });
 
 test('issue #17 second wave ignores fenced examples, strips scripts and keeps opt-in local',async({page})=>{
