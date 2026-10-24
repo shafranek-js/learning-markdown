@@ -15,8 +15,8 @@ Object.assign(globalThis,{
 });
 const {state,resetCourse}=await import('../js/core/state.js');
 const {markdownToHTML}=await import('../js/ui/preview.js');
-assert.equal(EXTENSIONS_LABS.length,6);
-assert.equal(new Set(EXTENSIONS_LABS.map(x=>x.id)).size,6);
+assert.equal(EXTENSIONS_LABS.length,13);
+assert.equal(new Set(EXTENSIONS_LABS.map(x=>x.id)).size,13);
 assert.equal(state.extensionsLabCurrent,EXTENSIONS_LABS[0].id);
 assert.deepEqual(state.extensionsLabCompleted,['gfm-table-alignment']);
 assert.equal(state.extensionsLabDrafts['gfm-table-alignment'],'saved work');
@@ -37,11 +37,11 @@ for(const lang of ['en','cs','uk','ro','ru']){
 }
 for(const lab of EXTENSIONS_LABS){
  const start=markdownToHTML(lab.starter,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
- assert.deepEqual(evaluateExtensionsLab(lab.id,start),[false,false],'starter must be incomplete: '+lab.id);
+ assert.deepEqual(evaluateExtensionsLab(lab.id,start,lab.starter),[false,false],'starter must be incomplete: '+lab.id);
  const finished=markdownToHTML(lab.example,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
- assert.deepEqual(evaluateExtensionsLab(lab.id,finished),[true,true],'example must actually render: '+lab.id);
+ assert.deepEqual(evaluateExtensionsLab(lab.id,finished,lab.example),[true,true],'example must actually render: '+lab.id);
  const fenced=markdownToHTML('~~~~markdown\n'+lab.example+'\n~~~~','gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
- assert.deepEqual(evaluateExtensionsLab(lab.id,fenced),[false,false],'fenced example is not a solution: '+lab.id);
+ assert.deepEqual(evaluateExtensionsLab(lab.id,fenced,'~~~~markdown\n'+lab.example+'\n~~~~'),[false,false],'fenced example is not a solution: '+lab.id);
  const common=markdownToHTML(lab.example,'commonmark',{extensions:false});
  if(lab.id==='gfm-table-alignment')assert.deepEqual(evaluateExtensionsLab(lab.id,common),[false,false]);
 }
@@ -62,10 +62,25 @@ const definitions=EXTENSIONS_LABS.find(l=>l.id==='definition-list').example;
 assert(!markdownToHTML(definitions,'gfm',{extensions:false}).includes('<dl'));
 assert(markdownToHTML(definitions,'gfm',{extensions:false,labFeatures:['definitionLists']}).includes('md-definition-list'));
 assert.equal(state.extensionSettingsByDocument['lesson_1_en'],undefined);
+
+const emoji=EXTENSIONS_LABS.find(x=>x.id==='emoji-shortcodes').example;
+assert(!markdownToHTML(emoji,'gfm',{extensions:false}).includes('🚀'));
+assert(markdownToHTML(emoji,'gfm',{extensions:false,labFeatures:['emojiShortcodes']}).includes('🚀'));
+assert(!markdownToHTML(emoji,'commonmark',{extensions:false,labFeatures:['emojiShortcodes']}).includes('🚀'));
+const notesSource=EXTENSIONS_LABS.find(x=>x.id==='author-notes').example;
+const notesHTML=markdownToHTML(notesSource,'gfm',{extensions:false});
+assert.deepEqual(evaluateExtensionsLab('author-notes',notesHTML,notesSource),[true,true]);
+const disguised='~~~~markdown\n'+notesSource+'\n~~~~';
+assert.deepEqual(evaluateExtensionsLab('author-notes',markdownToHTML(disguised,'gfm',{extensions:false}),disguised),[false,false]);
+assert.deepEqual(evaluateExtensionsLab('author-notes',notesHTML,''),[false,false],
+ 'Rendered paragraph alone cannot prove hidden source notes');
+const maliciousPractical='[Open](javascript:alert(1))\n\n<iframe src="https://example.com"></iframe>';
+const cleanPractical=markdownToHTML(maliciousPractical,'gfm',{extensions:false});
+assert(!/<iframe|javascript:/i.test(cleanPractical));
 const attack=markdownToHTML('<img src="javascript:alert(1)" onerror="alert(2)">\n<script>alert(3)</script>','gfm',{extensions:false});
 assert(!/<script|onerror=|javascript:/i.test(attack));
 assert.deepEqual(evaluateExtensionsLab('invalid','<table></table>'),[]);
 resetCourse();
 assert.equal(state.extensionsLabDrafts['gfm-table-alignment'],'saved work','core reset must not erase optional lab');
 assert.deepEqual(state.extensionsLabCompleted,['gfm-table-alignment'],'core reset must not erase optional progress');
-console.log('PASS: #17 six optional labs, semantic outcomes, five locales, isolated state and XSS');
+console.log('PASS: #17 thirteen optional labs, semantic outcomes, five locales, isolated state and XSS');
