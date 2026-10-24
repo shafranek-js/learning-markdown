@@ -24,7 +24,7 @@ export function markdownToHTML(text,dialect=state.dialect,{extensions=true,labFe
  // The optional learning lab may exercise selected already-reviewed grammar
  // extensions without reading or mutating the current document's opt-ins.
  // Never activate lab features in CommonMark, Original, or normal Preview.
- const allowedLabFeatures=new Set(['footnotes','headingIds','definitionLists']);
+ const allowedLabFeatures=new Set(['footnotes','headingIds','definitionLists','emojiShortcodes']);
  const isolated=!extensions&&dialect==='gfm'&&Array.isArray(labFeatures)
   ?new Set(labFeatures.filter(id=>allowedLabFeatures.has(id))):new Set();
  const enabled=id=>isolated.has(id)||(extensions&&extensionEnabled(state.extensionSettingsByDocument,docKey(),dialect,id));

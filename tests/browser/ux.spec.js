@@ -2209,13 +2209,13 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  const modal=page.locator('#extensions-lab-modal');
  await expect(modal).toBeVisible();
  await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 13');
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
  const source=page.locator('#extensions-lab-source');
  await source.fill('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-preview th[align="center"]')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview td[align="right"]')).toHaveText('5');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13');
  await page.locator('#extensions-lab-close').click();
  await expect(modal).toBeHidden();
  await expect(main).toHaveValue(originalMarkdown);
@@ -2224,7 +2224,7 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  await expect(page.locator('#advanced-progress-label')).toHaveText(advancedProgress);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 6');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 13');
  await page.locator('#extensions-lab-open').click();
  await expect(source).toHaveValue('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-status')).toContainText('All checks pass');
@@ -2243,11 +2243,11 @@ test('issue #17 fenced examples cannot pass without rendered highlighting; succe
  await expect(page.locator('#extensions-lab-preview code.language-javascript')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview code.language-javascript .hljs-keyword')).toContainText('const');
  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ ']);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13');
  await page.locator('#extensions-lab-reset').click();
  await expect(source).toHaveValue(/^~~~\nconst answer/);
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6'); // historical achievement persists
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13'); // historical achievement persists
  await page.locator('#extensions-lab-close').click();
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
@@ -2304,7 +2304,7 @@ test('issue #17 second learning wave: four opt-in exercises pass with real sanit
  await page.locator('#extensions-lab-open').click();
  const select=page.locator('#extensions-lab-select');
  const source=page.locator('#extensions-lab-source');
- await expect(select.locator('option')).toHaveCount(6);
+ await expect(select.locator('option')).toHaveCount(13);
  for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
   await select.selectOption(id);
   await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
@@ -2326,13 +2326,13 @@ test('issue #17 second learning wave: four opt-in exercises pass with real sanit
    await expect(page.locator('#extensions-lab-preview dl.md-definition-list dd')).toHaveCount(2);
   }
  }
- await expect(page.locator('#extensions-lab-progress')).toHaveText('4 / 6');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('4 / 13');
  await page.locator('#extensions-lab-close').click();
  await expect(page.locator('#markdown-input')).toHaveValue(originalDraft);
  expect(new URL(page.url()).hash).toBe(originalHash);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 6');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 13');
  await page.locator('#extensions-lab-open').click();
  await expect(select).toHaveValue('definition-list');
  await expect(source).toHaveValue(/First \*\*definition\*\*/);
@@ -2364,13 +2364,13 @@ test('issue #17 second wave ignores fenced examples, strips scripts and keeps op
  await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(0);
 });
 
-test('issue #17 six exercises show localized titles and portability notes in five languages',async({page})=>{
+test('issue #17 all exercises show localized titles and portability notes in five languages',async({page})=>{
  await page.goto('/');
  for(const language of ['en','cs','uk','ro','ru']){
   await page.locator('#lang-selector').selectOption(language);
   await page.locator('#contents-toggle-btn').click();
   await page.locator('#extensions-lab-open').click();
-  await expect(page.locator('#extensions-lab-select option')).toHaveCount(6);
+  await expect(page.locator('#extensions-lab-select option')).toHaveCount(13);
   for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
    await page.locator('#extensions-lab-select').selectOption(id);
    await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
@@ -2378,5 +2378,91 @@ test('issue #17 six exercises show localized titles and portability notes in fiv
    await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
   }
   await page.locator('#extensions-lab-close').click();
+ }
+});
+
+test('issue #17 practical lessons: seven complete by rendered effects and persist',async({page})=>{
+ await page.goto('/');
+ const mainBefore=await page.locator('#markdown-input').inputValue();
+ const routeBefore=new URL(page.url()).hash;
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ const source=page.locator('#extensions-lab-source'),select=page.locator('#extensions-lab-select');
+ await expect(select.locator('option')).toHaveCount(13);
+ const ids=['unicode-entities','emoji-shortcodes','gfm-table-tricks','html-table-list','portable-callout','author-notes','video-preview-links'];
+ for(const id of ids){
+  await select.selectOption(id);
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+  await page.locator('#extensions-lab-example').click();
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ ']);
+  if(id==='unicode-entities'){
+   await expect(page.locator('#extensions-lab-preview')).toContainText('العربية');
+   await expect(page.locator('#extensions-lab-preview')).toContainText('עברית');
+  }else if(id==='emoji-shortcodes'){
+   await expect(page.locator('#extensions-lab-preview p > code')).toHaveText(':rocket:');
+  }else if(id==='gfm-table-tricks'){
+   await expect(page.locator('#extensions-lab-preview table tbody tr:first-child td')).toHaveCount(2);
+   await expect(page.locator('#extensions-lab-preview td br')).toHaveCount(1);
+  }else if(id==='html-table-list'){
+   await expect(page.locator('#extensions-lab-preview table td ul > li')).toHaveText(['One','Two']);
+  }else if(id==='portable-callout'){
+   await expect(page.locator('#extensions-lab-preview blockquote blockquote')).toHaveCount(1);
+  }else if(id==='author-notes'){
+   await expect(page.locator('#extensions-lab-preview')).not.toContainText('Internal:');
+   await expect(page.locator('#extensions-lab-preview')).not.toContainText('Editor:');
+  }else if(id==='video-preview-links'){
+   await expect(page.locator('#extensions-lab-preview a[href="https://example.com/watch"] img[alt="Video preview"]')).toHaveCount(1);
+   await expect(page.locator('#extensions-lab-preview iframe')).toHaveCount(0);
+  }
+ }
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('7 / 13');
+ await page.locator('#extensions-lab-close').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(mainBefore);
+ expect(new URL(page.url()).hash).toBe(routeBefore);
+ await page.reload();
+ await page.locator('#contents-toggle-btn').click();
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('7 / 13');
+ await page.locator('#extensions-lab-open').click();
+ await expect(select).toHaveValue('video-preview-links');
+ await expect(source).toHaveValue(/\[!\[Video preview\]/);
+});
+
+test('issue #17 practical lessons reject all code-fenced examples and embedded frames',async({page})=>{
+ await page.goto('/');
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ const source=page.locator('#extensions-lab-source'),select=page.locator('#extensions-lab-select');
+ for(const id of ['unicode-entities','emoji-shortcodes','gfm-table-tricks','html-table-list','portable-callout','author-notes','video-preview-links']){
+  await select.selectOption(id);
+  await page.locator('#extensions-lab-example').click();
+  const example=await source.inputValue();
+  await source.fill('~~~~markdown\n'+example+'\n~~~~');
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+ }
+ await select.selectOption('author-notes');
+ await source.fill('Public text stays visible.\n\n<!-- Editor: draft note. -->');
+ await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','✓ ']);
+ await select.selectOption('video-preview-links');
+ await source.fill('[Watch the video](https://example.com/watch)\n\n<iframe src="https://example.com/watch"></iframe>');
+ await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','○ ']);
+ await expect(page.locator('#extensions-lab-preview iframe')).toHaveCount(0);
+});
+
+test('issue #17 practical instructions are complete across five locales on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ for(const lang of ['en','cs','uk','ro','ru']){
+  await page.locator('#lang-selector').selectOption(lang);
+  await page.locator('#contents-toggle-btn').click();
+  await page.locator('#extensions-lab-open').click();
+  await expect(page.locator('#extensions-lab-select option')).toHaveCount(13);
+  for(const id of ['unicode-entities','emoji-shortcodes','gfm-table-tricks','html-table-list','portable-callout','author-notes','video-preview-links']){
+   await page.locator('#extensions-lab-select').selectOption(id);
+   await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
+   await expect(page.locator('#extensions-lab-portability')).not.toBeEmpty();
+   await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
+  }
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#extensions-lab-modal')).toBeHidden();
  }
 });

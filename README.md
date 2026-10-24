@@ -340,3 +340,20 @@ Four more exercises have been added to the optional lab (now **six** in total), 
 - Definition lists: `Term` followed by `: Definition` lines is an app-specific opt-in grammar (not normative GFM/CommonMark). The lab checks semantic `<dl>/<dt>/<dd>` output, including inline bold and italic formatting.
 
 Lab-specific grammar is **only enabled in the lab rendering call**, with an explicit allowlist, and never writes to the active document's extension settings. Regular GFM/CommonMark/Original parsing and both certificate tracks remain unchanged. The exercises verify rendered DOM rather than syntax shown as code. Remaining #17 exercises cover Unicode, table tricks, portable callouts, comments and video links; Mermaid content still depends on #18/#19.
+
+
+#### Practical Extensions & Hacks exercises (#17, wave 3)
+
+The optional lab now has **13 exercises**, including seven practical additions, with EN/CS/UK/RO/RU instructions and two semantic checks per exercise:
+
+- **Unicode and HTML entities:** rendered symbols and multilingual RTL text, with the distinction between source characters, decoded entities and browser text direction.
+- **Emoji shortcodes:** this application's opt-in GFM grammar, enabled only inside the particular lab; real symbols appear in prose, while code spans retain their literal source.
+- **GFM table tricks:** escaped and entity-encoded pipes, `<br>`, bold and italic inside cells, never pretending that raw Markdown block lists belong in pipe-table cells.
+- **HTML table lists:** actual nested `<ul><li>` elements in a sanitized HTML table.
+- **Portable callouts:** standard CommonMark blockquote with emphasis and nested reply (different from GitHub Alerts).
+- **Author notes:** an unused reference definition and an HTML comment checked using Markdown lexer tokens outside code fences, with both reminders omitted from Preview.
+- **Video preview links:** standard links and linked remote thumbnail images, without iframe/video embeds or third-party scripts.
+
+All examples remain editable in an independent, locally saved lab workspace and do not change the user's main Markdown source. The source-only author-note checks explicitly exclude code fences; all other validators inspect the **sanitized rendered DOM**. The existing parser allowlist prevents the app-specific emoji expansion from affecting normative GFM, CommonMark, Original or other lessons. Browser regression tests include all five languages, mobile view, safe HTML and local storage persistence.
+
+Issue #17's non-Mermaid practical curriculum is implemented. Any Mermaid-specific lab should wait for dedicated renderer/export work in issues #18 and #19.
