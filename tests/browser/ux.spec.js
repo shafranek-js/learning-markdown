@@ -2478,7 +2478,7 @@ test('issue #18 Mermaid picker inserts editable source and renders a safe image;
  await expect(page.locator('#mermaid-dialog-type option')).toHaveCount(3);
  await page.locator('#mermaid-dialog-type').selectOption('flowchart');
  await page.locator('#mermaid-dialog-insert').click();
- await expect(input).toHaveValue(/\\\`\\\`\\\`mermaid[\s\S]*flowchart LR/);
+ await expect(input).toHaveValue(/```mermaid[\s\S]*flowchart LR/);
  const card=page.locator('#markdown-preview .mermaid-preview-card');
  await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
  const image=card.locator('img.mermaid-preview-diagram');
