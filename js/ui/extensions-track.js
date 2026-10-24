@@ -21,7 +21,7 @@ function checkLive(){
  const lab=selected(),source=$('extensions-lab-source').value;
  const html=markdownToHTML(source,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
  $('extensions-lab-preview').innerHTML=html;
- const checks=evaluateExtensionsLab(lab.id,html);
+ const checks=evaluateExtensionsLab(lab.id,html,source);
  const locale=extensionsLabText(state.lang),entry=locale.entry[lab.id];
  const root=$('extensions-lab-checks');root.replaceChildren();
  checks.forEach((passed,index)=>{
