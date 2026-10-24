@@ -2470,6 +2470,7 @@ test('issue #17 practical instructions are complete across five locales on mobil
 
 test('issue #18 Mermaid picker inserts editable source and renders a safe image; Undo/Redo work',async({page})=>{
  test.setTimeout(90000);
+ page.on('console',msg=>{if(msg.text().includes('Mermaid Preview'))console.log('DIAGRAM DEBUG:',msg.text());});
  await page.goto('/');
  const input=page.locator('#markdown-input'),before=await input.inputValue();
  await page.locator('#advanced-tools-toggle').click();
@@ -2480,7 +2481,7 @@ test('issue #18 Mermaid picker inserts editable source and renders a safe image;
  await page.locator('#mermaid-dialog-insert').click();
  await expect(input).toHaveValue(/```mermaid[\s\S]*flowchart LR/);
  const card=page.locator('#markdown-preview .mermaid-preview-card');
- await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:16000});
  const image=card.locator('img.mermaid-preview-diagram');
  await expect(image).toHaveAttribute('src',/^data:image\/svg\+xml/);
  await expect(page.locator('#markdown-preview svg')).toHaveCount(0);
@@ -2493,11 +2494,12 @@ test('issue #18 Mermaid picker inserts editable source and renders a safe image;
  await expect(page.locator('#markdown-preview .mermaid-preview-card')).toHaveCount(0);
  await page.locator('#redo-btn').click();
  await expect(input).toHaveValue(/flowchart LR/);
- await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:16000});
 });
 
 test('issue #18 multiple Mermaid blocks render individually; errors preserve original code and stale diagrams never win',async({page})=>{
  test.setTimeout(90000);
+ page.on('console',msg=>{if(msg.text().includes('Mermaid Preview'))console.log('DIAGRAM DEBUG:',msg.text());});
  await page.goto('/');
  const input=page.locator('#markdown-input');
  const source='~~~mermaid\nsequenceDiagram\n  participant A as Author\n  participant R as Reviewer\n  A->>R: Request review\n  R-->>A: Approved\n~~~\n\n'+
@@ -2505,8 +2507,8 @@ test('issue #18 multiple Mermaid blocks render individually; errors preserve ori
  await input.fill(source);
  const cards=page.locator('#markdown-preview .mermaid-preview-card');
  await expect(cards).toHaveCount(2);
- await expect(cards.nth(0)).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
- await expect(cards.nth(1)).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ await expect(cards.nth(0)).toHaveAttribute('data-mermaid-status','ready',{timeout:16000});
+ await expect(cards.nth(1)).toHaveAttribute('data-mermaid-status','ready',{timeout:16000});
  await expect(cards.locator('img')).toHaveCount(2);
  await input.fill('~~~mermaid\njourney\n  section Unsupported\n~~~');
  await expect(cards).toHaveCount(1);
@@ -2520,6 +2522,7 @@ test('issue #18 multiple Mermaid blocks render individually; errors preserve ori
 
 test('issue #18 rejects malicious Mermaid directives and keeps HTML export source-only',async({page})=>{
  test.setTimeout(90000);
+ page.on('console',msg=>{if(msg.text().includes('Mermaid Preview'))console.log('DIAGRAM DEBUG:',msg.text());});
  await page.goto('/');
  const input=page.locator('#markdown-input');
  await input.fill('~~~mermaid\n%%{init: {"securityLevel":"loose"}}%%\nflowchart LR\n  A-->B\n~~~');
@@ -2530,7 +2533,7 @@ test('issue #18 rejects malicious Mermaid directives and keeps HTML export sourc
  await input.fill('~~~mermaid\nflowchart LR\nclick A "javascript:alert(1)"\n~~~');
  await expect(card).toHaveAttribute('data-mermaid-status','error');
  await input.fill('~~~mermaid\nflowchart LR\n A[Start] --> B[End]\n~~~');
- await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:16000});
  const imgSrc=await card.locator('img').getAttribute('src');
  expect(decodeURIComponent(imgSrc)).not.toMatch(/<script|foreignObject|javascript:/i);
  // Static export is intentionally deferred to issue #19; preserve readable Mermaid source.
