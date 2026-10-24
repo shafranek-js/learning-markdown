@@ -163,3 +163,32 @@
 .figure-dialog .figure-error{font-size:11px;color:#dc2626;min-height:1em}
 .figure-dialog input:disabled{opacity:.48}
 @media(max-width:480px){.figure-dialog .figure-dialog-actions button{flex:1}}
+
+
+/* #15 offline Unicode palette, modal stays in viewport at 390px mobile. */
+.unicode-picker-dialog{width:min(455px,calc(100vw - 16px));max-width:calc(100vw - 16px);
+ max-height:calc(100dvh - 24px);overflow:auto;padding:13px;border-radius:11px;
+ border:1px solid var(--border-ui);background:var(--bg-panel);color:var(--text-ui);
+ box-shadow:0 16px 52px rgba(0,0,0,.36)}
+.unicode-picker-dialog::backdrop{background:rgba(0,0,0,.54)}
+.unicode-picker-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;font-size:13px}
+.unicode-picker-header button,.unicode-lesson-button{border:1px solid var(--border-ui);border-radius:6px;padding:5px 8px;font-size:11px}
+.unicode-picker-dialog>label{display:block;font-size:11px;font-weight:600;margin-bottom:4px}
+#unicode-search{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--border-ui);
+ background:var(--bg-panel-alt);color:var(--text-ui);font-size:13px;outline-offset:2px}
+#unicode-categories{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0 6px}
+.unicode-category{padding:4px 7px;border:1px solid var(--border-ui);border-radius:6px;font-size:11px;
+ background:var(--bg-panel-alt)}
+.unicode-category[aria-pressed="true"]{border-color:var(--accent);outline:1px solid var(--accent)}
+.unicode-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:4px;
+ max-height:min(38dvh,310px);overflow-y:auto;padding:3px;margin:4px 0}
+.unicode-result{display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:2px;padding:8px 3px;min-height:62px;min-width:0;border-radius:6px;border:1px solid var(--border-ui);
+ background:var(--bg-panel-alt);color:var(--text-ui)}
+.unicode-result:hover,.unicode-result:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.unicode-character{font-size:24px;line-height:1.3;min-height:29px}
+.unicode-item-name{font-size:9px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.unicode-help{display:block;font-size:10px;color:var(--text-ui-muted);margin:6px 0}
+.unicode-lesson-button{margin-top:4px}
+@media(max-width:400px){.unicode-picker-dialog{padding:10px}
+ .unicode-results{grid-template-columns:repeat(4,minmax(0,1fr));max-height:34dvh}}

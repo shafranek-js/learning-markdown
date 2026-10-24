@@ -13,6 +13,7 @@ import {initTableEditor,renderTableEditorLanguage} from './ui/table-editor.js';
 import {renderPractice} from './ui/deep-practice.js';
 import {initAdvancedUI,renderAdvancedUI} from './ui/advanced.js';
 import {initFigureDialog,renderFigureLanguage} from './ui/figure-dialog.js';
+import {initUnicodePicker,renderUnicodePickerLanguage} from './ui/unicode-picker.js';
 import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
 import {initTOC,TOC_TEXT} from './ui/toc.js';
 import {standaloneHTML} from './core/export-html.js';
@@ -79,7 +80,7 @@ function renderLocalization(){const strings=ui(state.lang);document.documentElem
  ro:['Deschide cuprinsul','Arată sau ascunde ghidul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
  ru:['Открыть содержание курса','Показать или скрыть гид урока','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
  ['contents-toggle-btn','theory-pane-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
- renderCheats();renderDialectUI();renderAdvancedUI();renderFigureLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
+ renderCheats();renderDialectUI();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
 }
 function selectLesson(index,{route=true,scroll=true}={}){
  if(index<-1||index>=LESSON_CORE.length+ADVANCED_IDS.length)return;state.currentLessonIndex=index;
@@ -139,7 +140,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');

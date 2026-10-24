@@ -143,6 +143,9 @@
                 </button>
             </div>
 
+            <!-- Native Unicode is portable and usable without advanced tools. -->
+            <button id="unicode-picker-trigger" type="button" aria-haspopup="dialog" aria-controls="unicode-picker-dialog" class="px-2 py-1 shrink-0 text-[11px] font-semibold rounded border theme-border theme-panel-alt hover:opacity-90">Symbols</button>
+
             <!-- Quick Formatting Toolbar -->
             <div class="inline-flex items-center theme-panel-alt p-0.5 rounded-lg border theme-border gap-0.5">
                 <button type="button" data-action="h1" class="toolbar-btn px-2 py-0.5 rounded text-xs font-mono font-bold hover:bg-white/10 transition" title="Heading 1 (#) — Ctrl+1">H1</button>
@@ -613,6 +616,23 @@
           <button type="submit" data-format="html" id="figure-insert"></button>
         </div>
       </form>
+    </dialog>
+
+
+    <!-- Local, offline Unicode picker; no remote emoji provider. -->
+    <dialog id="unicode-picker-dialog" aria-labelledby="unicode-picker-title" class="unicode-picker-dialog theme-panel theme-border">
+      <div class="unicode-picker-header">
+        <strong id="unicode-picker-title">Unicode symbols & emoji</strong>
+        <button id="unicode-close" type="button">Close</button>
+      </div>
+      <label id="unicode-search-label" for="unicode-search">Search symbols or names</label>
+      <input id="unicode-search" type="search" autocomplete="off" aria-controls="unicode-results" placeholder="Search symbols or names">
+      <div id="unicode-categories" role="group" aria-label="Symbol categories"></div>
+      <span id="unicode-count" class="unicode-help" aria-live="polite"></span>
+      <div id="unicode-results" class="unicode-results" role="group" aria-label="Unicode results"></div>
+      <p id="unicode-empty" class="unicode-help" hidden>No matches</p>
+      <p id="unicode-hint" class="unicode-help">Enter to insert; Esc to close.</p>
+      <button id="unicode-lesson-example" type="button" class="unicode-lesson-button">Unicode, entities and escapes</button>
     </dialog>
 
 </body>
