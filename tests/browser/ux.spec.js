@@ -2209,13 +2209,13 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  const modal=page.locator('#extensions-lab-modal');
  await expect(modal).toBeVisible();
  await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 2');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 6');
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
  const source=page.locator('#extensions-lab-source');
  await source.fill('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-preview th[align="center"]')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview td[align="right"]')).toHaveText('5');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 2');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6');
  await page.locator('#extensions-lab-close').click();
  await expect(modal).toBeHidden();
  await expect(main).toHaveValue(originalMarkdown);
@@ -2224,7 +2224,7 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  await expect(page.locator('#advanced-progress-label')).toHaveText(advancedProgress);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 2');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 6');
  await page.locator('#extensions-lab-open').click();
  await expect(source).toHaveValue('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-status')).toContainText('All checks pass');
@@ -2243,11 +2243,11 @@ test('issue #17 fenced examples cannot pass without rendered highlighting; succe
  await expect(page.locator('#extensions-lab-preview code.language-javascript')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview code.language-javascript .hljs-keyword')).toContainText('const');
  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ ']);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 2');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6');
  await page.locator('#extensions-lab-reset').click();
  await expect(source).toHaveValue(/^~~~\nconst answer/);
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 2'); // historical achievement persists
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 6'); // historical achievement persists
  await page.locator('#extensions-lab-close').click();
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
@@ -2294,4 +2294,89 @@ test('issue #17 lab stays usable on mobile and does not execute source HTML',asy
  expect(size.width).toBeLessThanOrEqual(390);
  await page.locator('#extensions-lab-close').click();
  await expect(page.locator('#extensions-lab-modal')).toBeHidden();
+});
+
+test('issue #17 second learning wave: four opt-in exercises pass with real sanitized semantics',async({page})=>{
+ await page.goto('/');
+ const originalHash=new URL(page.url()).hash;
+ const originalDraft=await page.locator('#markdown-input').inputValue();
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ const select=page.locator('#extensions-lab-select');
+ const source=page.locator('#extensions-lab-source');
+ await expect(select.locator('option')).toHaveCount(6);
+ for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
+  await select.selectOption(id);
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+  await page.locator('#extensions-lab-example').click();
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ ']);
+  if(id==='github-footnotes'){
+   await expect(page.locator('#extensions-lab-preview a.fn-ref')).toHaveCount(2);
+   await expect(page.locator('#extensions-lab-preview a.fn-backref')).toHaveCount(2);
+   await page.locator('#extensions-lab-preview a.fn-backref').first().click();
+   expect(new URL(page.url()).hash).toBe(originalHash);
+  }else if(id==='custom-heading-toc'){
+   await expect(page.locator('#extensions-lab-preview h1#manual-overview')).toHaveCount(1);
+   await page.locator('#extensions-lab-preview a[href="#manual-overview"]').click();
+   expect(new URL(page.url()).hash).toBe(originalHash);
+  }else if(id==='figure-caption'){
+   await expect(page.locator('#extensions-lab-preview figure.af-figure figcaption')).toHaveText('Front of carton');
+   await expect(page.locator('#extensions-lab-preview figure img')).toHaveAttribute('width','640');
+  }else if(id==='definition-list'){
+   await expect(page.locator('#extensions-lab-preview dl.md-definition-list dd')).toHaveCount(2);
+  }
+ }
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('4 / 6');
+ await page.locator('#extensions-lab-close').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(originalDraft);
+ expect(new URL(page.url()).hash).toBe(originalHash);
+ await page.reload();
+ await page.locator('#contents-toggle-btn').click();
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 6');
+ await page.locator('#extensions-lab-open').click();
+ await expect(select).toHaveValue('definition-list');
+ await expect(source).toHaveValue(/First \*\*definition\*\*/);
+});
+
+test('issue #17 second wave ignores fenced examples, strips scripts and keeps opt-in local',async({page})=>{
+ await page.goto('/');
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ const select=page.locator('#extensions-lab-select');
+ const source=page.locator('#extensions-lab-source');
+ const examples={
+  'github-footnotes':'Reference[^note].\n\n[^note]: **Text**.',
+  'custom-heading-toc':'# Overview {#manual-overview}\n\n[Jump](#manual-overview)',
+  'figure-caption':'<figure class="af-figure"><img src="https://example.org/a.png" alt="Test" width="640"><figcaption>Caption</figcaption></figure>',
+  'definition-list':'Term\n: **First**\n: *Second*'
+ };
+ for(const [id,snippet] of Object.entries(examples)){
+  await select.selectOption(id);
+  await source.fill('~~~~markdown\n'+snippet+'\n~~~~');
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+ }
+ await source.fill('Term\n: <script>window.__labAttack=1</script> **First**\n: *Second* <img src="javascript:alert(1)" onerror="window.__labAttack=2">');
+ await expect(page.locator('#extensions-lab-preview script')).toHaveCount(0);
+ await expect(page.locator('#extensions-lab-preview img')).toHaveCount(0);
+ expect(await page.evaluate(()=>window.__labAttack)).toBeUndefined();
+ await page.locator('#extensions-lab-close').click();
+ await page.locator('#markdown-input').fill('An unhandled note[^x].\n\n[^x]: Source.');
+ await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(0);
+});
+
+test('issue #17 six exercises show localized titles and portability notes in five languages',async({page})=>{
+ await page.goto('/');
+ for(const language of ['en','cs','uk','ro','ru']){
+  await page.locator('#lang-selector').selectOption(language);
+  await page.locator('#contents-toggle-btn').click();
+  await page.locator('#extensions-lab-open').click();
+  await expect(page.locator('#extensions-lab-select option')).toHaveCount(6);
+  for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
+   await page.locator('#extensions-lab-select').selectOption(id);
+   await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
+   await expect(page.locator('#extensions-lab-portability')).not.toBeEmpty();
+   await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
+  }
+  await page.locator('#extensions-lab-close').click();
+ }
 });

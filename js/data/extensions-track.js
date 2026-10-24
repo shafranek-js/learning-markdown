@@ -1,5 +1,6 @@
 // Optional learning track (#17): distinct from the 8 core and 7 advanced lessons.
-export const EXTENSIONS_LABS = Object.freeze([
+import {MORE_LABS,MORE_LAB_TEXT,MORE_LAB_NOTES,evaluateMoreLab} from './extensions-track-more.js';
+const BASE_EXTENSIONS_LABS = Object.freeze([
   {
     "id": "gfm-table-alignment",
     "category": "gfm",
@@ -23,7 +24,7 @@ export const EXTENSIONS_LABS = Object.freeze([
     ]
   }
 ]);
-export const EXTENSIONS_LAB_TEXT = Object.freeze({
+const BASE_EXTENSIONS_LAB_TEXT = Object.freeze({
   "en": {
     "title": "Extensions & Hacks Lab",
     "open": "Extensions & Hacks · Practice",
@@ -210,6 +211,12 @@ export const EXTENSIONS_LAB_TEXT = Object.freeze({
     }
   }
 });
+export const EXTENSIONS_LABS = Object.freeze([...BASE_EXTENSIONS_LABS,...MORE_LABS]);
+export const EXTENSIONS_LAB_TEXT = Object.freeze(Object.fromEntries(
+ Object.entries(BASE_EXTENSIONS_LAB_TEXT).map(([language,copy])=>[
+  language,{...copy,note:MORE_LAB_NOTES[language],entry:{...copy.entry,...MORE_LAB_TEXT[language]}}
+ ])
+));
 export const extensionsLabText = lang => EXTENSIONS_LAB_TEXT[lang] || EXTENSIONS_LAB_TEXT.en;
 export const extensionsLabIds = new Set(EXTENSIONS_LABS.map(lab=>lab.id));
 
@@ -230,5 +237,5 @@ export function evaluateExtensionsLab(id,renderedHTML){
   if(!code)return [false,false];
   return [true,Boolean(code.querySelector('span.hljs-keyword'))];
  }
- return [];
+ return evaluateMoreLab(id,doc);
 }
