@@ -15,7 +15,7 @@ export function safeMermaidSvgImage(svg){
  if(!root||root.localName!=='svg'||doc.querySelector('parsererror'))
   throw new Error('Invalid Mermaid SVG.');
  for(const element of [root,...root.querySelectorAll('*')]){
-  if(!SVG_TAGS.has(element.localName.toLowerCase()))throw new Error('Unsupported SVG element.');
+  if(!SVG_TAGS.has(element.localName.toLowerCase()))throw new Error('Unsupported SVG element: '+element.localName);
   for(const attribute of [...element.attributes]){
    const name=attribute.name.toLowerCase(),value=attribute.value;
    if(name==='xmlns'&&value==='http://www.w3.org/2000/svg')continue;
