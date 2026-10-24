@@ -20,7 +20,12 @@ body{min-width:0}
  .mobile-tabs button.selected{background:var(--accent-soft);color:var(--accent)}
  #course-main-title{max-width:180px}
  #theory-panel{min-width:0!important}
- header{overflow-x:auto}
+ /* Keep Contents tappable; additional header controls scroll in their own lane. */
+ .app-header{overflow-x:visible}
+ .app-header-brand{display:none}
+ .app-header-left{flex:0 0 auto}
+ .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain}
+ .app-header-actions>*{flex-shrink:0}
 }
 @media print{
  @page{size:A4;margin:18mm}
