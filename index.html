@@ -18,10 +18,10 @@
 <body class="w-screen h-screen m-0 p-0 flex flex-col overflow-hidden font-sans antialiased select-none">
 
     <!-- ==================== FULL-WIDTH COURSE HEADER BAR (Screenshot Style) ==================== -->
-    <header class="h-14 w-full shrink-0 border-b theme-header px-3 sm:px-4 flex items-center justify-between gap-2 z-30">
+    <header class="app-header h-14 w-full shrink-0 border-b theme-header px-3 sm:px-4 flex items-center justify-between gap-2 z-30">
         
         <!-- Left: Contents Drawer Toggle + Course Title & Subtitle -->
-        <div class="flex items-center gap-3 min-w-0">
+        <div class="app-header-left flex items-center gap-3 min-w-0">
             <button id="contents-toggle-btn" type="button" class="px-3 py-1.5 rounded-lg theme-panel hover:opacity-90 border theme-border flex items-center gap-2 text-xs sm:text-sm font-bold transition shrink-0" title="Toggle Course Contents & Tasks">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h12"/>
@@ -34,7 +34,7 @@
                 <span data-i18n="guideBtn">Lesson Guide</span>
             </button>
 
-            <div class="min-w-0 border-l theme-border pl-3">
+            <div class="app-header-brand min-w-0 border-l theme-border pl-3">
                 <div class="flex items-center gap-2">
                     <h1 id="course-main-title" class="font-bold text-xs sm:text-sm md:text-base tracking-tight truncate">
                         Learning Markdown: Formatting Text without the Complexity
@@ -60,7 +60,7 @@
         </div>
 
         <!-- Right: Controls (Sandbox, CheatSheet, Certificate, Theme Selector, Language Selector) -->
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div class="app-header-actions flex items-center gap-1.5 sm:gap-2 shrink-0">
             <!-- Prompt / Sandbox Button -->
             <button id="sandbox-mode-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
                 <svg class="w-3.5 h-3.5" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
