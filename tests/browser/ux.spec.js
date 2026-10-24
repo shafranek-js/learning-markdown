@@ -2466,3 +2466,95 @@ test('issue #17 practical instructions are complete across five locales on mobil
   await expect(page.locator('#extensions-lab-modal')).toBeHidden();
  }
 });
+
+
+test('issue #18 Mermaid picker inserts editable source and renders a safe image; Undo/Redo work',async({page})=>{
+ test.setTimeout(90000);
+ await page.goto('/');
+ const input=page.locator('#markdown-input'),before=await input.inputValue();
+ await page.locator('#advanced-tools-toggle').click();
+ await page.locator('#mermaid-dialog-trigger').click();
+ await expect(page.locator('#mermaid-dialog')).toBeVisible();
+ await expect(page.locator('#mermaid-dialog-type option')).toHaveCount(3);
+ await page.locator('#mermaid-dialog-type').selectOption('flowchart');
+ await page.locator('#mermaid-dialog-insert').click();
+ await expect(input).toHaveValue(/\\\`\\\`\\\`mermaid[\s\S]*flowchart LR/);
+ const card=page.locator('#markdown-preview .mermaid-preview-card');
+ await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ const image=card.locator('img.mermaid-preview-diagram');
+ await expect(image).toHaveAttribute('src',/^data:image\/svg\+xml/);
+ await expect(page.locator('#markdown-preview svg')).toHaveCount(0);
+ await expect(page.locator('#markdown-preview pre > code.language-mermaid')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview pre')).toBeHidden();
+ await card.locator('button').click();
+ await expect(page.locator('#markdown-preview pre')).toBeVisible();
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(before);
+ await expect(page.locator('#markdown-preview .mermaid-preview-card')).toHaveCount(0);
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue(/flowchart LR/);
+ await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+});
+
+test('issue #18 multiple Mermaid blocks render individually; errors preserve original code and stale diagrams never win',async({page})=>{
+ test.setTimeout(90000);
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='~~~mermaid\nsequenceDiagram\n  participant A as Author\n  participant R as Reviewer\n  A->>R: Request review\n  R-->>A: Approved\n~~~\n\n'+
+  '~~~mermaid\npie showData\n  title Tasks\n  "Done" : 7\n  "Open" : 3\n~~~';
+ await input.fill(source);
+ const cards=page.locator('#markdown-preview .mermaid-preview-card');
+ await expect(cards).toHaveCount(2);
+ await expect(cards.nth(0)).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ await expect(cards.nth(1)).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ await expect(cards.locator('img')).toHaveCount(2);
+ await input.fill('~~~mermaid\njourney\n  section Unsupported\n~~~');
+ await expect(cards).toHaveCount(1);
+ await expect(cards).toHaveAttribute('data-mermaid-status','error');
+ await expect(page.locator('#markdown-preview pre')).toBeVisible();
+ await expect(page.locator('#markdown-preview .mermaid-preview-image img')).toHaveCount(0);
+ await input.fill('# Not a diagram');
+ await expect(cards).toHaveCount(0);
+ await expect(page.locator('#markdown-preview h1')).toHaveText('Not a diagram');
+});
+
+test('issue #18 rejects malicious Mermaid directives and keeps HTML export source-only',async({page})=>{
+ test.setTimeout(90000);
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('~~~mermaid\n%%{init: {"securityLevel":"loose"}}%%\nflowchart LR\n  A-->B\n~~~');
+ const card=page.locator('#markdown-preview .mermaid-preview-card');
+ await expect(card).toHaveAttribute('data-mermaid-status','error');
+ await expect(page.locator('#markdown-preview svg')).toHaveCount(0);
+ expect(await input.inputValue()).toContain('securityLevel');
+ await input.fill('~~~mermaid\nflowchart LR\nclick A "javascript:alert(1)"\n~~~');
+ await expect(card).toHaveAttribute('data-mermaid-status','error');
+ await input.fill('~~~mermaid\nflowchart LR\n A[Start] --> B[End]\n~~~');
+ await expect(card).toHaveAttribute('data-mermaid-status','ready',{timeout:60000});
+ const imgSrc=await card.locator('img').getAttribute('src');
+ expect(decodeURIComponent(imgSrc)).not.toMatch(/<script|foreignObject|javascript:/i);
+ // Static export is intentionally deferred to issue #19; preserve readable Mermaid source.
+ const download=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await download;
+ expect(file.suggestedFilename()).toContain('markdown-export');
+ const fs=await import('node:fs/promises');
+ const html=await fs.readFile(await file.path(),'utf8');
+ expect(html).toContain('language-mermaid');
+ expect(html).not.toContain('src="data:image/svg+xml');
+});
+
+test('issue #18 Mermaid toolbar translations in all five languages and mobile dialog',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ for(const language of ['en','cs','uk','ro','ru']){
+  await page.locator('#lang-selector').selectOption(language);
+  await page.locator('#mermaid-dialog-trigger').click();
+  await expect(page.locator('#mermaid-dialog')).toBeVisible();
+  await expect(page.locator('#mermaid-dialog-type option')).toHaveCount(3);
+  await expect(page.locator('#mermaid-dialog-help')).not.toBeEmpty();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#mermaid-dialog')).toBeHidden();
+ }
+});
