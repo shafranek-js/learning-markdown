@@ -18,8 +18,10 @@ export function safeMermaidSvgImage(svg){
   if(!SVG_TAGS.has(element.localName.toLowerCase()))throw new Error('Unsupported SVG element.');
   for(const attribute of [...element.attributes]){
    const name=attribute.name.toLowerCase(),value=attribute.value;
+   if(name==='xmlns'&&value==='http://www.w3.org/2000/svg')continue;
+   if(name==='xmlns:xlink'&&value==='http://www.w3.org/1999/xlink')continue;
    if(name.startsWith('on')||name==='href'||name==='xlink:href'||name==='src'
-    ||name==='xml:base'||name==='xmlns:xlink'||name==='formaction'
+    ||name==='xml:base'||name==='formaction'
     ||REMOTE_VALUE.test(value)||name==='style'&&DANGEROUS_CSS.test(value))
     throw new Error('Unsafe SVG attribute.');
   }
