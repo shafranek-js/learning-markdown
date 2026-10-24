@@ -1997,3 +1997,131 @@ test('issue #14 definition syntax never creates executable markup from hostile t
  expect(await page.evaluate(()=>window.__definitionXss)).toBeUndefined();
  await expect(page.locator('#markdown-preview')).toContainText('Ordinary: paragraph');
 });
+
+
+test('issue #15 Unicode picker searches offline and inserts at caret with Undo/Redo',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('Price: ');
+ await page.locator('#unicode-picker-trigger').click();
+ await expect(page.locator('#unicode-picker-dialog')).toBeVisible();
+ await page.locator('#unicode-search').fill('euro');
+ await expect(page.locator('#unicode-results button[data-item-id="euro"]')).toHaveCount(1);
+ await page.locator('#unicode-results button[data-item-id="euro"]').click();
+ await expect(page.locator('#unicode-picker-dialog')).not.toBeVisible();
+ await expect(input).toHaveValue('Price: €');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('Price: ');
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue('Price: €');
+ await expect(page.locator('#markdown-preview')).toContainText('Price: €');
+});
+
+test('issue #15 Enter, Escape and keyboard search work in localized Unicode palette',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#unicode-picker-trigger').click();
+ await expect(page.locator('#unicode-picker-title')).toHaveText('Символы Unicode и emoji');
+ const search=page.locator('#unicode-search');
+ await search.fill('стрелка');
+ await expect(page.locator('#unicode-results button').first()).toBeVisible();
+ await search.press('ArrowDown');
+ await expect(page.locator('#unicode-results button').first()).toBeFocused();
+ await page.keyboard.press('Enter');
+ await expect(page.locator('#unicode-picker-dialog')).not.toBeVisible();
+ await expect(input).not.toHaveValue('');
+ await page.locator('#unicode-picker-trigger').click();
+ await search.fill('совершенно-несуществующий');
+ await expect(page.locator('#unicode-empty')).toBeVisible();
+ await search.fill('copyright');
+ await search.press('Enter');
+ await expect(page.locator('#unicode-picker-dialog')).not.toBeVisible();
+ await expect(input).toHaveValue(/©$/);
+ await page.locator('#unicode-picker-trigger').click();
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#unicode-picker-dialog')).not.toBeVisible();
+});
+
+test('issue #15 opt-in shortcodes expand only in selected GFM documents',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='Hello :joy: :tent: :unknown:.\n\n'+String.fromCharCode(96)+':joy:'+String.fromCharCode(96)+'\n\n~~~text\n:tent:\n~~~';
+ await input.fill(source);
+ await expect(page.locator('#markdown-preview p').first()).toContainText(':joy:');
+ await page.locator('#compatibility-panel summary').click();
+ const toggle=page.locator('#extension-emoji-toggle');
+ await expect(toggle).toHaveValue('off');
+ await toggle.selectOption('on');
+ await expect(page.locator('#markdown-preview p').first()).toContainText('😂');
+ await expect(page.locator('#markdown-preview p').first()).toContainText('⛺');
+ await expect(page.locator('#markdown-preview p').first()).toContainText(':unknown:');
+ await expect(page.locator('#markdown-preview code').first()).toHaveText(':joy:');
+ await expect(page.locator('#markdown-preview pre')).toContainText(':tent:');
+ await expect(input).toHaveValue(source);
+ await page.reload();
+ await expect(toggle).toHaveValue('on');
+ await page.locator('#dialect-selector').selectOption('commonmark');
+ await expect(toggle).toBeDisabled();
+ await expect(page.locator('#markdown-preview p').first()).toContainText(':joy:');
+ await page.locator('#dialect-selector').selectOption('original');
+ await expect(page.locator('#markdown-preview p').first()).toContainText(':joy:');
+ await page.locator('#dialect-selector').selectOption('gfm');
+ await expect(toggle).toHaveValue('on');
+ await expect(page.locator('#markdown-preview p').first()).toContainText('😂');
+ await page.locator('#sandbox-mode-btn').click();
+ await expect(toggle).toHaveValue('off');
+ await page.locator('#lang-selector').selectOption('ru');
+ await expect(page.locator('#extension-emoji-label')).toContainText('Shortcodes');
+ await expect(page.locator('#extension-matrix-body tr')).toHaveCount(8);
+});
+
+test('issue #15 Unicode picker stays usable on 390px mobile screen and inserts symbols',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('Road ');
+ await page.locator('#unicode-picker-trigger').click();
+ const dialog=page.locator('#unicode-picker-dialog');
+ await expect(dialog).toBeVisible();
+ const geometry=await dialog.evaluate(el=>{
+  const rect=el.getBoundingClientRect();
+  return {left:rect.left,right:rect.right,width:rect.width,viewport:innerWidth};
+ });
+ expect(geometry.left).toBeGreaterThanOrEqual(0);
+ expect(geometry.right).toBeLessThanOrEqual(geometry.viewport+1);
+ await page.locator('#unicode-categories button[data-category="arrows"]').click();
+ await expect(page.locator('#unicode-results button').first()).toBeVisible();
+ await page.locator('#unicode-results button[data-item-id="right"]').click();
+ await expect(dialog).not.toBeVisible();
+ await expect(page.locator('#markdown-input')).toHaveValue('Road →');
+});
+
+test('issue #15 Unicode sample and Markdown/HTML export preserve source and rendered output',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('');
+ await page.locator('#unicode-picker-trigger').click();
+ await page.locator('#unicode-lesson-example').click();
+ await expect(input).toHaveValue(/Unicode: © € → π/);
+ await expect(input).toHaveValue(/&copy; &euro; &rarr;/);
+ await expect(input).toHaveValue(/\\\*literal asterisks\\\*/);
+ await input.fill('One :joy: © €');
+ await page.locator('#compatibility-panel summary').click();
+ await page.locator('#extension-emoji-toggle').selectOption('on');
+ const messages=[];
+ page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
+ const download=page.waitForEvent('download');
+ await page.locator('#download-md-btn').click();
+ const file=await download;
+ const {readFile}=await import('node:fs/promises');
+ expect(await readFile(await file.path(),'utf8')).toBe('One :joy: © €');
+ expect(messages).toHaveLength(1);
+ expect(messages[0]).toContain('shortcode');
+ const htmlDownload=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const htmlFile=await htmlDownload;
+ const html=await readFile(await htmlFile.path(),'utf8');
+ expect(html).toContain('One 😂 © €');
+ expect(html).not.toContain('<script');
+});
