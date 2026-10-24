@@ -52,7 +52,8 @@ assert(combined.includes('md-definition-list')&&combined.includes('😂')&&combi
 assert(!marked.parse(':joy:').includes('😂'));
 const hostile=markdownToHTML('Literal :script: and '+tick+'<img onerror="x">'+tick+'\n\n<script>alert(1)</script>','gfm');
 assert(!hostile.includes('<script'));
-assert(!hostile.includes('onerror='));
+assert([...new JSDOM(hostile).window.document.querySelectorAll('*')].every(el=>
+ [...el.attributes].every(attr=>!/^on/i.test(attr.name))),'Event handlers must never survive as HTML attributes');
 const unicode='© € → π ✓ 😂';
 assert(markdownToHTML(unicode).includes(unicode));
 assert(markdownToHTML('Escaped: \\*literal\\* and &copy;').includes('©'));
