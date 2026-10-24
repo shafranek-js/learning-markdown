@@ -1550,7 +1550,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await expect(input).toHaveValue(source);
- await expect(page.locator('#extension-matrix-body tr')).toHaveCount(7);
+ await expect(page.locator('#extension-matrix-body tr')).toHaveCount(8);
  await page.reload();
  await expect(toggle).toHaveValue('on');
  // The <details> panel intentionally collapses after a page reload.
@@ -1929,7 +1929,7 @@ test('issue #14 definition lists are opted in and persist per document without a
  await page.locator('#lang-selector').selectOption('ru');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#extension-definitions-label')).toContainText('Списки определений');
- await expect(page.locator('#extension-matrix-body tr')).toHaveCount(7);
+ await expect(page.locator('#extension-matrix-body tr')).toHaveCount(8);
 });
 
 test('issue #14 Advanced HTML definition template is semantic, reversible and available across dialects',async({page})=>{

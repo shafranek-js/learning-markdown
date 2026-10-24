@@ -19,6 +19,7 @@ import {initTOC,TOC_TEXT} from './ui/toc.js';
 import {standaloneHTML} from './core/export-html.js';
 import {renderPortability,portabilityStatus,portabilityLabels,initExtensionSettings} from './ui/compatibility.js';
 import {extensionText,footnoteText,definitionText} from './core/extensions.js';
+import {paletteLabels} from './core/unicode-palette.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
 import {initAdvancedCertificate,renderAdvancedCertificate,openAdvancedCertificate} from './ui/advanced-certificate.js';
@@ -166,6 +167,7 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
   if(portabilityStatus()?.footnotesActive && !confirm(footnoteText(state.lang).warning))return;
   if(portabilityStatus()?.customHeadingIdsActive && !confirm((TOC_TEXT[state.lang]||TOC_TEXT.en).customWarning))return;
   if(portabilityStatus()?.definitionListsActive && !confirm(definitionText(state.lang).warning))return;
+  if(portabilityStatus()?.emojiShortcodesActive && !confirm(paletteLabels(state.lang).warning))return;
   download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8');
  });
  $('download-html-btn').addEventListener('click',()=>download(standaloneHTML(currentHtml(),state.lang),'markdown-export.html','text/html;charset=utf-8'));
