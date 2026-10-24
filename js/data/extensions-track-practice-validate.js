@@ -39,7 +39,7 @@ export function evaluatePracticeLab(id,doc,source=''){
    &&items[0].textContent.trim()==='One'&&items[1].textContent.trim()==='Two'];
  }
  if(id==='portable-callout'){
-  const outer=[...doc.querySelectorAll('blockquote')].find(q=>!q.closest('blockquote'));
+  const outer=[...doc.querySelectorAll('blockquote')].find(q=>!q.parentElement?.closest('blockquote'));
   const bold=outer?.querySelector('p > strong, p > b');
   return [Boolean(outer&&bold?.textContent.trim()==='Note:'),
    Boolean(outer?.querySelector('blockquote > p')?.textContent.includes('A nested reply'))];
