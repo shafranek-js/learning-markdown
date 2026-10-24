@@ -2274,6 +2274,7 @@ test('issue #17 optional lab supports all five locales and keyboard Escape',asyn
   await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
   await page.keyboard.press('Escape');
   await expect(page.locator('#extensions-lab-modal')).toBeHidden();
+  await expect(page.locator('#contents-toggle-btn')).toBeFocused();
  }
 });
 
