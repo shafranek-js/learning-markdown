@@ -2197,3 +2197,100 @@ test('issue #16 practical hacks can be reached on a narrow viewport',async({page
  await page.locator('[data-hack-id="entities-and-unicode"] button').click();
  await expect(page.locator('#markdown-input')).toHaveValue(/Unicode: © ® ™ € π ° →/);
 });
+
+test('issue #17 optional GFM lab validates rendered alignment and preserves isolated drafts',async({page})=>{
+ await page.goto('/');
+ const originalRoute=new URL(page.url()).hash;
+ const main=page.locator('#markdown-input'),originalMarkdown=await main.inputValue();
+ const coreProgress=await page.locator('#progress-label').textContent();
+ const advancedProgress=await page.locator('#advanced-progress-label').textContent();
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ const modal=page.locator('#extensions-lab-modal');
+ await expect(modal).toBeVisible();
+ await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 2');
+ await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
+ const source=page.locator('#extensions-lab-source');
+ await source.fill('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
+ await expect(page.locator('#extensions-lab-preview th[align="center"]')).toHaveCount(1);
+ await expect(page.locator('#extensions-lab-preview td[align="right"]')).toHaveText('5');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 2');
+ await page.locator('#extensions-lab-close').click();
+ await expect(modal).toBeHidden();
+ await expect(main).toHaveValue(originalMarkdown);
+ expect(new URL(page.url()).hash).toBe(originalRoute);
+ await expect(page.locator('#progress-label')).toHaveText(coreProgress);
+ await expect(page.locator('#advanced-progress-label')).toHaveText(advancedProgress);
+ await page.reload();
+ await page.locator('#contents-toggle-btn').click();
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 2');
+ await page.locator('#extensions-lab-open').click();
+ await expect(source).toHaveValue('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
+ await expect(page.locator('#extensions-lab-status')).toContainText('All checks pass');
+});
+
+test('issue #17 fenced examples cannot pass without rendered highlighting; successful samples persist',async({page})=>{
+ await page.goto('/');
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ const selector=page.locator('#extensions-lab-select'),source=page.locator('#extensions-lab-source');
+ await selector.selectOption('fenced-code-highlighting');
+ await expect(source).toHaveValue(/^~~~\nconst answer/);
+ await source.fill('~~~~markdown\n~~~javascript\nconst answer = 42;\n~~~\n~~~~');
+ await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+ await page.locator('#extensions-lab-example').click();
+ await expect(page.locator('#extensions-lab-preview code.language-javascript')).toHaveCount(1);
+ await expect(page.locator('#extensions-lab-preview code.language-javascript .hljs-keyword')).toContainText('const');
+ await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ ']);
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 2');
+ await page.locator('#extensions-lab-reset').click();
+ await expect(source).toHaveValue(/^~~~\nconst answer/);
+ await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 2'); // historical achievement persists
+ await page.locator('#extensions-lab-close').click();
+ await page.reload();
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ await expect(selector).toHaveValue('fenced-code-highlighting');
+ await expect(source).toHaveValue(/^~~~\nconst answer/);
+});
+
+test('issue #17 optional lab supports all five locales and keyboard Escape',async({page})=>{
+ await page.goto('/');
+ for(const [lang,heading] of [
+  ['en','Extensions & Hacks Lab'],
+  ['cs','Laboratoř rozšíření a triků'],
+  ['uk','Практикум розширень і прийомів'],
+  ['ro','Laborator de extensii și trucuri'],
+  ['ru','Практикум Extensions & Hacks']
+ ]){
+  await page.locator('#lang-selector').selectOption(lang);
+  await page.locator('#contents-toggle-btn').click();
+  const launch=page.locator('#extensions-lab-open');
+  await launch.click();
+  await expect(page.locator('#extensions-lab-title')).toHaveText(heading);
+  await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
+  await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#extensions-lab-modal')).toBeHidden();
+ }
+});
+
+test('issue #17 lab stays usable on mobile and does not execute source HTML',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ await expect(page.locator('#extensions-lab-modal')).toBeVisible();
+ const source=page.locator('#extensions-lab-source');
+ await source.fill('<script>window.__labXss = 1</script>\n\n<img src="x" onerror="window.__labXss=2">');
+ await expect(page.locator('#extensions-lab-preview script')).toHaveCount(0);
+ await expect(page.locator('#extensions-lab-preview img')).not.toHaveAttribute('onerror',/./);
+ expect(await page.evaluate(()=>window.__labXss)).toBeUndefined();
+ await expect(page.locator('#extensions-lab-status')).toBeVisible();
+ const size=await page.locator('#extensions-lab-modal > div').boundingBox();
+ expect(size.width).toBeLessThanOrEqual(390);
+ await page.locator('#extensions-lab-close').click();
+ await expect(page.locator('#extensions-lab-modal')).toBeHidden();
+});
