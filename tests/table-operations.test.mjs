@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds} from '../js/core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,sanitizeInlineCellHTML} from '../js/core/table-operations.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
@@ -117,5 +117,43 @@ assert.equal(tableSelectionBounds(wideTop,0,select(0,0,{row:0.4,col:1})),null);
 const nestedHTML='<table><tr><td>Outer<table><tr><td>Inner</td></tr></table></td></tr></table>';
 assert.equal(tableSelectionBounds(nestedHTML,0,select(0,0)),null);
 assert.equal(apply(nestedHTML,'merge-right',select(0,0)),null);
+
+
+// Rich editing is allowed only for safe inline HTML within standalone tables.
+const richSource='Before\n\n<table class="af-table-outline"><tr><td rowspan="2" colspan="2" class="af-cell-mint">'+
+ '<strong>Title</strong> <em>italic</em> <a href="https://example.org/guide">read</a>'+
+ '</td><td>Other</td></tr><tr><td>More</td></tr></table>\n\nAfter';
+const htmlBefore=getTableCellHTML(richSource,0,0,0);
+assert(htmlBefore.includes('<strong>Title</strong>'));
+assert(htmlBefore.includes('<em>italic</em>'));
+assert(htmlBefore.includes('https://example.org/guide'));
+assert.equal(getTableCellHTML(richSource,0,1,1),htmlBefore,'merged owner is addressable throughout its span');
+assert.equal(getTableCellHTML(editSource,0,1,0),null,'GFM source is never implicitly rewritten');
+const modified=setTableCellHTML(richSource,0,0,0,
+ '<strong>Updated</strong> <em>italic</em> <a href="https://example.org/guide">read now</a> <u>underlined</u>');
+assert(modified?.text.startsWith('Before\n\n'));
+assert(modified?.text.endsWith('\n\nAfter'));
+assert(modified.text.includes('rowspan="2"'));
+assert(modified.text.includes('colspan="2"'));
+assert(modified.text.includes('af-cell-mint'));
+assert(modified.text.includes('<strong>Updated</strong>'));
+assert(modified.text.includes('<em>italic</em>'));
+assert(modified.text.includes('<u>underlined</u>'));
+assert(modified.text.includes('href="https://example.org/guide"'));
+assert(modified.text.includes('Other')&&modified.text.includes('More'));
+const safeScript=setTableCellHTML(richSource,0,0,0,'<strong>Valid</strong><span onclick="alert(1)">text</span>');
+assert(safeScript&&!/onclick=|<script/.test(safeScript.text),'event handlers removed by sanitizer');
+const unsafeLink=setTableCellHTML(richSource,0,0,0,'<a href="javascript:alert(1)">Open</a>');
+assert(unsafeLink&&!/javascript:/i.test(unsafeLink.text));
+assert.equal(setTableCellHTML(richSource,0,0,0,'<script>alert(1)</script>'),null);
+assert.equal(setTableCellHTML(richSource,0,0,0,'<table><tr><td>Nested</td></tr></table>'),null);
+assert.equal(setTableCellHTML(richSource,0,0,0,'<p>Block</p>'),null);
+assert.equal(setTableCellHTML(richSource,0,0,0,'<img src="https://example.com/a.png">'),null);
+assert.equal(setTableCellHTML(richSource,0,0,0,'x'.repeat(2001)),null);
+assert.equal(sanitizeInlineCellHTML('<strong>X</strong><em>Y</em><code>Z</code><br>'),
+ '<strong>X</strong><em>Y</em><code>Z</code><br>');
+assert.equal(sanitizeInlineCellHTML('<svg onload="alert(1)"/>'),null);
+assert.equal(getTableCellHTML(nestedHTML,0,0,0),null);
+assert.equal(setTableCellHTML(nestedHTML,0,0,0,'Test'),null);
 
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');

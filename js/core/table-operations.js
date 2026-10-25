@@ -285,6 +285,51 @@ export function setTableCellText(source,index,row,col,value){
  return {text:source.slice(0,table.start)+updated+source.slice(table.end),
   start:table.start,end:table.end,kind:table.type};
 }
+// Rich cell editing is deliberately restricted to stand-alone HTML tables and
+// the HTML sanitizer's inline subset. GFM source remains GFM unless the user
+// explicitly performs a structural/advanced operation.
+const CELL_INLINE_TAGS=new Set('strong b em i u s del sup sub mark code span a br'.split(' '));
+export function sanitizeInlineCellHTML(value){
+ if(typeof value!=='string'||value.length>12000)return null;
+ const parsed=new DOMParser().parseFromString(value,'text/html');
+ // DOMParser hoists some forbidden elements (notably <script>/<style>)
+ // into <head>. Reject those, never turn them into an empty cell.
+ if(parsed.head.children.length)return null;
+ // Block/foreign DOM cannot be safely represented by a single inline cell.
+ // Refuse it instead of silently losing table structure or other content.
+ if([...parsed.body.querySelectorAll('*')].some(el=>!CELL_INLINE_TAGS.has(el.tagName.toLowerCase())))
+  return null;
+ if((parsed.body.textContent||'').length>2000)return null;
+ const clean=sanitizeHTML(value);
+ const doc=new DOMParser().parseFromString(clean,'text/html');
+ if([...doc.body.querySelectorAll('*')].some(el=>!CELL_INLINE_TAGS.has(el.tagName.toLowerCase())))return null;
+ return doc.body.innerHTML;
+}
+export function getTableCellHTML(source,index,row,col){
+ const table=findEditableTables(source)[index];
+ if(table?.type!=='html'||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ const model=modelFromHTML(table.raw);
+ if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
+ const owner=cellsAt(model,row,col);
+ return owner?sanitizeInlineCellHTML(owner.html):null;
+}
+export function setTableCellHTML(source,index,row,col,value){
+ const inline=sanitizeInlineCellHTML(value);
+ if(inline===null)return null;
+ const table=findEditableTables(source)[index];
+ if(table?.type!=='html'||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ const model=modelFromHTML(table.raw);
+ if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
+ const owner=cellsAt(model,row,col);
+ if(!owner)return null;
+ if(sanitizeInlineCellHTML(owner.html)===null)return null;
+ owner.html=inline;
+ const updated=serializeHTML(model);
+ if(updated===table.raw)return null;
+ return {text:source.slice(0,table.start)+updated+source.slice(table.end),
+  start:table.start,end:table.end,kind:'html'};
+}
+
 const previewCache=new WeakMap();
 export function previewTableCoordinates(table,cell){
  const rows=[...table.querySelectorAll('tr')],row=rows.indexOf(cell.closest('tr'));

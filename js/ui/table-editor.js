@@ -1,6 +1,6 @@
 import {state,docKey} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds} from '../core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML} from '../core/table-operations.js';
 
 const $=id=>document.getElementById(id);
 const UI={
@@ -37,6 +37,14 @@ const CONTENT_TEXT={
  ro:['Textul celulei','Salvează celula','Doar text; formatarea anterioară se înlocuiește.','Editează conținutul'],
  ru:['Текст ячейки','Сохранить ячейку','Только текст; прежняя разметка ячейки будет заменена.','Изменить содержимое ячейки']
 };
+const RICH_TEXT={
+ en:{rich:'Rich text',plain:'Plain text',hint:'Edit formatting safely; paste inserts plain text. Changes apply on Save.',bold:'Bold',italic:'Italic',underline:'Underline',code:'Code',unsupported:'Rich editing supports inline HTML in standalone tables only.'},
+ cs:{rich:'Formátovaný text',plain:'Prostý text',hint:'Formátujte bezpečně; vložený text se převede na prostý text. Změny uložíte tlačítkem Uložit.',bold:'Tučné',italic:'Kurzíva',underline:'Podtržení',code:'Kód',unsupported:'Formátování lze upravit jen v samostatných HTML tabulkách.'},
+ uk:{rich:'Форматований текст',plain:'Звичайний текст',hint:'Безпечне форматування; вставлений текст без розмітки. Для збереження натисніть кнопку.',bold:'Жирний',italic:'Курсив',underline:'Підкреслення',code:'Код',unsupported:'Форматування доступне лише для окремих HTML-таблиць.'},
+ ro:{rich:'Text formatat',plain:'Text simplu',hint:'Formatare sigură; lipirea adaugă doar text. Salvați pentru a aplica.',bold:'Aldin',italic:'Cursiv',underline:'Subliniat',code:'Cod',unsupported:'Editarea formatării este disponibilă doar în tabele HTML independente.'},
+ ru:{rich:'Форматированный',plain:'Обычный текст',hint:'Безопасное форматирование; вставка — только текст. Изменения применяются после сохранения.',bold:'Жирный',italic:'Курсив',underline:'Подчёркнутый',code:'Код',unsupported:'Форматирование доступно только для отдельных HTML-таблиц.'}
+};
+const richWords=()=>RICH_TEXT[state.lang]||RICH_TEXT.en;
 const GROUPS=[
  {key:'rows',items:['row-above','row-below','delete-row']},
  {key:'cols',items:['column-left','column-right','delete-column']},
@@ -50,26 +58,105 @@ function clearSelection(){
  $('table-edit-bar').hidden=true;
  document.querySelectorAll('#markdown-preview .table-edit-selected').forEach(c=>c.classList.remove('table-edit-selected'));
 }
+function showCellMode(){
+ if(!selected)return;
+ const rich=getTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col);
+ const eligible=rich!==null;
+ const richMode=eligible&&Boolean(selected.richMode);
+ $('table-edit-mode').hidden=!eligible;
+ $('table-edit-content-input').hidden=richMode;
+ $('table-edit-rich-panel').hidden=!richMode;
+ $('table-edit-rich-choice').setAttribute('aria-pressed',String(richMode));
+ $('table-edit-plain-choice').setAttribute('aria-pressed',String(!richMode));
+ $('table-edit-content-label').htmlFor=richMode?'table-edit-rich-content':'table-edit-content-input';
+ $('table-edit-content-warning').textContent=richMode?richWords().hint:(CONTENT_TEXT[state.lang]||CONTENT_TEXT.en)[2];
+}
 function refreshCellText(){
  if(!selected)return;
- const text=getTableCellText(area().value,selected.tableIndex,selected.row,selected.col);
+ const source=area().value;
+ const text=getTableCellText(source,selected.tableIndex,selected.row,selected.col);
+ const html=getTableCellHTML(source,selected.tableIndex,selected.row,selected.col);
  $('table-edit-content-input').value=text??'';
  $('table-edit-content-input').disabled=text===null;
  $('table-edit-content-save').disabled=text===null;
+ $('table-edit-rich-choice').disabled=html===null;
+ if(html!==null)$('table-edit-rich-content').innerHTML=html;
+ else $('table-edit-rich-content').replaceChildren();
+ showCellMode();
+}
+function setCellMode(rich){
+ if(!selected)return;
+ if(rich&&getTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col)===null)return;
+ if(rich===Boolean(selected.richMode))return;
+ if(rich){
+  // Switching away and back without modifying text must NOT discard rich
+  // formatting. If the plain field was edited, use its explicit text instead.
+  const previous=selected.pendingRichHTML;
+  if(previous!==undefined){
+   const doc=new DOMParser().parseFromString(previous,'text/html');
+   if(doc.body.textContent===$('table-edit-content-input').value)
+    $('table-edit-rich-content').innerHTML=previous;
+   else $('table-edit-rich-content').textContent=$('table-edit-content-input').value;
+  }else $('table-edit-rich-content').textContent=$('table-edit-content-input').value;
+ }else{
+  selected.pendingRichHTML=$('table-edit-rich-content').innerHTML;
+  $('table-edit-content-input').value=$('table-edit-rich-content').textContent;
+ }
+ selected.richMode=rich;
+ showCellMode();
+ (rich?$('table-edit-rich-content'):$('table-edit-content-input')).focus();
 }
 function saveCell(){
  if(!selected)return;
  const before=findEditableTables(area().value)[selected.tableIndex];
  if(!before||before.raw!==selected.raw){clearSelection();return;}
- const value=$('table-edit-content-input').value;
- const current=getTableCellText(area().value,selected.tableIndex,selected.row,selected.col);
+ const richMode=Boolean(selected.richMode);
+ const value=richMode?$('table-edit-rich-content').innerHTML:$('table-edit-content-input').value;
+ const current=richMode?getTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col)
+  :getTableCellText(area().value,selected.tableIndex,selected.row,selected.col);
  if(value===current)return;
- const edit=setTableCellText(area().value,selected.tableIndex,selected.row,selected.col,value);
+ const edit=richMode?setTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col,value)
+  :setTableCellText(area().value,selected.tableIndex,selected.row,selected.col,value);
  if(!edit){$('table-edit-message').textContent=labels().invalid;return;}
  selected.raw=findEditableTables(edit.text)[selected.tableIndex]?.raw||'';
  $('table-edit-message').textContent='';
  applyEdit(edit.text,edit.start,edit.start,{focus:false});
  syncTableEditorPreview();
+ refreshCellText();
+}
+function insertRichNodes(nodes){
+ const editor=$('table-edit-rich-content'),selection=window.getSelection();
+ const range=selection?.rangeCount?selection.getRangeAt(0):null;
+ if(!range||!editor.contains(range.commonAncestorContainer))return false;
+ range.deleteContents();
+ const fragment=document.createDocumentFragment();
+ for(const node of nodes)fragment.append(node);
+ const last=fragment.lastChild;
+ range.insertNode(fragment);
+ if(last){range.setStartAfter(last);range.collapse(true);selection.removeAllRanges();selection.addRange(range);}
+ editor.focus();return true;
+}
+function wrapRichSelection(tag){
+ if(!selected?.richMode)return;
+ const editor=$('table-edit-rich-content'),selection=window.getSelection();
+ if(!selection?.rangeCount)return;
+ const range=selection.getRangeAt(0);
+ if(range.collapsed||!editor.contains(range.commonAncestorContainer))return;
+ const node=document.createElement(tag);
+ node.append(range.extractContents());
+ range.insertNode(node);
+ range.selectNodeContents(node);range.collapse(false);
+ selection.removeAllRanges();selection.addRange(range);
+ editor.focus();
+}
+function pastePlainText(text){
+ const normalized=String(text).replace(/\r\n?/g,'\n').slice(0,2000);
+ const segments=normalized.split('\n'),nodes=[];
+ segments.forEach((line,i)=>{
+  if(i)nodes.push(document.createElement('br'));
+  if(line)nodes.push(document.createTextNode(line));
+ });
+ insertRichNodes(nodes);
 }
 function highlight(){
  const preview=$('markdown-preview');
@@ -117,7 +204,11 @@ function chooseCell(event){
  if(!coords)return;
  if(event.shiftKey&&selected?.doc===docKey()&&selected.tableIndex===index){
   selected.other={row:coords.row,col:coords.col};
- }else selected={tableIndex:index,doc:docKey(),row:coords.row,col:coords.col,other:null,raw:sourceTables[index].raw};
+ }else{
+  const html=getTableCellHTML(area().value,index,coords.row,coords.col);
+  selected={tableIndex:index,doc:docKey(),row:coords.row,col:coords.col,other:null,
+   raw:sourceTables[index].raw,richMode:html!==null&&/<(?:strong|b|em|i|u|s|del|sup|sub|mark|code|span|a|br)\b/i.test(html)};
+ }
  highlight();
  refreshCellText();
 }
@@ -144,6 +235,15 @@ export function renderTableEditorLanguage(){
  $('table-edit-content-label').textContent=content[0];
  $('table-edit-content-save').textContent=content[1];
  $('table-edit-content-warning').textContent=content[2];
+ const rich=richWords();
+ $('table-edit-rich-choice').textContent=rich.rich;
+ $('table-edit-plain-choice').textContent=rich.plain;
+ for(const [key,label] of Object.entries({bold:rich.bold,italic:rich.italic,underline:rich.underline,code:rich.code})){
+  const button=$('table-edit-rich-'+key);
+  button.title=label;button.setAttribute('aria-label',label);
+ }
+ $('table-edit-rich-content').setAttribute('aria-label',rich.rich);
+ if(selected)showCellMode();
  $('table-edit-content-input').setAttribute('aria-label',content[3]);
  GROUPS.forEach(({key,items})=>{
   const select=$('table-edit-'+key);
@@ -163,7 +263,12 @@ export function initTableEditor(){
  bar.innerHTML='<div class="table-edit-heading"><strong id="table-edit-title"></strong>'
   +'<span id="table-edit-status" aria-live="polite"></span><button id="table-edit-close" type="button">✕</button></div>'
   +'<div class="table-edit-actions"></div>'
-  +'<form id="table-edit-content-form" class="table-edit-content-form"><label id="table-edit-content-label" for="table-edit-content-input"></label><input id="table-edit-content-input" type="text" maxlength="2000" autocomplete="off"><button id="table-edit-content-save" type="submit"></button></form>'
+  +'<div id="table-edit-mode" class="table-edit-mode" role="group" hidden><button type="button" id="table-edit-rich-choice" aria-pressed="false"></button><button type="button" id="table-edit-plain-choice" aria-pressed="true"></button></div>'
+  +'<form id="table-edit-content-form" class="table-edit-content-form"><label id="table-edit-content-label" for="table-edit-content-input"></label><input id="table-edit-content-input" type="text" maxlength="2000" autocomplete="off">'
+  +'<div id="table-edit-rich-panel" hidden><div class="table-edit-rich-actions" role="toolbar" aria-label="Rich cell formatting">'
+  +'<button type="button" id="table-edit-rich-bold"><strong>B</strong></button><button type="button" id="table-edit-rich-italic"><em>I</em></button><button type="button" id="table-edit-rich-underline"><u>U</u></button><button type="button" id="table-edit-rich-code"><code>&lt;/&gt;</code></button></div>'
+  +'<div id="table-edit-rich-content" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true"></div></div>'
+  +'<button id="table-edit-content-save" type="submit"></button></form>'
   +'<p id="table-edit-content-warning"></p><p id="table-edit-hint"></p><p id="table-edit-message" role="status" aria-live="polite"></p>';
  const actions=bar.querySelector('.table-edit-actions');
  for(const {key} of GROUPS){
@@ -176,6 +281,24 @@ export function initTableEditor(){
  document.body.append(bar);
  $('table-edit-close').addEventListener('click',clearSelection);
  $('table-edit-content-form').addEventListener('submit',e=>{e.preventDefault();saveCell();});
+ $('table-edit-rich-choice').addEventListener('click',()=>setCellMode(true));
+ $('table-edit-plain-choice').addEventListener('click',()=>setCellMode(false));
+ for(const [kind,tag] of Object.entries({bold:'strong',italic:'em',underline:'u',code:'code'})){
+  const btn=$('table-edit-rich-'+kind);
+  btn.addEventListener('pointerdown',e=>e.preventDefault());
+  btn.addEventListener('click',()=>wrapRichSelection(tag));
+ }
+ const editor=$('table-edit-rich-content');
+ editor.addEventListener('paste',event=>{
+  event.preventDefault();
+  pastePlainText(event.clipboardData?.getData('text/plain')||'');
+ });
+ editor.addEventListener('drop',event=>event.preventDefault());
+ editor.addEventListener('beforeinput',event=>{
+  if(event.inputType==='insertParagraph'||event.inputType==='insertLineBreak'){
+   event.preventDefault();insertRichNodes([document.createElement('br')]);
+  }
+ });
  $('markdown-preview').addEventListener('click',chooseCell);
  $('markdown-preview').addEventListener('keydown',e=>{
   if((e.key==='Enter'||e.key===' ')&&/^(TD|TH)$/.test(e.target.tagName)){

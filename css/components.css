@@ -192,3 +192,22 @@
 .unicode-lesson-button{margin-top:4px}
 @media(max-width:400px){.unicode-picker-dialog{padding:10px}
  .unicode-results{grid-template-columns:repeat(4,minmax(0,1fr));max-height:34dvh}}
+
+/* #6 Rich cell editor: inline formatting, plain-text fallback, accessible controls. */
+.table-edit-mode{display:flex;gap:5px;align-items:center;margin-top:7px}
+.table-edit-mode[hidden],#table-edit-rich-panel[hidden],#table-edit-content-input[hidden]{display:none!important}
+.table-edit-mode button{border:1px solid var(--border-ui);border-radius:5px;padding:4px 9px;
+ background:var(--bg-panel-alt);color:var(--text-ui);font-size:11px;font-weight:600}
+.table-edit-mode button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:-1px}
+#table-edit-rich-panel{display:flex;flex:1;min-width:180px;flex-direction:column;gap:4px}
+.table-edit-rich-actions{display:flex;gap:4px;align-items:center}
+.table-edit-rich-actions button{min-width:30px;min-height:29px}
+#table-edit-rich-content{min-height:36px;max-height:140px;overflow-y:auto;white-space:pre-wrap;
+ word-break:break-word;border-radius:5px;border:1px solid var(--border-ui);padding:7px 9px;
+ background:var(--bg-editor);color:var(--editor-text);font-size:13px;line-height:1.5}
+#table-edit-rich-content a{color:var(--accent);text-decoration:underline}
+#table-edit-rich-content:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+@media(max-width:600px){
+ #table-edit-rich-panel{flex-basis:100%;min-width:0}
+ #table-edit-rich-content{max-height:100px}
+}
