@@ -2466,3 +2466,81 @@ test('issue #17 practical instructions are complete across five locales on mobil
   await expect(page.locator('#extensions-lab-modal')).toBeHidden();
  }
 });
+
+
+test('Mermaid Advanced insertion creates editable source and safe live image',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ await expect(page.locator('#mermaid-template-choice')).toBeVisible();
+ await page.locator('#mermaid-template-choice').selectOption('flowchart');
+ await page.locator('#mermaid-template-insert').click();
+ const editor=page.locator('#markdown-input');
+ await expect(editor).toHaveValue(/```mermaid\nflowchart LR/);
+ const figure=page.locator('#markdown-preview figure.mermaid-diagram');
+ await expect(figure).toHaveCount(1,{timeout:20000});
+ const img=figure.locator('img');
+ await expect(img).toHaveAttribute('src',/^data:image\/svg\+xml;charset=utf-8,/);
+ await expect(img).toHaveJSProperty('complete',true);
+ expect(await img.evaluate(el=>el.naturalWidth)).toBeGreaterThan(0);
+ await figure.locator('summary').click();
+ await expect(figure.locator('pre code')).toContainText('flowchart LR');
+ await page.locator('#undo-btn').click();
+ await expect(editor).not.toHaveValue(/```mermaid/);
+});
+
+test('Mermaid independently renders three blocks and preserves original Markdown',async({page})=>{
+ await page.goto('/');
+ const source=['```mermaid','flowchart LR',' A[One] --> B[Two]','```','','```mermaid',
+ 'sequenceDiagram',' Alice->>Bob: Hello','```','','```mermaid','pie showData',
+ ' "Yes" : 60',' "No" : 40','```'].join('\n');
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview figure.mermaid-diagram')).toHaveCount(3,{timeout:30000});
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
+});
+
+test('Mermaid invalid input retains code and forbids inline configuration',async({page})=>{
+ await page.goto('/');
+ const source='```mermaid\n%%{init: { "securityLevel": "loose" }}%%\nflowchart LR\n A-->B\n```';
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview .mermaid-error')).toBeVisible({timeout:15000});
+ await expect(page.locator('#markdown-preview pre code.language-mermaid')).toContainText('securityLevel');
+ await expect(page.locator('#markdown-preview figure.mermaid-diagram')).toHaveCount(0);
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
+});
+
+test('Mermaid preview does not apply an outdated asynchronous render',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('```mermaid\nflowchart LR\n A[Old] --> B[Branch]\n```');
+ await input.fill('```mermaid\nflowchart LR\n A[New] --> B[Branch]\n```');
+ const diagram=page.locator('#markdown-preview figure.mermaid-diagram img');
+ await expect(diagram).toBeVisible({timeout:20000});
+ const svg=await diagram.getAttribute('src');
+ expect(decodeURIComponent(svg.split(',')[1])).toContain('New');
+ expect(decodeURIComponent(svg.split(',')[1])).not.toContain('>Old<');
+});
+
+test('Mermaid Advanced insertion labels are localized in all five languages',async({page})=>{
+ await page.goto('/');
+ await page.locator('#advanced-tools-toggle').click();
+ const expected={en:'Diagrams',cs:'Diagramy',uk:'Діаграми',ro:'Diagrame',ru:'Диаграммы'};
+ for(const [lang,label] of Object.entries(expected)){
+  await page.locator('#lang-selector').selectOption(lang);
+  await expect(page.locator('#mermaid-insert-controls')).toContainText(label);
+  await expect(page.locator('#mermaid-template-choice option')).toHaveCount(3);
+ }
+});
+
+
+test('Mermaid diagram cache avoids re-rendering after unrelated Markdown changes',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='```mermaid\nflowchart LR\n A[Stable] --> B[Diagram]\n```';
+ await input.fill(source);
+ const diagram=page.locator('#markdown-preview figure.mermaid-diagram img');
+ await expect(diagram).toBeVisible({timeout:20000});
+ const previous=await diagram.getAttribute('src');
+ await input.fill(source+'\n\nSome unrelated paragraph.');
+ await expect(page.locator('#markdown-preview figure.mermaid-diagram img')).toHaveAttribute('src',previous);
+ await expect(page.locator('#markdown-preview .mermaid-status')).toHaveCount(0);
+});
