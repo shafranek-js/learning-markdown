@@ -3101,3 +3101,92 @@ test('issue #6 nested table editing remains accessible on mobile with locales',a
  expect(raw).toContain('конец');
  expect(raw).toContain('Изменена');
 });
+
+
+test('issue #6 Blocks mode preserves paragraphs, nested lists, quote, code and export',async({page})=>{
+ test.setTimeout(75000);
+ await page.goto('/');
+ const source='Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
+  '<p>Opening <strong>bold</strong> <a href="https://example.org/docs">docs</a></p>'+
+  '<ul><li>Alpha</li><li>Beta<ul><li>Nested</li></ul></li></ul>'+
+  '<blockquote><p>Quote text</p></blockquote><pre><code>const n = 1;</code></pre>'+
+  '</td><td>Neighbor</td></tr><tr><td>Bottom</td></tr></table>\n\nAfter';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#markdown-preview > table td[rowspan="2"]').click();
+ await expect(page.locator('#table-edit-block-choice')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#table-edit-rich-choice')).toBeDisabled();
+ const editor=page.locator('#table-edit-rich-content');
+ await expect(editor.locator('ul li')).toHaveCount(3);
+ await expect(editor.locator('blockquote')).toContainText('Quote text');
+ await expect(editor.locator('pre code')).toContainText('const n = 1;');
+ await editor.locator('ul > li').first().evaluate(el=>{el.firstChild.textContent='Updated Alpha';});
+ await page.locator('#table-edit-content-save').click();
+ const changed=await input.inputValue();
+ expect(changed).toContain('Updated Alpha');
+ expect(changed).toContain('<blockquote>');
+ expect(changed).toContain('<pre><code>const n = 1;</code></pre>');
+ expect(changed).toContain('href="https://example.org/docs"');
+ expect(changed).toContain('rowspan="2"');
+ expect(changed).toContain('Neighbor');
+ expect(changed).toContain('Bottom');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview > table td[rowspan="2"]')).toContainText('Updated Alpha');
+ const dl=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const downloaded=await dl;
+ const html=await readFile(await downloaded.path(),'utf8');
+ expect(html).toContain('<blockquote>');
+ expect(html).toContain('Updated Alpha');
+ expect(html).not.toMatch(/onmouseover=|<script[\s>]|javascript:/i);
+});
+
+test('issue #6 Blocks toolbar inserts paragraph, lists, quote and code, preserving neighbors',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('<table><tr><td>Start</td><td>Other</td></tr></table>');
+ await page.locator('#markdown-preview td').first().click();
+ await page.locator('#table-edit-block-choice').click();
+ await expect(page.locator('#table-edit-block-actions')).toBeVisible();
+ for(const kind of ['p','ul','ol','quote','pre'])
+  await page.locator('#table-edit-block-'+kind).click();
+ const rich=page.locator('#table-edit-rich-content');
+ await expect(rich.locator('p')).toHaveCount(2);
+ await expect(rich.locator('ul > li')).toHaveCount(1);
+ await expect(rich.locator('ol > li')).toHaveCount(1);
+ await expect(rich.locator('blockquote')).toHaveCount(1);
+ await expect(rich.locator('pre code')).toHaveCount(1);
+ await rich.locator('ul > li').fill('Bullet item');
+ await rich.locator('ol > li').fill('Numbered item');
+ await rich.locator('blockquote p').fill('Quote item');
+ await rich.locator('pre code').fill('code item');
+ await page.locator('#table-edit-content-save').click();
+ const source=await page.locator('#markdown-input').inputValue();
+ for(const part of ['<ul>','<ol>','Bullet item','Numbered item','Quote item','<pre><code>code item</code></pre>','<td>Other</td>'])
+  expect(source).toContain(part);
+});
+
+test('issue #6 Blocks mode is localized on mobile and explicit Plain text save replaces markup',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#markdown-input').fill('<table><tr><td><p>Первый абзац</p><ul><li>Пункт</li></ul></td></tr></table>');
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview td').click();
+ await expect(page.locator('#table-edit-block-choice')).toHaveText('Блоки');
+ await expect(page.locator('#table-edit-block-choice')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#table-edit-block-p')).toHaveText('Добавить абзац');
+ await expect(page.locator('#table-edit-bar')).toBeInViewport();
+ await page.locator('#table-edit-plain-choice').click();
+ await expect(page.locator('#table-edit-content-input')).toBeVisible();
+ await page.locator('#table-edit-block-choice').click();
+ await expect(page.locator('#table-edit-rich-content ul li')).toHaveText('Пункт');
+ await page.locator('#table-edit-plain-choice').click();
+ await page.locator('#table-edit-content-input').fill('Только текст');
+ await page.locator('#table-edit-content-save').click();
+ const result=await page.locator('#markdown-input').inputValue();
+ expect(result).toContain('Только текст');
+ expect(result).not.toContain('<ul>');
+ expect(result).not.toContain('<p>');
+});
