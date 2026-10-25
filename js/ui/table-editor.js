@@ -339,7 +339,7 @@ export function renderTableEditorLanguage(){
   const label=$('table-edit-image-'+name+'-label');
   label.textContent=media[key];
  }
- $('table-edit-image-decorative-label').lastChild.textContent=media.decorative;
+ $('table-edit-image-decorative-label').textContent=media.decorative;
  $('table-edit-image-save').textContent=media.save;
  $('table-edit-block-choice').textContent=block.mode;
  for(const kind of ['p','ul','ol','quote','pre']){
