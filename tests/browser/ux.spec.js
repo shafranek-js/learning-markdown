@@ -3308,3 +3308,119 @@ test('issue #6 keyboard Enter targets image URL without flattening a cell',async
  await expect(page.locator('#table-edit-content-form')).toBeHidden();
  await expect(page.locator('#markdown-input')).toHaveValue(source);
 });
+
+
+test('issue #6 insert HTML cell image without changing surrounding rich blocks, Undo or export',async({page})=>{
+ test.setTimeout(65000);
+ await page.goto('/');
+ const source='# Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
+  '<p>Introduction <strong>important</strong> <a href="https://example.org/guide">guide</a></p>'+
+  '<ul><li>First item</li></ul><blockquote><p>Keep quote</p></blockquote>'+
+  '</td><td>Neighbor</td></tr><tr><td>Bottom</td></tr></table>\n\n# After';
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ await page.locator('#markdown-preview td[rowspan="2"]').click();
+ await expect(page.locator('#table-edit-image-add')).toHaveText('Add image');
+ await page.locator('#table-edit-image-add').click();
+ await expect(page.locator('#table-edit-image-form')).toBeVisible();
+ await expect(page.locator('#table-edit-content-form')).toBeHidden();
+ await expect(page.locator('#table-edit-image-url')).toBeFocused();
+ await page.locator('#table-edit-image-url').fill('https://example.org/image.png');
+ await page.locator('#table-edit-image-alt').fill('Artwork diagram');
+ await page.locator('#table-edit-image-width').fill('380');
+ await page.locator('#table-edit-image-save').click();
+ const changed=await editor.inputValue();
+ for(const token of ['Introduction','<strong>important</strong>','https://example.org/guide',
+  'First item','Keep quote','Neighbor','Bottom','rowspan="2"',
+  'src="https://example.org/image.png"','alt="Artwork diagram"','width="380"'])
+  expect(changed).toContain(token);
+ await expect(page.locator('#markdown-preview td[rowspan="2"] img')).toHaveAttribute('alt','Artwork diagram');
+ await expect(page.locator('#table-edit-image-add')).toBeHidden();
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview td[rowspan="2"] img')).toHaveAttribute('width','380');
+ const downloadPromise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const downloaded=await downloadPromise;
+ const html=await readFile(await downloaded.path(),'utf8');
+ expect(html).toContain('Artwork diagram');
+ expect(html).toContain('Keep quote');
+ expect(html).toContain('Neighbor');
+ expect(html).not.toMatch(/onerror=|<script[\s>]|javascript:/i);
+});
+
+test('issue #6 insert portable Markdown image without converting a GFM table to HTML',async({page})=>{
+ await page.goto('/');
+ const source='| Name | Result |\n| --- | --- |\n| First **bold** | Completed |\n';
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ await page.locator('#markdown-preview table tbody tr td').first().click();
+ await expect(page.locator('#table-edit-image-add')).toBeVisible();
+ await page.locator('#table-edit-image-add').click();
+ await expect(page.locator('#table-edit-image-form')).toBeVisible();
+ await expect(page.locator('#table-edit-image-width')).toBeHidden();
+ await expect(page.locator('#table-edit-image-height')).toBeHidden();
+ await expect(page.locator('#table-edit-content-warning')).toContainText('GFM');
+ await page.locator('#table-edit-image-url').fill('https://example.org/picture.png');
+ await page.locator('#table-edit-image-alt').fill('Preview');
+ await page.locator('#table-edit-image-save').click();
+ const updated=await editor.inputValue();
+ expect(updated).toContain('First **bold** ![Preview](https://example.org/picture.png)');
+ expect(updated).toContain('Completed');
+ expect(updated).not.toContain('<table');
+ await expect(page.locator('#markdown-preview table tbody tr td img')).toHaveAttribute('alt','Preview');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue(source);
+});
+
+test('issue #6 image insertion refuses unsaved cell drafts and unsafe URL; cancel is lossless',async({page})=>{
+ await page.goto('/');
+ const source='<table><tr><td>Original text</td><td>Another</td></tr></table>';
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ await page.locator('#markdown-preview td').first().click();
+ await page.locator('#table-edit-content-input').fill('Unsaved draft');
+ await page.locator('#table-edit-image-add').click();
+ await expect(page.locator('#table-edit-image-form')).toBeHidden();
+ await expect(page.locator('#table-edit-message')).toContainText('Save the current cell edits');
+ await expect(page.locator('#table-edit-content-input')).toHaveValue('Unsaved draft');
+ await page.locator('#table-edit-content-input').fill('Original text');
+ await page.locator('#table-edit-image-add').click();
+ await expect(page.locator('#table-edit-image-form')).toBeVisible();
+ await page.locator('#table-edit-image-url').fill('https://example.org/will-cancel.png');
+ await page.locator('#table-edit-image-alt').fill('Draft');
+ await page.locator('#table-edit-image-add').click();
+ await expect(page.locator('#table-edit-image-form')).toBeHidden();
+ await expect(editor).toHaveValue(source);
+ await page.locator('#table-edit-image-add').click();
+ await page.locator('#table-edit-image-url').fill('javascript:alert(1)');
+ await page.locator('#table-edit-image-alt').fill('Invalid');
+ await page.locator('#table-edit-image-save').click();
+ await expect(page.locator('#table-edit-message')).toContainText('HTTPS');
+ await expect(editor).toHaveValue(source);
+});
+
+test('issue #6 mobile nested table image insertion preserves parent and decorative alt',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ const source='<table><tr><td>Снаружи <table><tr><td><p>Внутри <strong>важно</strong></p>'+
+ '</td></tr></table> После</td></tr></table>';
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview table table td').click();
+ await expect(page.locator('#table-edit-image-add')).toHaveText('Добавить изображение');
+ await page.locator('#table-edit-image-add').click();
+ await page.locator('#table-edit-image-url').fill('https://example.org/leaf.png');
+ await page.locator('#table-edit-image-decorative').check();
+ await expect(page.locator('#table-edit-image-alt')).toBeDisabled();
+ await page.locator('#table-edit-image-save').click();
+ const changed=await editor.inputValue();
+ for(const text of ['Снаружи','После','Внутри','<strong>важно</strong>',
+  'src="https://example.org/leaf.png"','alt=""'])expect(changed).toContain(text);
+ await expect(page.locator('#markdown-preview table table img')).toHaveAttribute('alt','');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue(source);
+});

@@ -1,6 +1,6 @@
 import {state,docKey} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage} from '../core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../core/table-operations.js';
 
 const $=id=>document.getElementById(id);
 const UI={
@@ -54,11 +54,11 @@ const BLOCK_TEXT={
 };
 const blockWords=()=>BLOCK_TEXT[state.lang]||BLOCK_TEXT.en;
 const IMAGE_TEXT={
- en:{title:'Image properties',url:'Image URL (HTTPS)',alt:'Alternative text',decorative:'Decorative image (empty alt)',width:'Width (px)',height:'Height (px)',save:'Save image',hint:'Edit this image without replacing the cell text. External images need internet when exported.',invalid:'Enter a valid HTTPS image URL, alt text (unless decorative), and dimensions of 1–1600 px.'},
- cs:{title:'Vlastnosti obrázku',url:'URL obrázku (HTTPS)',alt:'Alternativní text',decorative:'Dekorativní obrázek (prázdný alt)',width:'Šířka (px)',height:'Výška (px)',save:'Uložit obrázek',hint:'Upravte obrázek bez změny textu buňky. Externí obrázky v exportu vyžadují internet.',invalid:'Zadejte platnou HTTPS adresu, alternativní text a rozměry 1–1600 px.'},
- uk:{title:'Властивості зображення',url:'URL зображення (HTTPS)',alt:'Альтернативний текст',decorative:'Декоративне зображення (порожній alt)',width:'Ширина (px)',height:'Висота (px)',save:'Зберегти зображення',hint:'Редагуйте зображення, не змінюючи текст клітинки. Для зовнішніх зображень потрібен інтернет.',invalid:'Вкажіть коректну HTTPS-адресу, альтернативний текст та розміри 1–1600 px.'},
- ro:{title:'Proprietăți imagine',url:'URL imagine (HTTPS)',alt:'Text alternativ',decorative:'Imagine decorativă (alt gol)',width:'Lățime (px)',height:'Înălțime (px)',save:'Salvează imaginea',hint:'Editați imaginea fără a înlocui textul celulei. Imaginile externe necesită internet la export.',invalid:'Introduceți o adresă HTTPS, text alternativ și dimensiuni 1–1600 px.'},
- ru:{title:'Свойства изображения',url:'URL изображения (HTTPS)',alt:'Альтернативный текст',decorative:'Декоративное изображение (пустой alt)',width:'Ширина (пикс.)',height:'Высота (пикс.)',save:'Сохранить изображение',hint:'Изменение изображения не заменяет текст ячейки. Внешние изображения требуют интернета при экспорте.',invalid:'Нужны корректный HTTPS-адрес, альтернативный текст и размеры от 1 до 1600 пикселей.'}
+ en:{title:'Image properties',url:'Image URL (HTTPS)',alt:'Alternative text',decorative:'Decorative image (empty alt)',width:'Width (px)',height:'Height (px)',save:'Save image',hint:'Edit this image without replacing the cell text. External images need internet when exported.',invalid:'Enter a valid HTTPS image URL, alt text (unless decorative), and dimensions of 1–1600 px.',insertTitle:"Insert image",add:"Add image",cancel:"Cancel image",insert:"Insert image",insertHint:"Insert a new image after the cell content without replacing its text.",gfmHint:"GFM images stay portable; pixel dimensions are unavailable.",unsaved:"Save the current cell edits before inserting an image."},
+ cs:{title:'Vlastnosti obrázku',url:'URL obrázku (HTTPS)',alt:'Alternativní text',decorative:'Dekorativní obrázek (prázdný alt)',width:'Šířka (px)',height:'Výška (px)',save:'Uložit obrázek',hint:'Upravte obrázek bez změny textu buňky. Externí obrázky v exportu vyžadují internet.',invalid:'Zadejte platnou HTTPS adresu, alternativní text a rozměry 1–1600 px.',insertTitle:"Vložit obrázek",add:"Přidat obrázek",cancel:"Zrušit obrázek",insert:"Vložit obrázek",insertHint:"Vložit nový obrázek za obsah buňky bez nahrazení textu.",gfmHint:"Obrázky GFM zůstávají přenosné; rozměry v pixelech nejsou dostupné.",unsaved:"Před vložením obrázku uložte aktuální úpravy buňky."},
+ uk:{title:'Властивості зображення',url:'URL зображення (HTTPS)',alt:'Альтернативний текст',decorative:'Декоративне зображення (порожній alt)',width:'Ширина (px)',height:'Висота (px)',save:'Зберегти зображення',hint:'Редагуйте зображення, не змінюючи текст клітинки. Для зовнішніх зображень потрібен інтернет.',invalid:'Вкажіть коректну HTTPS-адресу, альтернативний текст та розміри 1–1600 px.',insertTitle:"Вставити зображення",add:"Додати зображення",cancel:"Скасувати зображення",insert:"Вставити зображення",insertHint:"Додати зображення після вмісту клітинки без заміни тексту.",gfmHint:"Зображення GFM залишаються сумісними; розміри в пікселях недоступні.",unsaved:"Збережіть зміни клітинки перед вставленням зображення."},
+ ro:{title:'Proprietăți imagine',url:'URL imagine (HTTPS)',alt:'Text alternativ',decorative:'Imagine decorativă (alt gol)',width:'Lățime (px)',height:'Înălțime (px)',save:'Salvează imaginea',hint:'Editați imaginea fără a înlocui textul celulei. Imaginile externe necesită internet la export.',invalid:'Introduceți o adresă HTTPS, text alternativ și dimensiuni 1–1600 px.',insertTitle:"Inserează imagine",add:"Adaugă imagine",cancel:"Anulează imaginea",insert:"Inserează imagine",insertHint:"Adăugați o imagine după conținutul celulei, fără a înlocui textul.",gfmHint:"Imaginile GFM rămân portabile; dimensiunile în pixeli nu sunt disponibile.",unsaved:"Salvați modificările celulei înainte de inserarea imaginii."},
+ ru:{title:'Свойства изображения',url:'URL изображения (HTTPS)',alt:'Альтернативный текст',decorative:'Декоративное изображение (пустой alt)',width:'Ширина (пикс.)',height:'Высота (пикс.)',save:'Сохранить изображение',hint:'Изменение изображения не заменяет текст ячейки. Внешние изображения требуют интернета при экспорте.',invalid:'Нужны корректный HTTPS-адрес, альтернативный текст и размеры от 1 до 1600 пикселей.',insertTitle:"Вставить изображение",add:"Добавить изображение",cancel:"Отменить вставку",insert:"Вставить изображение",insertHint:"Изображение добавляется после содержимого ячейки без замены её текста.",gfmHint:"Изображения в GFM остаются переносимыми; размеры в пикселях недоступны.",unsaved:"Сначала сохраните изменения текста ячейки."}
 };
 const imageWords=()=>IMAGE_TEXT[state.lang]||IMAGE_TEXT.en;
 
@@ -82,11 +82,25 @@ function showCellMode(){
  const inline=getTableCellHTML(source,index,row,col);
  const blocks=getTableCellBlocks(source,index,row,col);
  const image=getTableCellImage(source,index,row,col);
- const imageActive=image!==null;
+ const insertable=image===null?getTableCellImageInsertion(source,index,row,col):null;
+ const inserting=Boolean(selected.insertingImage)&&insertable!==null;
+ const imageActive=image!==null||inserting;
  const eligible=blocks!==null;
  const unsupported=!eligible&&!imageActive&&findEditableTables(source)[index]?.type!=='gfm';
  const richActive=eligible&&Boolean(selected.richMode);
  const blockActive=richActive&&Boolean(selected.blockMode);
+ const addButton=$('table-edit-image-add');
+ addButton.hidden=!insertable;
+ addButton.setAttribute('aria-pressed',String(inserting));
+ addButton.textContent=inserting?imageWords().cancel:imageWords().add;
+ $('table-edit-image-title').textContent=inserting?imageWords().insertTitle:imageWords().title;
+ $('table-edit-image-save').textContent=inserting?imageWords().insert:imageWords().save;
+ for(const key of ['width','height']){
+  const control=$('table-edit-image-'+key);
+  const gfm=inserting&&insertable.format==='gfm';
+  control.closest('label').hidden=gfm;
+  control.disabled=gfm;
+ }
  $('table-edit-mode').hidden=!eligible||imageActive;
  $('table-edit-content-form').hidden=imageActive;
  $('table-edit-image-form').hidden=!imageActive;
@@ -98,7 +112,9 @@ function showCellMode(){
  $('table-edit-block-choice').setAttribute('aria-pressed',String(blockActive));
  $('table-edit-plain-choice').setAttribute('aria-pressed',String(!richActive));
  $('table-edit-content-label').htmlFor=richActive?'table-edit-rich-content':'table-edit-content-input';
- $('table-edit-content-warning').textContent=imageActive?imageWords().hint:unsupported?richWords().unsupported:
+ $('table-edit-content-warning').textContent=inserting?
+  (insertable.format==='gfm'?imageWords().gfmHint:imageWords().insertHint):
+  image!==null?imageWords().hint:unsupported?richWords().unsupported:
   blockActive?blockWords().hint:richActive?richWords().hint:(CONTENT_TEXT[state.lang]||CONTENT_TEXT.en)[2];
 }
 function refreshCellText(){
@@ -117,15 +133,43 @@ function refreshCellText(){
  else if(inline!==null)$('table-edit-rich-content').innerHTML=inline;
  else $('table-edit-rich-content').replaceChildren();
  selected.pendingRichHTML=undefined;
- if(image){
-  $('table-edit-image-url').value=image.url;
-  $('table-edit-image-alt').value=image.alt;
-  $('table-edit-image-decorative').checked=image.decorative;
-  $('table-edit-image-alt').disabled=image.decorative;
-  $('table-edit-image-width').value=image.width;
-  $('table-edit-image-height').value=image.height;
+ if(image||selected.insertingImage){
+  const values=image||{url:'',alt:'',decorative:false,width:'',height:''};
+  $('table-edit-image-url').value=values.url;
+  $('table-edit-image-alt').value=values.alt;
+  $('table-edit-image-decorative').checked=values.decorative;
+  $('table-edit-image-alt').disabled=values.decorative;
+  $('table-edit-image-width').value=values.width;
+  $('table-edit-image-height').value=values.height;
  }
  showCellMode();
+}
+function toggleImageInsertion(){
+ if(!selected)return;
+ const source=area().value,index=selected.tableIndex,row=selected.row,col=selected.col;
+ if(!getTableCellImageInsertion(source,index,row,col))return;
+ if(!selected.insertingImage){
+  const current=selected.blockMode?getTableCellBlocks(source,index,row,col):
+   selected.richMode?getTableCellHTML(source,index,row,col):getTableCellText(source,index,row,col);
+  const draft=selected.richMode?$('table-edit-rich-content').innerHTML:$('table-edit-content-input').value;
+  if(current!==draft){
+   $('table-edit-message').textContent=imageWords().unsaved;
+   return;
+  }
+ }
+ selected.insertingImage=!selected.insertingImage;
+ $('table-edit-message').textContent='';
+ if(selected.insertingImage){
+  $('table-edit-image-url').value='';
+  $('table-edit-image-alt').value='';
+  $('table-edit-image-width').value='';
+  $('table-edit-image-height').value='';
+  $('table-edit-image-decorative').checked=false;
+  $('table-edit-image-alt').disabled=false;
+ }
+ showCellMode();
+ (selected.insertingImage?$('table-edit-image-url'):
+  selected.richMode?$('table-edit-rich-content'):$('table-edit-content-input')).focus();
 }
 function setCellMode(mode){
  if(!selected)return;
@@ -175,7 +219,8 @@ function saveImage(){
  if(!entry||entry.raw!==selected.raw){clearSelection();return;}
  const args=[source,selected.tableIndex,selected.row,selected.col];
  const current=getTableCellImage(...args);
- if(!current)return;
+ const inserting=current===null&&selected.insertingImage&&getTableCellImageInsertion(...args);
+ if(!current&&!inserting)return;
  const options={
   url:$('table-edit-image-url').value.trim(),
   alt:$('table-edit-image-alt').value,
@@ -183,10 +228,11 @@ function saveImage(){
   width:$('table-edit-image-width').value,
   height:$('table-edit-image-height').value
  };
- if(Object.entries(options).every(([key,value])=>value===current[key]))return;
- const edit=setTableCellImage(...args,options);
+ if(!inserting&&Object.entries(options).every(([key,value])=>value===current[key]))return;
+ const edit=inserting?insertTableCellImage(...args,options):setTableCellImage(...args,options);
  if(!edit){$('table-edit-message').textContent=imageWords().invalid;return;}
  selected.raw=findEditableTables(edit.text)[selected.tableIndex]?.raw||'';
+ selected.insertingImage=false;
  $('table-edit-message').textContent='';
  applyEdit(edit.text,edit.start,edit.start,{focus:false});
  syncTableEditorPreview();
@@ -300,7 +346,7 @@ function chooseCell(event){
   const image=getTableCellImage(area().value,index,coords.row,coords.col);
   const blockMode=blocks!==null&&/<(?:p|div|ul|ol|li|blockquote|pre|h[2-4])\b/i.test(blocks);
   selected={tableIndex:index,doc:docKey(),row:coords.row,col:coords.col,other:null,
-   raw:sourceTables[index].raw,imageMode:image!==null,blockMode,richMode:blockMode||
+   raw:sourceTables[index].raw,imageMode:image!==null,insertingImage:false,blockMode,richMode:blockMode||
     (html!==null&&/<(?:strong|b|em|i|u|s|del|sup|sub|mark|code|span|a|br)\b/i.test(html))};
  }
  highlight();
@@ -372,6 +418,7 @@ export function initTableEditor(){
   +'<span id="table-edit-status" aria-live="polite"></span><button id="table-edit-close" type="button">✕</button></div>'
   +'<div class="table-edit-actions"></div>'
   +'<div id="table-edit-mode" class="table-edit-mode" role="group" hidden><button type="button" id="table-edit-rich-choice" aria-pressed="false"></button><button type="button" id="table-edit-block-choice" aria-pressed="false"></button><button type="button" id="table-edit-plain-choice" aria-pressed="true"></button></div>'
+  +'<button id="table-edit-image-add" class="table-edit-image-add" type="button" aria-pressed="false" hidden></button>'
   +'<form id="table-edit-content-form" class="table-edit-content-form"><label id="table-edit-content-label" for="table-edit-content-input"></label><input id="table-edit-content-input" type="text" maxlength="2000" autocomplete="off">'
   +'<div id="table-edit-rich-panel" hidden><div class="table-edit-rich-actions" role="toolbar" aria-label="Rich cell formatting">'
   +'<button type="button" id="table-edit-rich-bold"><strong>B</strong></button><button type="button" id="table-edit-rich-italic"><em>I</em></button><button type="button" id="table-edit-rich-underline"><u>U</u></button><button type="button" id="table-edit-rich-code"><code>&lt;/&gt;</code></button></div>'
@@ -399,6 +446,7 @@ export function initTableEditor(){
  $('table-edit-close').addEventListener('click',clearSelection);
  $('table-edit-content-form').addEventListener('submit',e=>{e.preventDefault();saveCell();});
  $('table-edit-image-form').addEventListener('submit',e=>{e.preventDefault();saveImage();});
+ $('table-edit-image-add').addEventListener('click',toggleImageInsertion);
  $('table-edit-image-decorative').addEventListener('change',()=>{
   const decorative=$('table-edit-image-decorative').checked;
   $('table-edit-image-alt').disabled=decorative;

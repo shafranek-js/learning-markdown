@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,sanitizeBlockCellHTML,sanitizeInlineCellHTML,getTableCellImage,setTableCellImage} from '../js/core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,sanitizeBlockCellHTML,sanitizeInlineCellHTML,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../js/core/table-operations.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
@@ -362,5 +362,78 @@ assert(nestedPictureEdit?.text.includes('Closing text'));
 assert(nestedPictureEdit?.text.includes('Inner text'));
 assert(nestedPictureEdit?.text.includes('New leaf'));
 assert.equal(findEditableTables(nestedPictureEdit.text).length,2);
+
+
+
+// #6: Explicit image insertion never overwrites existing formatted cell data.
+const emptyImageSource='Header\n\n<table class="af-table-outline"><tr>'+
+ '<td rowspan="2"><p>Before <strong>bold</strong> <a href="https://example.org/guide">guide</a></p>'+
+ '<ul><li>List item</li></ul><blockquote><p>Quote</p></blockquote></td><td>Sibling</td></tr>'+
+ '<tr><td>Last</td></tr></table>\n\nFooter';
+assert.deepEqual(getTableCellImageInsertion(emptyImageSource,0,0,0),{format:'html'});
+const addImage=insertTableCellImage(emptyImageSource,0,1,0,{
+ url:'https://example.org/new.png',alt:'Inserted image',decorative:false,width:'420',height:''
+});
+assert(addImage?.text.startsWith('Header\n\n'));
+assert(addImage.text.endsWith('\n\nFooter'));
+for(const token of ['class="af-table-outline"','rowspan="2"','<strong>bold</strong>',
+ 'https://example.org/guide','<ul>','List item','<blockquote>','Sibling','Last',
+ 'src="https://example.org/new.png"','alt="Inserted image"','width="420"'])
+ assert(addImage.text.includes(token),'preserves existing content: '+token);
+assert.deepEqual(getTableCellImage(addImage.text,0,0,0),{
+ url:'https://example.org/new.png',alt:'Inserted image',decorative:false,width:'420',height:''
+});
+assert.equal(getTableCellImageInsertion(addImage.text,0,0,0),null,'duplicate image insertion refused');
+assert.equal(insertTableCellImage(addImage.text,0,0,0,{
+ url:'https://example.org/two.png',alt:'Second',decorative:false,width:'',height:''
+}),null);
+const plainHTML='<table><tr><td>First <em>emphasis</em></td><td>Second</td></tr></table>';
+const insertedPlain=insertTableCellImage(plainHTML,0,0,0,{
+ url:'https://example.org/img.png',alt:'New',decorative:false,width:'',height:''
+});
+assert(insertedPlain.text.includes('First <em>emphasis</em><br><img'));
+assert(insertedPlain.text.includes('<td>Second</td>'));
+const decorativeAdded=insertTableCellImage('<table><tr><td></td></tr></table>',0,0,0,{
+ url:'https://example.org/decorative.png',alt:'',decorative:true,width:'',height:''
+});
+assert(decorativeAdded?.text.includes('alt=""'));
+assert.equal(getTableCellImage(decorativeAdded.text,0,0,0).decorative,true);
+const insertOptions={url:'https://example.org/image.png',alt:'Accessible image',decorative:false,width:'',height:''};
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,url:'javascript:alert(1)'}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,url:'data:image/svg+xml,<svg>'}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,url:'http://example.org/x.png'}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,url:'https://example.org/'+ 'x'.repeat(2100)}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,alt:''}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,alt:'a'.repeat(401)}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,alt:'line\nbreak'}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,width:'1601'}),null);
+assert.equal(insertTableCellImage(plainHTML,0,0,0,{...insertOptions,height:'0'}),null);
+assert.equal(getTableCellImageInsertion('<table><tr><td><iframe src="https://example.org"></iframe></td></tr></table>',0,0,0),null);
+assert.equal(getTableCellImageInsertion(twoPictures,0,0,0),null);
+assert.equal(getTableCellImageInsertion(rejectedSiblingImage,0,0,0),null);
+assert.equal(getTableCellImageInsertion(nestedHTML,0,0,0),null);
+const nestedInsert='<table><tr><td>Outer <table><tr><td><p>Inner <strong>safe</strong></p></td>'+
+ '</tr></table> Final</td></tr></table>';
+assert.equal(getTableCellImageInsertion(nestedInsert,0,0,0),null);
+assert.deepEqual(getTableCellImageInsertion(nestedInsert,1,0,0),{format:'html'});
+const nestedAddedImage=insertTableCellImage(nestedInsert,1,0,0,insertOptions);
+assert(nestedAddedImage?.text.includes('Outer'));
+assert(nestedAddedImage.text.includes('Final'));
+assert(nestedAddedImage.text.includes('<strong>safe</strong>'));
+assert.equal(getTableCellImage(nestedAddedImage.text,1,0,0).url,insertOptions.url);
+const pipeImageSource='| Item | Notes |\n| --- | --- |\n| First **bold** | Keep text |\n';
+assert.deepEqual(getTableCellImageInsertion(pipeImageSource,0,1,0),{format:'gfm'});
+const pipeInserted=insertTableCellImage(pipeImageSource,0,1,0,{
+ url:'https://example.org/picture(a).png',alt:'Art [test] | sample',decorative:false,width:'',height:''
+});
+assert(pipeInserted?.text.includes('First **bold**'));
+assert(pipeInserted.text.includes('![Art \\[test\\] \\| sample](https://example.org/picture%28a%29.png)'));
+assert(pipeInserted.text.includes('| Keep text |'));
+assert(!pipeInserted.text.includes('<table'));
+assert.equal(marked.lexer(pipeInserted.text,{gfm:true}).find(token=>token.type==='table').rows.length,1);
+assert.equal(getTableCellImageInsertion(pipeInserted.text,0,1,0),null);
+assert.equal(insertTableCellImage(pipeImageSource,0,1,0,{...insertOptions,width:'300'}),null,
+ 'GFM image syntax cannot express a pixel width');
+assert.equal(getTableCellImageInsertion(fenced,0,0,0),null);
 
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');

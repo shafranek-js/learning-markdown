@@ -430,20 +430,21 @@ export function setTableCellBlocks(source,index,row,col,value){
 // without flattening paragraphs, captions, lists, or neighboring cells.
 // General contenteditable never owns the whole cell in this mode.
 const IMAGE_CELL_TAGS=new Set([...CELL_SAFE_TAGS,'img','figure','figcaption']);
-function imageCellOwner(source,index,row,col){
- const entry=findEditableTables(source)[index];
- if(!['html','nested'].includes(entry?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
- // Inspect the raw HTML block as well as its sanitized representation:
- // dropped foreign/media tags elsewhere in the containing table must not be
- // silently removed during an otherwise legitimate image-property edit.
+function imageTableSourceSafe(entry){
+ if(!['html','nested'].includes(entry?.type))return false;
  const rawDoc=new DOMParser().parseFromString(entry.raw,'text/html');
  const allowed=new Set([...IMAGE_CELL_TAGS,'table','thead','tbody','tfoot','tr','td','th']);
  if(rawDoc.head.children.length||[...rawDoc.body.querySelectorAll('*')]
-    .some(el=>!allowed.has(el.tagName.toLowerCase())))return null;
- // An image rejected by the normal sanitizer elsewhere in the table would
- // otherwise disappear when serializing the updated table. Refuse the edit.
- if([...rawDoc.body.querySelectorAll('img')]
-    .some(el=>!safeFigureUrl(el.getAttribute('src')||'')))return null;
+    .some(el=>!allowed.has(el.tagName.toLowerCase())))return false;
+ return [...rawDoc.body.querySelectorAll('img')]
+    .every(el=>safeFigureUrl(el.getAttribute('src')||''));
+}
+function imageCellOwner(source,index,row,col){
+ const entry=findEditableTables(source)[index];
+ if(!['html','nested'].includes(entry?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ // The entire containing table must be free of foreign media/unsafe URLs:
+ // otherwise its source could be silently stripped while saving one cell.
+ if(!imageTableSourceSafe(entry))return null;
  const target=selectedHTMLTable(entry),model=target?.model;
  if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
  const owner=cellsAt(model,row,col);
@@ -492,6 +493,89 @@ export function setTableCellImage(source,index,row,col,options={}){
  if(!updated||updated===entry.raw)return null;
  return {text:source.slice(0,entry.start)+updated+source.slice(entry.end),
   start:entry.start,end:entry.end,kind:'html'};
+}
+
+
+// Image insertion does not turn GFM pipe tables into HTML. HTML insertion is
+// restricted to a safe leaf table/cell; images are always added AFTER existing
+// content, so captions, inline formatting and text never get replaced.
+function imageInsertionTarget(source,index,row,col){
+ const entry=findEditableTables(source)[index];
+ if(!entry||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ if(entry.type==='gfm'){
+  const matrix=gfmMatrix(entry.token);
+  if(row<0||row>=matrix.rows.length||col<0||col>=matrix.rows[0].length)return null;
+  const original=matrix.rows[row][col];
+  // Conservatively reject any existing Markdown/HTML image or raw HTML.
+  // The canonical GFM serializer is not a general mixed HTML editor.
+  if(/!\[|<\s*[a-z!/]/i.test(original)||
+     new DOMParser().parseFromString(marked.parseInline(original,{gfm:true}),'text/html')
+      .querySelector('img'))return null;
+  return {format:'gfm',entry,matrix,row,col};
+ }
+ if(!imageTableSourceSafe(entry))return null;
+ const target=selectedHTMLTable(entry),model=target?.model;
+ if(!model||row<0||row>=model.rows||col<0||col>=model.cols)return null;
+ const owner=cellsAt(model,row,col);
+ if(!owner||owner.html.length>20000)return null;
+ const parsed=new DOMParser().parseFromString(owner.html,'text/html');
+ if(parsed.head.children.length||[...parsed.body.querySelectorAll('*')]
+    .some(el=>!IMAGE_CELL_TAGS.has(el.tagName.toLowerCase()))||
+    parsed.body.querySelector('img'))return null;
+ return {format:'html',entry,target,model,owner,parsed};
+}
+export function getTableCellImageInsertion(source,index,row,col){
+ const result=imageInsertionTarget(source,index,row,col);
+ return result?{format:result.format}:null;
+}
+export function insertTableCellImage(source,index,row,col,options={}){
+ const found=imageInsertionTarget(source,index,row,col);
+ if(!found||!options||typeof options!=='object')return null;
+ const {url,alt,decorative,width,height}=options;
+ if(typeof url!=='string'||url.length>2048||!safeFigureUrl(url))return null;
+ if(typeof alt!=='string'||alt.length>400||/[\r\n]/.test(alt))return null;
+ if(decorative!==true&&!alt.trim())return null;
+ const dimension=value=>value==null||value===''?'':figureDimension(value);
+ const w=dimension(width),h=dimension(height);
+ if(w===null||h===null)return null;
+ const {entry}=found;
+ let updated;
+ if(found.format==='gfm'){
+  // GFM cannot express pixel dimensions portably.
+  if(w!==''||h!=='')return null;
+  const escapedAlt=(decorative===true?'':alt).replace(/([\\\[\]|])/g,'\\$1');
+  const safeURL=url.replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\|/g,'%7C');
+  const {matrix}=found;
+  const existing=matrix.rows[row][col];
+  matrix.rows[row][col]=(existing.trim()?existing.trim()+' ':'')+
+   '!['+escapedAlt+']('+safeURL+')';
+  updated=serializeGFM(matrix);
+ }else{
+  const {parsed,owner,model,target}=found;
+  const image=parsed.createElement('img');
+  image.setAttribute('src',url);
+  image.setAttribute('alt',decorative===true?'':alt);
+  if(w!=='')image.setAttribute('width',String(w));
+  if(h!=='')image.setAttribute('height',String(h));
+  const hasContent=Boolean(owner.html.trim());
+  const hasBlocks=Boolean(parsed.body.querySelector('p,div,ul,ol,blockquote,pre,h2,h3,h4,figure'));
+  if(hasBlocks){
+   const container=parsed.createElement('p');container.append(image);parsed.body.append(container);
+  }else{
+   if(hasContent)parsed.body.append(parsed.createElement('br'));
+   parsed.body.append(image);
+  }
+  const clean=sanitizeHTML(parsed.body.innerHTML);
+  const doc=new DOMParser().parseFromString(clean,'text/html');
+  if(doc.body.querySelectorAll('img').length!==1||
+     [...doc.body.querySelectorAll('*')].some(el=>!IMAGE_CELL_TAGS.has(el.tagName.toLowerCase())))
+   return null;
+  owner.html=clean;
+  updated=replaceSelectedTable(entry,target,serializeHTML(model));
+ }
+ if(!updated||updated===entry.raw)return null;
+ return {text:source.slice(0,entry.start)+updated+source.slice(entry.end),
+  start:entry.start,end:entry.end,kind:found.format};
 }
 
 const previewCache=new WeakMap();
