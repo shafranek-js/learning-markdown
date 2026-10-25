@@ -79,4 +79,19 @@ function select(selection,a,ao,b,bo){
  assert.deepEqual(convertBlockSelection(editor,'ul',selection),{ok:true,blocks:1});
  assert.equal(editor.innerHTML,'<p>Before</p><ul><li>Middle</li></ul><p>After</p>');
 }
+{
+ const {editor,selection}=setup('<p>First</p><ul><li>Second</li></ul>'+
+  '<p>Third <em>rich</em></p><blockquote><p>Untouched last</p></blockquote>');
+ const first=editor.querySelector('ul > li').firstChild;
+ const last=editor.querySelector(':scope > p:nth-of-type(2)').firstChild;
+ select(selection,first,0,last,2);
+ const initialText=editor.textContent;
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),{ok:true,blocks:2});
+ assert.deepEqual([...editor.children].map(x=>x.tagName),['P','P','P','BLOCKQUOTE'],
+  'a trailing selected paragraph must stay before the next untouched block');
+ assert.equal(editor.textContent,initialText);
+ assert.equal(editor.children[1].textContent,'Second');
+ assert.equal(editor.children[2].querySelector('em').textContent,'rich');
+ assert.equal(editor.lastElementChild.textContent,'Untouched last');
+}
 console.log('PASS: #6 selected paragraph/list structural conversion preserves order and rejects ambiguous sources');
