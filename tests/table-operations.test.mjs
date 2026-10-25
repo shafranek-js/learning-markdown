@@ -268,9 +268,9 @@ assert.equal(findEditableTables(fencedNested).length,0);
 
 
 // Nested list levels in an otherwise safe HTML cell must remain editable.
-const nestedListLevels='Before\\n\\n<table><tr><td><ol type="i"><li>Parent<ul>'+
+const nestedListLevels='Before\n\n<table><tr><td><ol type="i"><li>Parent<ul>'+
  '<li>Inner one</li><li><em>Inner two</em><ul><li>Deep</li></ul></li>'+
- '</ul>Tail</li><li>Outer two</li></ol></td><td>Neighbor</td></tr></table>\\n\\nAfter';
+ '</ul>Tail</li><li>Outer two</li></ol></td><td>Neighbor</td></tr></table>\n\nAfter';
 assert.equal(findEditableTables(nestedListLevels).length,1);
 assert.equal(getTableReadOnlyReason(nestedListLevels,0),null);
 assert(getTableCellBlocks(nestedListLevels,0,0,0)?.includes('Inner two'),
