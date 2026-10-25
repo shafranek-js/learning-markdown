@@ -73,6 +73,7 @@ function showCellMode(){
  const inline=getTableCellHTML(source,index,row,col);
  const blocks=getTableCellBlocks(source,index,row,col);
  const eligible=blocks!==null;
+ const unsupported=!eligible&&findEditableTables(source)[index]?.type!=='gfm';
  const richActive=eligible&&Boolean(selected.richMode);
  const blockActive=richActive&&Boolean(selected.blockMode);
  $('table-edit-mode').hidden=!eligible;
@@ -84,8 +85,8 @@ function showCellMode(){
  $('table-edit-block-choice').setAttribute('aria-pressed',String(blockActive));
  $('table-edit-plain-choice').setAttribute('aria-pressed',String(!richActive));
  $('table-edit-content-label').htmlFor=richActive?'table-edit-rich-content':'table-edit-content-input';
- $('table-edit-content-warning').textContent=blockActive?blockWords().hint:
-  richActive?richWords().hint:(CONTENT_TEXT[state.lang]||CONTENT_TEXT.en)[2];
+ $('table-edit-content-warning').textContent=unsupported?richWords().unsupported:
+  blockActive?blockWords().hint:richActive?richWords().hint:(CONTENT_TEXT[state.lang]||CONTENT_TEXT.en)[2];
 }
 function refreshCellText(){
  if(!selected)return;
@@ -94,8 +95,10 @@ function refreshCellText(){
  const inline=getTableCellHTML(source,index,row,col);
  const blocks=getTableCellBlocks(source,index,row,col);
  $('table-edit-content-input').value=text??'';
- $('table-edit-content-input').disabled=text===null;
- $('table-edit-content-save').disabled=text===null;
+ const entry=findEditableTables(source)[index];
+ const readonly=text===null||(entry?.type!=='gfm'&&blocks===null);
+ $('table-edit-content-input').disabled=readonly;
+ $('table-edit-content-save').disabled=readonly;
  if(blocks!==null)$('table-edit-rich-content').innerHTML=blocks;
  else if(inline!==null)$('table-edit-rich-content').innerHTML=inline;
  else $('table-edit-rich-content').replaceChildren();
