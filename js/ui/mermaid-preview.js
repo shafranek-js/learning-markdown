@@ -251,7 +251,9 @@ export async function renderMermaidExportImages(safeDocumentHtml){
     uri=await job;
     rememberDiagram(source,uri);
    }
-   images.push({source,uri:validatedMermaidImageUrl(uri)});
+   const mermaid=await getMermaid();
+   const type=typeof mermaid.detectType==='function'?mermaid.detectType(source):'';
+   images.push({source,uri:validatedMermaidImageUrl(uri),type});
   }catch(error){
    const detail=String(error?.message||'Rendering error').slice(0,180);
    images.push({source,error:detail});
