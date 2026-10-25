@@ -3562,9 +3562,9 @@ test('issue #6 Blocks Russian mobile help and Backspace at first list item',asyn
 
 test('issue #6 multi-item outdent preserves trailing nested list order, formatting and Undo',async({page})=>{
  await page.goto('/');
- const source='Before\\n\\n<table><tr><td><ol><li>Root<ol type="i">'+
+ const source='Before\n\n<table><tr><td><ol><li>Root<ol type="i">'+
   '<li>One</li><li>Two <em>rich</em></li><li>Three</li><li>Four</li></ol></li>'+
-  '<li>End</li></ol></td><td>Neighbor</td></tr></table>\\n\\nAfter';
+  '<li>End</li></ol></td><td>Neighbor</td></tr></table>\n\nAfter';
  const input=page.locator('#markdown-input');
  await input.fill(source);
  await page.locator('#markdown-preview td').first().click();
