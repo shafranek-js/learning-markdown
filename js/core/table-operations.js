@@ -440,6 +440,10 @@ function imageCellOwner(source,index,row,col){
  const allowed=new Set([...IMAGE_CELL_TAGS,'table','thead','tbody','tfoot','tr','td','th']);
  if(rawDoc.head.children.length||[...rawDoc.body.querySelectorAll('*')]
     .some(el=>!allowed.has(el.tagName.toLowerCase())))return null;
+ // An image rejected by the normal sanitizer elsewhere in the table would
+ // otherwise disappear when serializing the updated table. Refuse the edit.
+ if([...rawDoc.body.querySelectorAll('img')]
+    .some(el=>!safeFigureUrl(el.getAttribute('src')||'')))return null;
  const target=selectedHTMLTable(entry),model=target?.model;
  if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
  const owner=cellsAt(model,row,col);
