@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {mermaidSnippet} from '../../js/data/mermaid-templates.js';
+import {readFile} from 'node:fs/promises';
 
 test('preview renders H1–H6 and a GFM table',async({page})=>{
  await page.goto('/');
@@ -2624,4 +2625,58 @@ test('issue #18 Mermaid renders after an offline reload with precached chunks',a
  }finally{
   await context.setOffline(false);
  }
+});
+
+
+test('issue #19 exports validated Mermaid SVG without changing Markdown source',async({page})=>{
+ await page.goto('/');
+ const source=mermaidSnippet('flowchart');
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ await expect(page.locator('#markdown-preview .mermaid-diagram img')).toBeVisible({timeout:20000});
+ const downloadPromise=page.waitForEvent('download');
+ await page.locator('#markdown-preview .mermaid-export-controls').getByRole('button',{name:'Export SVG'}).click();
+ const download=await downloadPromise;
+ expect(download.suggestedFilename()).toBe('mermaid-diagram-1.svg');
+ const svg=await readFile(await download.path(),'utf8');
+ expect(svg).toContain('<svg');
+ expect(svg).not.toMatch(/<script|<foreignObject|@import|href\s*=\s*["'](?:https?:|javascript:)/i);
+ await expect(editor).toHaveValue(source);
+});
+
+test('issue #19 exports Mermaid PNG at 2x with no remote requests',async({page})=>{
+ await page.goto('/');
+ const source=mermaidSnippet('sequence');
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview .mermaid-diagram img')).toBeVisible({timeout:20000});
+ const controls=page.locator('#markdown-preview .mermaid-export-controls');
+ await controls.getByRole('combobox',{name:'PNG resolution'}).selectOption('2');
+ const downloadPromise=page.waitForEvent('download');
+ await controls.getByRole('button',{name:'Export PNG'}).click();
+ const download=await downloadPromise;
+ expect(download.suggestedFilename()).toBe('mermaid-diagram-1.png');
+ const file=await readFile(await download.path());
+ expect(file.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');
+ expect(file.readUInt32BE(16)).toBeGreaterThan(100);
+ expect(file.readUInt32BE(20)).toBeGreaterThan(80);
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
+});
+
+test('issue #19 copy Mermaid source is accessible and localized',async({page,context})=>{
+ await context.grantPermissions(['clipboard-read','clipboard-write']);
+ await page.goto('/');
+ const source=mermaidSnippet('pie');
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview .mermaid-export-controls')).toBeVisible({timeout:20000});
+ await page.locator('#markdown-preview .mermaid-export-controls').getByRole('button',{name:'Copy source'}).click();
+ expect(await page.evaluate(()=>navigator.clipboard.readText())).toContain('pie showData');
+ await expect(page.locator('#markdown-preview .mermaid-export-status')).toContainText('copied');
+ await page.locator('#lang-selector').selectOption('ru');
+ // Lessons have language-specific drafts: insert the same source into the RU draft.
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview .mermaid-export-controls')).toBeVisible({timeout:20000});
+ await expect(page.locator('#markdown-preview .mermaid-export-controls')).toContainText('Экспорт SVG');
+ await expect(page.locator('#markdown-preview .mermaid-export-controls')).toContainText('Экспорт PNG');
+ await expect(page.locator('#markdown-preview .mermaid-export-controls')).toContainText('Копировать код');
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
 });

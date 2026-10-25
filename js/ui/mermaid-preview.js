@@ -63,6 +63,45 @@ function visibleError(status,locale,index,message){
  status.setAttribute('role','alert');
  status.textContent=locale.error+' '+index+': '+String(message||'').slice(0,180);
 }
+
+const SVG_DATA_PREFIX='data:image/svg+xml;charset=utf-8,';
+function trustedSvgSource(data){
+ if(typeof data!=='string'||!data.startsWith(SVG_DATA_PREFIX))throw new Error('Not a validated SVG image');
+ // Revalidate instead of treating arbitrary data: payloads as trusted HTML.
+ const plain=decodeURIComponent(data.slice(SVG_DATA_PREFIX.length));
+ const normalized=mermaidImageDataUrl(plain);
+ return {svg:decodeURIComponent(normalized.slice(SVG_DATA_PREFIX.length)),uri:normalized};
+}
+function saveDiagramBlob(blob,name){
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');
+ link.href=url;link.download=name;
+ document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+function exportSvg(data,index){
+ const {svg}=trustedSvgSource(data);
+ saveDiagramBlob(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),'mermaid-diagram-'+index+'.svg');
+}
+async function exportPng(data,index,scale){
+ const {uri}=trustedSvgSource(data);
+ const image=new Image();
+ image.src=uri;
+ await image.decode();
+ const width=Math.ceil(image.naturalWidth*scale),height=Math.ceil(image.naturalHeight*scale);
+ if(!width||!height||width>4096||height>4096||width*height>16000000)
+  throw new Error('Diagram dimensions exceed PNG safety limits');
+ const canvas=document.createElement('canvas');
+ canvas.width=width;canvas.height=height;
+ const context=canvas.getContext('2d');
+ if(!context)throw new Error('Canvas unavailable');
+ context.drawImage(image,0,0,width,height);
+ const blob=await new Promise((resolve,reject)=>{
+  canvas.toBlob(result=>result?resolve(result):reject(new Error('PNG encoding failed')),'image/png');
+ });
+ saveDiagramBlob(blob,'mermaid-diagram-'+index+'.png');
+}
+
 function showDiagram(pre,src,index,locale,status=null){
  // Preserve insertion position before the source <pre> moves into <details>.
  const anchor=status||document.createComment('Mermaid preview');
@@ -101,6 +140,39 @@ function showDiagram(pre,src,index,locale,status=null){
  viewport.append(img);
  container.append(controls,viewport);
  reflect();
+ const exports=document.createElement('div');
+ exports.className='mermaid-export-controls';
+ exports.setAttribute('role','group');
+ exports.setAttribute('aria-label',locale.alt+' '+index);
+ const message=document.createElement('output');
+ message.className='mermaid-export-status';
+ message.setAttribute('role','status');
+ message.setAttribute('aria-live','polite');
+ const safeAction=action=>async()=>{
+  message.textContent='';
+  try{await action();}
+  catch(error){message.textContent=locale.exportError;console.warn('Mermaid export failed',error);}
+ };
+ const copy=makeButton(locale.copy,locale.copy,safeAction(async()=>{
+  if(!navigator.clipboard?.writeText)throw new Error('Clipboard unavailable');
+  await navigator.clipboard.writeText(pre.textContent.trim());
+  message.textContent=locale.copied;
+ }));
+ const svgButton=makeButton(locale.svg,locale.svg,safeAction(()=>exportSvg(src,index)));
+ const scaleLabel=document.createElement('label');
+ scaleLabel.className='mermaid-scale-label';
+ scaleLabel.textContent=locale.scale;
+ const scale=document.createElement('select');
+ scale.setAttribute('aria-label',locale.scale);
+ for(const value of [1,2]){
+  const option=document.createElement('option');
+  option.value=String(value);option.textContent=value+'×';
+  scale.append(option);
+ }
+ scaleLabel.append(scale);
+ const pngButton=makeButton(locale.png,locale.png,safeAction(()=>exportPng(src,index,Number(scale.value))));
+ exports.append(copy,svgButton,scaleLabel,pngButton,message);
+ container.append(exports);
  const details=document.createElement('details');
  details.className='mermaid-source';
  const summary=document.createElement('summary');
