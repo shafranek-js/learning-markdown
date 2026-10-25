@@ -3078,7 +3078,7 @@ test('issue #6 nested leaf merge and row insertion preserve outer table geometry
  await page.locator('#table-edit-rows').selectOption('row-below');
  await expect(page.locator('#markdown-preview table table tr')).toHaveCount(3);
  await expect(page.locator('#markdown-preview > table > tbody > tr')).toHaveCount(1);
- await expect(page.locator('#markdown-preview table')).toContainText('Sibling');
+ await expect(page.locator('#markdown-preview > table')).toContainText('Sibling');
 });
 
 test('issue #6 nested table editing remains accessible on mobile with locales',async({page})=>{
