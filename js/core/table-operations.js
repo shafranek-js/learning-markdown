@@ -93,6 +93,39 @@ const empty=(row,col,header=false)=>({row,col,rs:1,cs:1,tag:header?'th':'td',htm
 function cellsAt(model,row,col){
  return model.cells.find(c=>row>=c.row&&row<c.row+c.rs&&col>=c.col&&col<c.col+c.cs);
 }
+// A visual rectangle may intersect a cell that already has rowspan/colspan.
+// Expand it to a fixed point so the subsequent merge consumes WHOLE cells,
+// never a partial owner. The grid is capped at MAX_ROWS x MAX_COLUMNS.
+function closedSelectionBounds(model,row,col,other={row,col}){
+ if(!Number.isInteger(row)||!Number.isInteger(col)||
+    !Number.isInteger(other?.row)||!Number.isInteger(other?.col))return null;
+ let r0=Math.min(row,other.row),r1=Math.max(row,other.row);
+ let c0=Math.min(col,other.col),c1=Math.max(col,other.col);
+ if(r0<0||c0<0||r1>=model.rows||c1>=model.cols)return null;
+ for(let pass=0;pass<=model.cells.length;pass++){
+  let changed=false;
+  for(const c of model.cells){
+   if(c.row>r1||c.row+c.rs-1<r0||c.col>c1||c.col+c.cs-1<c0)continue;
+   const nr0=Math.min(r0,c.row),nr1=Math.max(r1,c.row+c.rs-1);
+   const nc0=Math.min(c0,c.col),nc1=Math.max(c1,c.col+c.cs-1);
+   if(nr0!==r0||nr1!==r1||nc0!==c0||nc1!==c1){
+    r0=nr0;r1=nr1;c0=nc0;c1=nc1;changed=true;
+   }
+  }
+  if(!changed)return {r0,r1,c0,c1};
+ }
+ return null;
+}
+// Shared between editing and Preview highlighting: the visual selection must
+// reflect the exact rectangle the merge operation will consume.
+export function tableSelectionBounds(source,index,selection){
+ const table=findEditableTables(source)[index];
+ if(!table||!selection)return null;
+ const html=table.type==='gfm'?sanitizeHTML(marked.parse(table.raw,{gfm:true})):table.raw;
+ const model=modelFromHTML(html);
+ if(!model)return null;
+ return closedSelectionBounds(model,selection.row,selection.col,selection.other||{row:selection.row,col:selection.col});
+}
 function serializeHTML(model){
  const parts=['<table'+(model.cls?' class="'+model.cls+'"':'')+'>','<tbody>'];
  for(let r=0;r<model.rows;r++){
@@ -161,22 +194,26 @@ function updateHTML(model,operation,row,col,other){
    return true;
   });
   model.cols--;
- }else if(operation==='merge'){
-  const second=other||{row,col};
-  const r0=Math.min(row,second.row),r1=Math.max(row,second.row);
-  const c0=Math.min(col,second.col),c1=Math.max(col,second.col);
-  if(r0===r1&&c0===c1)return null;
-  if(r1>=model.rows||c1>=model.cols)return null;
-  const group=model.cells.filter(c=>c.row<=r1&&c.row+c.rs>r0&&c.col<=c1&&c.col+c.cs>c0);
-  if(group.some(c=>c.row<r0||c.col<c0||c.row+c.rs-1>r1||c.col+c.cs-1>c1))return null;
-  const first=group.find(c=>c.row===r0&&c.col===c0);if(!first)return null;
+ }else if(operation==='merge'||operation==='merge-right'||operation==='merge-down'){
+  // Merge Right/Down starts immediately after the entire merged owner,
+  // rather than selecting another coordinate inside that same cell.
+  const second=operation==='merge'
+   ?(other||{row,col})
+   :operation==='merge-right'
+    ?{row:anchor.row,col:anchor.col+anchor.cs}
+    :{row:anchor.row+anchor.rs,col:anchor.col};
+  const bounds=closedSelectionBounds(model,row,col,second);
+  if(!bounds)return null;
+  const {r0,r1,c0,c1}=bounds;
+  const group=model.cells.filter(c=>c.row<=r1&&c.row+c.rs-1>=r0&&c.col<=c1&&c.col+c.cs-1>=c0);
+  // Re-selecting a single pre-merged owner is not a change.
+  if(group.length<2)return null;
+  const first=group.find(c=>c.row===r0&&c.col===c0);
+  if(!first)return null;
   first.html=group.slice().sort((a,b)=>a.row-b.row||a.col-b.col)
    .map(c=>c.html.trim()).filter(Boolean).join('<br>');
   first.rs=r1-r0+1;first.cs=c1-c0+1;
   model.cells=model.cells.filter(c=>c===first||!group.includes(c));
- }else if(operation==='merge-right'||operation==='merge-down'){
-  return updateHTML(model,'merge',row,col,
-   operation==='merge-right'?{row,col:col+1}:{row:row+1,col});
  }else if(operation==='split'){
   if(anchor.rs===1&&anchor.cs===1)return null;
   const {row:r,col:c,rs,cs}=anchor;anchor.rs=1;anchor.cs=1;
