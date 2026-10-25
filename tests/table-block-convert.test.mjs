@@ -113,7 +113,7 @@ function select(selection,a,ao,b,bo){
  assert.deepEqual([...replacement.children].map(li=>li.textContent),
   ['Inner A','Inner BDeep']);
  assert.equal(replacement.querySelector('em').textContent,'Inner B');
- assert.equal(replacement.querySelector('ul > li').textContent,'Deep');
+ assert.equal(replacement.querySelector(':scope > li > ul > li').textContent,'Deep');
  assert.equal(editor.lastElementChild.textContent,'After');
  assert.equal(selection.rangeCount,1);
  assert.equal(selection.anchorNode.isConnected,true);
