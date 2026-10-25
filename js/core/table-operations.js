@@ -1,6 +1,7 @@
 import {marked} from 'marked';
 import {sanitizeHTML} from './sanitize.js';
 import {MAX_COLUMNS,MAX_ROWS} from './table-generator.js';
+import {safeFigureUrl,figureDimension} from './figures.js';
 
 // Only standalone top-level GFM/HTML table blocks are source-mapped.
 // A nested LEAF HTML table may be edited through its containing source block;
@@ -423,6 +424,63 @@ export function setTableCellBlocks(source,index,row,col,value){
  if(!updated||updated===table.raw)return null;
  return {text:source.slice(0,table.start)+updated+source.slice(table.end),
   start:table.start,end:table.end,kind:'html'};
+}
+
+// A complex cell with ONE existing HTTPS image can expose its image metadata
+// without flattening paragraphs, captions, lists, or neighboring cells.
+// General contenteditable never owns the whole cell in this mode.
+const IMAGE_CELL_TAGS=new Set([...CELL_SAFE_TAGS,'img','figure','figcaption']);
+function imageCellOwner(source,index,row,col){
+ const entry=findEditableTables(source)[index];
+ if(!['html','nested'].includes(entry?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ const target=selectedHTMLTable(entry),model=target?.model;
+ if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
+ const owner=cellsAt(model,row,col);
+ if(!owner||owner.html.length>25000)return null;
+ const parsed=new DOMParser().parseFromString(owner.html,'text/html');
+ if(parsed.head.children.length||[...parsed.body.querySelectorAll('*')]
+    .some(el=>!IMAGE_CELL_TAGS.has(el.tagName.toLowerCase())))return null;
+ const images=[...parsed.body.querySelectorAll('img')];
+ if(images.length!==1)return null;
+ const image=images[0],url=image.getAttribute('src')||'';
+ // Refuse to rewrite old HTTP, data:, file:, and malformed media sources.
+ if(!safeFigureUrl(url))return null;
+ return {entry,target,model,owner,parsed,image,url};
+}
+export function getTableCellImage(source,index,row,col){
+ const found=imageCellOwner(source,index,row,col);
+ if(!found)return null;
+ const {image,url}=found,alt=image.getAttribute('alt')||'';
+ return {url,alt,decorative:alt==='',width:image.getAttribute('width')||'',
+  height:image.getAttribute('height')||''};
+}
+export function setTableCellImage(source,index,row,col,options={}){
+ const found=imageCellOwner(source,index,row,col);
+ if(!found||!options||typeof options!=='object')return null;
+ const {url,alt,decorative,width,height}=options;
+ if(typeof url!=='string'||!safeFigureUrl(url))return null;
+ if(typeof alt!=='string'||alt.length>400)return null;
+ if(decorative!==true&&!alt.trim())return null;
+ const optionalDimension=value=>value==null||value===''?'':figureDimension(value);
+ const w=optionalDimension(width),h=optionalDimension(height);
+ if(w===null||h===null)return null;
+ const {image,parsed,owner,model,entry,target}=found;
+ image.setAttribute('src',url);
+ image.setAttribute('alt',decorative===true?'':alt);
+ if(w==='')image.removeAttribute('width');else image.setAttribute('width',String(w));
+ if(h==='')image.removeAttribute('height');else image.setAttribute('height',String(h));
+ const content=sanitizeHTML(parsed.body.innerHTML);
+ // The sanitizer is the only route into the Markdown source. Verify the
+ // resulting image and HTML subtree remained structurally recognizable.
+ const clean=new DOMParser().parseFromString(content,'text/html');
+ if(clean.querySelectorAll('img').length!==1||[...clean.body.querySelectorAll('*')]
+    .some(el=>!IMAGE_CELL_TAGS.has(el.tagName.toLowerCase())))return null;
+ if(content===owner.html)return null;
+ owner.html=content;
+ const updated=replaceSelectedTable(entry,target,serializeHTML(model));
+ if(!updated||updated===entry.raw)return null;
+ return {text:source.slice(0,entry.start)+updated+source.slice(entry.end),
+  start:entry.start,end:entry.end,kind:'html'};
 }
 
 const previewCache=new WeakMap();
