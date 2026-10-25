@@ -103,6 +103,8 @@ test('issue #6 convert-selection controls have labels in all five locales',async
  };
  for(const [language,expected] of Object.entries(words)){
   await page.locator('#lang-selector').selectOption(language);
+  // Language changes reset the lesson sample; re-load the controlled fixture.
+  await page.locator('#markdown-input').fill('<table><tr><td><p>Example</p></td></tr></table>');
   await page.locator('#markdown-preview td').first().click();
   for(const [index,kind] of ['p','ul','ol'].entries()){
    const button=page.locator('#table-edit-convert-'+kind);
