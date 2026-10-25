@@ -3519,9 +3519,10 @@ test('issue #6 Blocks Enter exits empty item, Backspace outdents nested and pres
   s.removeAllRanges();s.addRange(r);
  });
  await page.keyboard.press('Backspace');
- await expect(rich.locator('ul > li')).toHaveCount(3);
- await expect(rich.locator('ul > li').nth(1)).toContainText('Inner');
- await expect(rich.locator('ul > li > ul > li')).toHaveCount(1);
+ // Count only direct top-level <li> nodes, not the remaining nested item.
+ await expect(rich.locator(':scope > ul > li')).toHaveCount(3);
+ await expect(rich.locator(':scope > ul > li').nth(1)).toContainText('Inner');
+ await expect(rich.locator(':scope > ul > li > ul > li')).toHaveCount(1);
  await page.locator('#table-edit-content-save').click();
  const result=await input.inputValue();
  expect(result).toContain('<strong>Inner</strong>');
