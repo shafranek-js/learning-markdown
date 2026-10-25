@@ -12,6 +12,7 @@ let version=0;
 let debounceTimer=null;
 let mermaidModule=null;
 let workQueue=Promise.resolve();
+let exportRenderCounter=0;
 const diagramCache=new Map();
 const MAX_CACHED_DIAGRAMS=24;
 function getMermaid(){
@@ -28,7 +29,17 @@ function getMermaid(){
  return mermaidModule;
 }
 function unsafeCss(value){
- return /@import|@font-face|expression\s*\(|url\s*\(\s*(?!['"]?#)/i.test(value);
+ // SVG-as-image must not embed network resources, including quoted CSS URLs.
+ // Only local fragment URLs, used by Mermaid for markers/clips, are allowed.
+ if(/@import|@font-face|expression\s*\(|\\[0-9a-f]{1,6}\s?/i.test(value))return true;
+ const urls=/url\s*\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi;
+ let match,rest=value;
+ while((match=urls.exec(value))){
+  const fragment=(match[1]??match[2]??match[3]??'').trim();
+  if(!/^#[\w.:-]+$/.test(fragment))return true;
+  rest=rest.replace(match[0],'');
+ }
+ return /url\s*\(/i.test(rest);
 }
 export function mermaidImageDataUrl(svgText){
  if(typeof svgText!=='string'||svgText.length>1500000)throw new Error('SVG exceeds the allowed size');
@@ -71,6 +82,10 @@ function trustedSvgSource(data){
  const plain=decodeURIComponent(data.slice(SVG_DATA_PREFIX.length));
  const normalized=mermaidImageDataUrl(plain);
  return {svg:decodeURIComponent(normalized.slice(SVG_DATA_PREFIX.length)),uri:normalized};
+}
+// Re-export a single trust boundary for standalone document embedding.
+export function validatedMermaidImageUrl(data){
+ return trustedSvgSource(data).uri;
 }
 function saveDiagramBlob(blob,name){
  const url=URL.createObjectURL(blob);
@@ -210,6 +225,40 @@ async function renderOne(pre,source,index,ticket,locale){
   if(ticket!==version||!pre.isConnected)return;
   visibleError(status,locale,index,error?.message);
  }
+}
+// Produce static, validated images independently of the (debounced) Live Preview.
+// A click immediately after editing must export the NEW source, not a stale
+// rendered image. Render jobs share Mermaid's serialized queue with Preview.
+export async function renderMermaidExportImages(safeDocumentHtml){
+ const host=document.createElement('div');
+ host.innerHTML=safeDocumentHtml; // markdownToHTML() already strictly sanitized.
+ const sources=[...host.querySelectorAll('pre > code.language-mermaid')]
+  .map(code=>code.textContent.trim());
+ const images=[],failures=[];
+ for(const [index,source] of sources.entries()){
+  try{
+   if(index>=25)throw new Error('Document exceeds the 25-diagram export limit');
+   if(!validSource(source))throw new Error('Unsafe or oversized Mermaid source');
+   let uri=diagramCache.get(source);
+   if(!uri){
+    const id=++exportRenderCounter;
+    const job=workQueue.catch(()=>{}).then(async()=>{
+     const mermaid=await getMermaid();
+     const {svg}=await mermaid.render('md-document-export-'+id,source);
+     return mermaidImageDataUrl(svg);
+    });
+    workQueue=job.catch(()=>{});
+    uri=await job;
+    rememberDiagram(source,uri);
+   }
+   images.push({source,uri:validatedMermaidImageUrl(uri)});
+  }catch(error){
+   const detail=String(error?.message||'Rendering error').slice(0,180);
+   images.push({source,error:detail});
+   failures.push({index:index+1,message:detail});
+  }
+ }
+ return {images,failures};
 }
 export function scheduleMermaidPreview(root,language='en'){
  const ticket=++version;
