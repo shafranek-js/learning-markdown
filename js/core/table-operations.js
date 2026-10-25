@@ -292,6 +292,9 @@ const CELL_INLINE_TAGS=new Set('strong b em i u s del sup sub mark code span a b
 export function sanitizeInlineCellHTML(value){
  if(typeof value!=='string'||value.length>12000)return null;
  const parsed=new DOMParser().parseFromString(value,'text/html');
+ // DOMParser hoists some forbidden elements (notably <script>/<style>)
+ // into <head>. Reject those, never turn them into an empty cell.
+ if(parsed.head.children.length)return null;
  // Block/foreign DOM cannot be safely represented by a single inline cell.
  // Refuse it instead of silently losing table structure or other content.
  if([...parsed.body.querySelectorAll('*')].some(el=>!CELL_INLINE_TAGS.has(el.tagName.toLowerCase())))
