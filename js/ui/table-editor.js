@@ -1,5 +1,6 @@
 import {state,docKey} from '../core/state.js';
 import {handleBlockListKeydown} from './table-list-keyboard.js';
+import {formatBlockSelection} from './table-block-format.js';
 import {area,applyEdit} from './editor.js';
 import {findEditableTables,getTableReadOnlyReason,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../core/table-operations.js';
 
@@ -90,11 +91,11 @@ const READ_ONLY={
 const readonlyWords=()=>READ_ONLY[state.lang]||READ_ONLY.en;
 const richWords=()=>RICH_TEXT[state.lang]||RICH_TEXT.en;
 const BLOCK_TEXT={
- en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell. In a list: Tab indents, Shift+Tab outdents, Enter exits an empty item, and Backspace at the start outdents.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block',crossSelection:'Select items within one list to change their level. Mixed paragraph/list selections were left unchanged.'},
- cs:{mode:'Bloky',hint:'Bezpečně upravujte odstavce, seznamy a citace. Vkládaný text je prostý; změny uložte. V seznamu: Tab odsadí, Shift+Tab zruší odsazení, Enter ukončí prázdnou položku a Backspace na začátku zmenší odsazení.',p:'Přidat odstavec',ul:'Přidat odrážky',ol:'Přidat číslovaný seznam',quote:'Přidat citaci',pre:'Přidat blok kódu',crossSelection:'Pro změnu úrovně vyberte položky v jednom seznamu. Výběr přes odstavce a seznamy zůstal beze změny.'},
- uk:{mode:'Блоки',hint:'Безпечно редагуйте абзаци, списки та цитати. Вставляється лише текст. У списку: Tab збільшує відступ, Shift+Tab зменшує, Enter завершує порожній пункт, Backspace на початку зменшує відступ.',p:'Додати абзац',ul:'Додати маркований список',ol:'Додати нумерований список',quote:'Додати цитату',pre:'Додати блок коду',crossSelection:'Щоб змінити рівень, виберіть елементи одного списку. Виділення між абзацами та списками не змінено.'},
- ro:{mode:'Blocuri',hint:'Editați în siguranță paragrafe, liste și citate. Lipirea inserează doar text. În liste: Tab indentează, Shift+Tab revine, Enter iese dintr-un element gol, iar Backspace la început reduce indentarea.',p:'Adaugă paragraf',ul:'Adaugă listă cu marcatori',ol:'Adaugă listă numerotată',quote:'Adaugă citat',pre:'Adaugă bloc de cod',crossSelection:'Pentru indentare, selectați elemente dintr-o singură listă. Selecția peste paragrafe și liste nu a fost modificată.'},
- ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения. В списке: Tab — увеличить отступ, Shift+Tab — уменьшить, Enter — выйти из пустого пункта, Backspace в начале — уменьшить отступ.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода',crossSelection:'Для изменения уровня выделите пункты одного списка. Выделение между абзацами и списками оставлено без изменений.'}
+ en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell. In a list: Tab indents, Shift+Tab outdents, Enter exits an empty item, and Backspace at the start outdents.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block',formatUnsupported:'This selection includes code or unsupported content. Nothing was changed; select text outside code blocks.',crossSelection:'Select items within one list to change their level. Mixed paragraph/list selections were left unchanged.'},
+ cs:{mode:'Bloky',hint:'Bezpečně upravujte odstavce, seznamy a citace. Vkládaný text je prostý; změny uložte. V seznamu: Tab odsadí, Shift+Tab zruší odsazení, Enter ukončí prázdnou položku a Backspace na začátku zmenší odsazení.',p:'Přidat odstavec',ul:'Přidat odrážky',ol:'Přidat číslovaný seznam',quote:'Přidat citaci',pre:'Přidat blok kódu',formatUnsupported:'Výběr obsahuje kód nebo nepodporovaný obsah. Nic se nezměnilo; vyberte text mimo bloky kódu.',crossSelection:'Pro změnu úrovně vyberte položky v jednom seznamu. Výběr přes odstavce a seznamy zůstal beze změny.'},
+ uk:{mode:'Блоки',hint:'Безпечно редагуйте абзаци, списки та цитати. Вставляється лише текст. У списку: Tab збільшує відступ, Shift+Tab зменшує, Enter завершує порожній пункт, Backspace на початку зменшує відступ.',p:'Додати абзац',ul:'Додати маркований список',ol:'Додати нумерований список',quote:'Додати цитату',pre:'Додати блок коду',formatUnsupported:'Виділення містить код або непідтримуваний вміст. Нічого не змінено; виберіть текст поза блоками коду.',crossSelection:'Щоб змінити рівень, виберіть елементи одного списку. Виділення між абзацами та списками не змінено.'},
+ ro:{mode:'Blocuri',hint:'Editați în siguranță paragrafe, liste și citate. Lipirea inserează doar text. În liste: Tab indentează, Shift+Tab revine, Enter iese dintr-un element gol, iar Backspace la început reduce indentarea.',p:'Adaugă paragraf',ul:'Adaugă listă cu marcatori',ol:'Adaugă listă numerotată',quote:'Adaugă citat',pre:'Adaugă bloc de cod',formatUnsupported:'Selecția conține cod sau conținut incompatibil. Nimic nu a fost modificat; selectați text în afara blocurilor de cod.',crossSelection:'Pentru indentare, selectați elemente dintr-o singură listă. Selecția peste paragrafe și liste nu a fost modificată.'},
+ ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения. В списке: Tab — увеличить отступ, Shift+Tab — уменьшить, Enter — выйти из пустого пункта, Backspace в начале — уменьшить отступ.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода',formatUnsupported:'В выделении есть код или неподдерживаемое содержимое. Ничего не изменено; выделите текст вне блоков кода.',crossSelection:'Для изменения уровня выделите пункты одного списка. Выделение между абзацами и списками оставлено без изменений.'}
 };
 const blockWords=()=>BLOCK_TEXT[state.lang]||BLOCK_TEXT.en;
 const IMAGE_TEXT={
@@ -323,6 +324,16 @@ function wrapRichSelection(tag){
  if(!selection?.rangeCount)return;
  const range=selection.getRangeAt(0);
  if(range.collapsed||!editor.contains(range.commonAncestorContainer))return;
+ if(selected.blockMode){
+  const result=formatBlockSelection(editor,tag,selection);
+  if(!result.ok){
+   if(result.reason!=='no-selection')$('table-edit-message').textContent=blockWords().formatUnsupported;
+   return;
+  }
+  $('table-edit-message').textContent='';
+  editor.focus();
+  return;
+ }
  const node=document.createElement(tag);
  node.append(range.extractContents());
  range.insertNode(node);
