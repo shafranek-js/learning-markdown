@@ -2,8 +2,9 @@ import {marked} from 'marked';
 import {sanitizeHTML} from './sanitize.js';
 import {MAX_COLUMNS,MAX_ROWS} from './table-generator.js';
 
-// Only standalone, top-level GFM or HTML tables are writable. The source remains
-// canonical, with exact start/end offsets, so no unrelated text is rewritten.
+// Only standalone top-level GFM/HTML table blocks are source-mapped.
+// A nested LEAF HTML table may be edited through its containing source block;
+// outer tables with descendants remain read-only to protect complex content.
 export function findEditableTables(source){
  const text=String(source),out=[];
  let cursor=0;
@@ -18,7 +19,16 @@ export function findEditableTables(source){
    const trimmed=token.raw.trim();
    if(/^<table\b[\s\S]*<\/table>$/i.test(trimmed)){
     const leading=token.raw.indexOf(trimmed);
-    out.push({type:'html',start:start+leading,end:start+leading+trimmed.length,raw:trimmed});
+    const offset=start+leading;
+    out.push({type:'html',start:offset,end:offset+trimmed.length,raw:trimmed,innerIndex:0});
+    // Preview enumerates tables in DOM order. Give each nested table a
+    // matching editor index while keeping the outer source block as its
+    // transactional/Undo boundary.
+    const doc=new DOMParser().parseFromString(sanitizeHTML(trimmed),'text/html');
+    const nested=[...doc.querySelectorAll('table')].slice(1);
+    if(nested.length<=25)for(let i=0;i<nested.length;i++){
+     out.push({type:'nested',start:offset,end:offset+trimmed.length,raw:trimmed,innerIndex:i+1});
+    }
    }
   }
  }
@@ -89,6 +99,42 @@ function modelFromHTML(html){
  if(occupied.some(row=>Array.from({length:width},(_,col)=>row[col]).some(v=>!v)))return null;
  return {rows:trs.length,cols:width,cells,cls:table.getAttribute('class')||''};
 }
+// Resolve the selected leaf table from its original source-backed HTML block.
+function selectedHTMLTable(entry){
+ if(!entry||!['html','nested'].includes(entry.type))return null;
+ const doc=new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html');
+ const tables=[...doc.querySelectorAll('table')];
+ if(tables.length>26)return null;
+ const target=tables[entry.innerIndex||0];
+ if(!target||target.querySelector('table'))return null;
+ // Nested tables must remain inside a proper table cell; don't rewrite
+ // browser-repaired malformed hierarchies or arbitrary foreign wrappers.
+ if(entry.type==='nested'){
+  if(!target.parentElement?.closest('td,th'))return null;
+  let ancestor=target.parentElement.closest('table');
+  while(ancestor){
+   const copy=ancestor.cloneNode(true);
+   copy.querySelectorAll('table').forEach(inner=>inner.replaceWith(doc.createTextNode('Nested table')));
+   if(!modelFromHTML(copy.outerHTML))return null;
+   ancestor=ancestor.parentElement?.closest('table');
+  }
+ }
+ return {doc,target,root:tables[0],model:modelFromHTML(target.outerHTML)};
+}
+function replaceSelectedTable(entry,resolved,updated){
+ if(!updated)return null;
+ if(entry.type!=='nested')return updated;
+ const replacement=new DOMParser().parseFromString(updated,'text/html').querySelector('table');
+ if(!replacement)return null;
+ resolved.target.replaceWith(replacement);
+ // Every layer is re-sanitized before crossing the source editor boundary.
+ const output=sanitizeHTML(resolved.root.outerHTML);
+ const doc=new DOMParser().parseFromString(output,'text/html');
+ if(doc.querySelectorAll('table').length!==
+    new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html').querySelectorAll('table').length)
+  return null;
+ return output;
+}
 const empty=(row,col,header=false)=>({row,col,rs:1,cs:1,tag:header?'th':'td',html:'',cls:''});
 function cellsAt(model,row,col){
  return model.cells.find(c=>row>=c.row&&row<c.row+c.rs&&col>=c.col&&col<c.col+c.cs);
@@ -121,8 +167,8 @@ function closedSelectionBounds(model,row,col,other={row,col}){
 export function tableSelectionBounds(source,index,selection){
  const table=findEditableTables(source)[index];
  if(!table||!selection)return null;
- const html=table.type==='gfm'?sanitizeHTML(marked.parse(table.raw,{gfm:true})):table.raw;
- const model=modelFromHTML(html);
+ const html=table.type==='gfm'?sanitizeHTML(marked.parse(table.raw,{gfm:true})):null;
+ const model=table.type==='gfm'?modelFromHTML(html):selectedHTMLTable(table)?.model;
  if(!model)return null;
  return closedSelectionBounds(model,selection.row,selection.col,selection.other||{row:selection.row,col:selection.col});
 }
@@ -237,10 +283,12 @@ export function editTableAt(source,index,operation,selection){
  let updated=null;
  if(table.type==='gfm'&&basic.includes(operation))updated=updateGFM(table,operation,row,col);
  else {
-  const existing=table.type==='gfm'?sanitizeHTML(marked.parse(table.raw,{gfm:true})):table.raw;
-  const model=modelFromHTML(existing);
+  const existing=table.type==='gfm'?sanitizeHTML(marked.parse(table.raw,{gfm:true})):null;
+  const target=table.type==='gfm'?null:selectedHTMLTable(table);
+  const model=table.type==='gfm'?modelFromHTML(existing):target?.model;
   if(!model)return null;
   updated=updateHTML(model,operation,row,col,other);
+  if(table.type==='nested')updated=replaceSelectedTable(table,target,updated);
  }
  if(updated===null)return null;
  return {text:source.slice(0,table.start)+updated+source.slice(table.end),
@@ -256,7 +304,7 @@ export function getTableCellText(source,index,row,col){
   const rows=[table.token.header,...table.token.rows];
   return rows[row]?.[col]?.text??null;
  }
- const model=modelFromHTML(table.raw);
+ const model=selectedHTMLTable(table)?.model;
  if(!model||row<0||row>=model.rows||col<0||col>=model.cols)return null;
  const owner=cellsAt(model,row,col);
  if(!owner)return null;
@@ -274,12 +322,12 @@ export function setTableCellText(source,index,row,col,value){
   matrix.rows[row][col]=escapeText(value).replaceAll('|','\\|');
   updated=serializeGFM(matrix);
  }else{
-  const model=modelFromHTML(table.raw);
+  const target=selectedHTMLTable(table),model=target?.model;
   if(!model||row<0||row>=model.rows||col<0||col>=model.cols)return null;
   const owner=cellsAt(model,row,col);
   if(!owner)return null;
   owner.html=escapeText(value);
-  updated=serializeHTML(model);
+  updated=replaceSelectedTable(table,target,serializeHTML(model));
  }
  if(!updated||updated===table.raw)return null;
  return {text:source.slice(0,table.start)+updated+source.slice(table.end),
@@ -307,8 +355,8 @@ export function sanitizeInlineCellHTML(value){
 }
 export function getTableCellHTML(source,index,row,col){
  const table=findEditableTables(source)[index];
- if(table?.type!=='html'||!Number.isInteger(row)||!Number.isInteger(col))return null;
- const model=modelFromHTML(table.raw);
+ if(!['html','nested'].includes(table?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ const model=selectedHTMLTable(table)?.model;
  if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
  const owner=cellsAt(model,row,col);
  return owner?sanitizeInlineCellHTML(owner.html):null;
@@ -317,15 +365,15 @@ export function setTableCellHTML(source,index,row,col,value){
  const inline=sanitizeInlineCellHTML(value);
  if(inline===null)return null;
  const table=findEditableTables(source)[index];
- if(table?.type!=='html'||!Number.isInteger(row)||!Number.isInteger(col))return null;
- const model=modelFromHTML(table.raw);
+ if(!['html','nested'].includes(table?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ const target=selectedHTMLTable(table),model=target?.model;
  if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
  const owner=cellsAt(model,row,col);
  if(!owner)return null;
  if(sanitizeInlineCellHTML(owner.html)===null)return null;
  owner.html=inline;
- const updated=serializeHTML(model);
- if(updated===table.raw)return null;
+ const updated=replaceSelectedTable(table,target,serializeHTML(model));
+ if(!updated||updated===table.raw)return null;
  return {text:source.slice(0,table.start)+updated+source.slice(table.end),
   start:table.start,end:table.end,kind:'html'};
 }

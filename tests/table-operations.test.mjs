@@ -156,4 +156,69 @@ assert.equal(sanitizeInlineCellHTML('<svg onload="alert(1)"/>'),null);
 assert.equal(getTableCellHTML(nestedHTML,0,0,0),null);
 assert.equal(setTableCellHTML(nestedHTML,0,0,0,'Test'),null);
 
+
+
+// #6: Only a nested LEAF table is editable. Its parent stays read-only,
+// and every change uses the complete enclosing Markdown source block.
+const nestedDocument='# Outer\n\n'+
+ '<table class="af-table-outline"><tr><td>Intro <strong>keep</strong>'+
+ '<table class="af-table-borderless"><tr><td><strong>Alpha</strong></td><td>Beta</td></tr>'+
+ '<tr><td>Gamma</td><td>Delta</td></tr></table>'+
+ ' Outro</td><td>Sibling</td></tr></table>\n\n# After';
+const nestedTables=findEditableTables(nestedDocument);
+assert.equal(nestedTables.length,2);
+assert.deepEqual(nestedTables.map(entry=>entry.type),['html','nested']);
+assert.equal(nestedTables[0].raw,nestedTables[1].raw);
+assert.equal(getTableCellText(nestedDocument,0,0,0),null,'outer remains safely read-only');
+assert.equal(getTableCellText(nestedDocument,1,0,0),'Alpha');
+assert.equal(getTableCellHTML(nestedDocument,1,0,0),'<strong>Alpha</strong>');
+assert.deepEqual(tableSelectionBounds(nestedDocument,1,select(0,0,{row:1,col:1})),{r0:0,r1:1,c0:0,c1:1});
+assert.equal(tableSelectionBounds(nestedDocument,0,select(0,0)),null);
+const nestedChanged=setTableCellHTML(nestedDocument,1,0,0,
+ '<em>Updated</em> <a href="https://example.org/docs">help</a>');
+assert(nestedChanged?.text.startsWith('# Outer\n\n'));
+assert(nestedChanged?.text.endsWith('\n\n# After'));
+assert(nestedChanged.text.includes('Intro <strong>keep</strong>'));
+assert(nestedChanged.text.includes(' Outro'));
+assert(nestedChanged.text.includes('Sibling'));
+assert(nestedChanged.text.includes('af-table-borderless'));
+assert(nestedChanged.text.includes('af-table-outline'));
+assert(nestedChanged.text.includes('<em>Updated</em>'));
+assert(nestedChanged.text.includes('href="https://example.org/docs"'));
+assert.equal(getTableCellText(nestedChanged.text,1,0,0),'Updated help');
+const nestedPlain=setTableCellText(nestedDocument,1,1,0,'Changed | <script>');
+assert(nestedPlain.text.includes('Changed | &lt;script&gt;'));
+assert(nestedPlain.text.includes('Intro <strong>keep</strong>'));
+assert(nestedPlain.text.includes('Sibling'));
+assert.equal(findEditableTables(nestedPlain.text).length,2);
+const nestedMerged=editTableAt(nestedDocument,1,'merge',select(0,0,{row:1,col:1}));
+assert(nestedMerged.text.includes('rowspan="2"')&&nestedMerged.text.includes('colspan="2"'));
+assert(nestedMerged.text.includes('Sibling'));
+assert(nestedMerged.text.includes('Intro <strong>keep</strong>'));
+const nestedOwner=new DOMParser().parseFromString(nestedMerged.text,'text/html').querySelector('table table td');
+assert(nestedOwner.textContent.includes('Alpha'));
+assert(nestedOwner.textContent.includes('Beta'));
+assert(nestedOwner.textContent.includes('Gamma'));
+assert(nestedOwner.textContent.includes('Delta'));
+const nestedSplit=editTableAt(nestedMerged.text,1,'split',select(0,0));
+assert(nestedSplit?.text.includes('Alpha'));
+assert.equal(findEditableTables(nestedSplit.text).length,2);
+const nestedAdded=editTableAt(nestedDocument,1,'row-below',select(0,0));
+assert(nestedAdded&&new DOMParser().parseFromString(nestedAdded.text,'text/html').querySelector('table table').rows.length===3);
+assert.equal(editTableAt(nestedDocument,0,'row-below',select(0,0)),null,'parent structure never rewritten');
+assert.equal(getTableCellHTML(nestedDocument,1,4,0),null);
+assert.equal(setTableCellHTML(nestedDocument,1,0,0,'<script>alert(1)</script>'),null);
+assert.equal(setTableCellHTML(nestedDocument,1,0,0,'<table><tr><td>Bad</td></tr></table>'),null);
+const doubleNested='<table><tr><td>Top<table><tr><td>Middle'+
+ '<table><tr><td>Deep</td></tr></table></td></tr></table></td></tr></table>';
+assert.deepEqual(findEditableTables(doubleNested).map(t=>t.type),['html','nested','nested']);
+assert.equal(getTableCellText(doubleNested,1,0,0),null);
+assert.equal(getTableCellText(doubleNested,2,0,0),'Deep');
+const deepEdit=setTableCellText(doubleNested,2,0,0,'Inner changed');
+assert(deepEdit?.text.includes('Top'));
+assert(deepEdit.text.includes('Middle'));
+assert.equal(getTableCellText(deepEdit.text,2,0,0),'Inner changed');
+const fencedNested='~~~html\n'+nestedDocument+'\n~~~';
+assert.equal(findEditableTables(fencedNested).length,0);
+
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
