@@ -241,3 +241,11 @@
  .table-edit-image-form{grid-template-columns:1fr 1fr;max-height:34vh}
  .table-edit-image-form>label:has(#table-edit-image-alt),.table-edit-image-form .table-edit-image-decorative{grid-column:1/-1}
 }
+
+/* #6: explicit, reversible image insertion control for a selected table cell. */
+.table-edit-image-add{align-self:flex-start;border:1px solid var(--border-ui);
+ border-radius:6px;background:var(--bg-panel-alt);color:var(--text-ui);
+ font-size:12px;font-weight:600;padding:6px 10px;cursor:pointer;margin-top:6px}
+.table-edit-image-add[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:-1px}
+.table-edit-image-add[hidden],.table-edit-image-form>label[hidden]{display:none!important}
+.table-edit-image-add:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
