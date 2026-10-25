@@ -33,6 +33,11 @@ for(const payload of [
  '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>',
  '<svg xmlns="http://www.w3.org/2000/svg"><style>@import url(https://example.org/x.css)</style></svg>',
  '<svg xmlns="http://www.w3.org/2000/svg"><a href="javascript:alert(1)">Click</a></svg>',
- '<svg xmlns="http://www.w3.org/2000/svg"><rect style="fill:url(https://example.org/x)"/></svg>'
+ '<svg xmlns="http://www.w3.org/2000/svg"><style>rect{fill:url(\'https://example.org/tracker\')}</style></svg>',
+ '<svg xmlns="http://www.w3.org/2000/svg"><rect style="filter:url(&quot;https://example.org/x&quot;)"/></svg>',
+ '<svg xmlns="http://www.w3.org/2000/svg"><style>@import \'https://example.org/a.css\';</style></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg"><rect style="fill:url(https://example.org/x)"/></svg>'
 ])assert.throws(()=>mermaidImageDataUrl(payload),/Unsafe|External/);
+const localMarker='<svg xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow"><path d="M0 0"/></marker></defs><path style="marker-end:url(\'#arrow\')" d="M0 0"/></svg>';
+assert.ok(mermaidImageDataUrl(localMarker).startsWith('data:image/svg+xml'));
 console.log('Mermaid templates, i18n and SVG-as-image security checks passed.');
