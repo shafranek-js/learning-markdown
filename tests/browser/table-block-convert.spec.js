@@ -113,3 +113,88 @@ test('issue #6 convert-selection controls have labels in all five locales',async
   }
  }
 });
+
+
+test('issue #6 nested list conversion changes only selected depth and keeps outer roman numbering',async({page})=>{
+ await page.goto('/');
+ const source='Before\n\n<table><tr><td><ol type="i"><li>Parent<ul>'+
+  '<li>Inner one</li><li><em>Inner two</em><ul><li>Deep</li></ul></li>'+
+  '</ul>Tail</li><li>Outer two</li></ol></td><td>Neighbor</td></tr></table>\n\nAfter';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ await expect(page.locator('#table-edit-block-choice')).toHaveAttribute('aria-pressed','true');
+ await rich.locator(':scope > ol > li > ul > li em').evaluate(el=>{
+  const text=el.firstChild,range=document.createRange(),selection=window.getSelection();
+  el.closest('[contenteditable]').focus();
+  range.setStart(text,2);range.collapse(true);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-ol').click();
+ await expect(rich.locator(':scope > ol[type="i"]')).toHaveCount(1);
+ await expect(rich.locator(':scope > ol > li > ul')).toHaveCount(0);
+ await expect(rich.locator(':scope > ol > li > ol > li')).toHaveCount(2);
+ await expect(rich.locator(':scope > ol > li > ol > li em')).toHaveText('Inner two');
+ await expect(rich.locator(':scope > ol > li > ol > li ul > li')).toHaveText('Deep');
+ await expect(rich.locator(':scope > ol > li').last()).toHaveText('Outer two');
+ await page.locator('#table-edit-convert-ul').click();
+ await expect(rich.locator(':scope > ol > li > ul > li')).toHaveCount(2);
+ await expect(rich.locator(':scope > ol[type="i"]')).toHaveCount(1);
+ await page.locator('#table-edit-convert-ol').click();
+ await expect(rich.locator(':scope > ol > li > ol > li')).toHaveCount(2);
+ await expect(rich.locator(':scope > ol[type="i"]')).toHaveCount(1);
+ await expect(input).toHaveValue(source);
+ await page.locator('#table-edit-content-save').click();
+ const updated=await input.inputValue();
+ expect(updated).toContain('type="i"');
+ expect(updated).toContain('<em>Inner two</em>');
+ expect(updated).toContain('Neighbor');
+ expect(updated).toContain('Before');
+ expect(updated).toContain('After');
+ await expect(page.locator('#markdown-preview td').first().locator('ol > li > ol > li')).toHaveCount(2);
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview td').first().locator('ol > li > ol > li')).toHaveCount(2);
+});
+
+test('issue #6 Russian mobile prevents partial nested conversions and explains paragraph limitation',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ const source='<table><tr><td><ol type="i"><li>Родитель<ul>'+
+  '<li>Первый</li><li>Второй</li><li>Третий</li></ul></li>'+
+  '<li>Сосед</li></ol></td></tr></table>';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ const before=await rich.innerHTML();
+ await rich.locator(':scope > ol > li > ul > li').first().evaluate(li=>{
+  const range=document.createRange(),selection=window.getSelection();
+  li.closest('[contenteditable]').focus();
+  range.setStart(li.firstChild,0);
+  range.setEnd(li.nextElementSibling.firstChild,li.nextElementSibling.firstChild.length);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-ol').click();
+ await expect(page.locator('#table-edit-message')).toContainText('Выделите целые пункты');
+ expect(await rich.innerHTML()).toBe(before);
+ await expect(input).toHaveValue(source);
+ await rich.locator(':scope > ol > li > ul > li').first().evaluate(li=>{
+  const range=document.createRange(),selection=window.getSelection();
+  li.closest('[contenteditable]').focus();
+  range.setStart(li.firstChild,1);range.collapse(true);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-p').click();
+ await expect(page.locator('#table-edit-message')).toContainText('Вложенные списки можно переключать');
+ expect(await rich.innerHTML()).toBe(before);
+ await expect(page.locator('#table-edit-bar')).toBeInViewport();
+ await page.locator('#table-edit-convert-ol').click();
+ await expect(rich.locator(':scope > ol > li > ol > li')).toHaveCount(3);
+ await expect(rich.locator(':scope > ol[type="i"]')).toHaveCount(1);
+ await expect(input).toHaveValue(source);
+});
