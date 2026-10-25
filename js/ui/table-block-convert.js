@@ -25,12 +25,47 @@ function safeList(list,target,range){
     el.tagName==='UL'||el.tagName==='OL'||!SAFE_INLINE.has(el.tagName.toLowerCase()))))return false;
  return true;
 }
+function nestedItem(editor,node){
+ const element=node?.nodeType===1?node:node?.parentElement;
+ const item=element?.closest('li');
+ return item&&editor.contains(item)&&
+  ['UL','OL'].includes(item.parentElement?.tagName)?item:null;
+}
+function convertNestedList(editor,target,selection,range){
+ const a=nestedItem(editor,selection.anchorNode),b=nestedItem(editor,selection.focusNode);
+ const aNested=a?.parentElement?.parentElement?.tagName==='LI';
+ const bNested=b?.parentElement?.parentElement?.tagName==='LI';
+ if(!aNested&&!bNested)return null;
+ // Refuse a cross-depth/cross-list selection instead of reformatting the
+ // entire ancestor list. A nested range must belong to ONE direct child list.
+ if(!aNested||!bNested||a.parentElement!==b.parentElement)
+  return {ok:false,reason:'partial-or-nested-list'};
+ const list=a.parentElement,items=[...list.children];
+ if(!items.length||items.some(item=>item.tagName!=='LI')||
+    [...list.childNodes].some(node=>node.nodeType!==1&&
+      (node.nodeType!==3||node.textContent.trim())))
+  return {ok:false,reason:'partial-or-nested-list'};
+ if(target==='p')return {ok:false,reason:'nested-to-paragraph'};
+ if(!selection.isCollapsed&&items.some(item=>!range.intersectsNode(item)))
+  return {ok:false,reason:'partial-or-nested-list'};
+ if(list.tagName.toLowerCase()===target)
+  return {ok:false,reason:'already-formatted'};
+ const changed=editor.ownerDocument.createElement(target);
+ while(list.firstChild)changed.append(list.firstChild);
+ list.replaceWith(changed);
+ const replacement=editor.ownerDocument.createRange();
+ replacement.selectNodeContents(changed);
+ selection.removeAllRanges();selection.addRange(replacement);
+ return {ok:true,blocks:1};
+}
 export function convertBlockSelection(editor,target,selection=window.getSelection()){
  if(!editor||!TARGETS.has(target)||!selection?.rangeCount||
     !editor.contains(selection.anchorNode)||!editor.contains(selection.focusNode))
   return {ok:false,reason:'no-selection'};
  const range=selection.getRangeAt(0);
  if(!editor.contains(range.commonAncestorContainer))return {ok:false,reason:'no-selection'};
+ const nested=convertNestedList(editor,target,selection,range);
+ if(nested)return nested;
  const blocks=selection.isCollapsed?
   [topBlock(editor,selection.anchorNode)].filter(Boolean):selectedTopBlocks(editor,range);
  if(!blocks.length)return {ok:false,reason:'no-selection'};
