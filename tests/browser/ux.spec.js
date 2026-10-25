@@ -3194,7 +3194,7 @@ test('issue #6 Blocks mode is localized on mobile and explicit Plain text save r
 
 test('issue #6 unsupported media cells remain read-only and preserve source',async({page})=>{
  await page.goto('/');
- const source='<table><tr><td><p>Caption</p><img src="https://example.org/picture.png" alt="Artwork"></td><td>Neighbor</td></tr></table>';
+ const source='<table><tr><td><p>Caption</p><img src="https://example.org/picture.png" alt="Artwork"><img src="https://example.org/second.png" alt="Second artwork"></td><td>Neighbor</td></tr></table>';
  await page.locator('#markdown-input').fill(source);
  await page.locator('#markdown-preview td').first().click();
  await expect(page.locator('#table-edit-content-input')).toBeDisabled();
@@ -3202,7 +3202,7 @@ test('issue #6 unsupported media cells remain read-only and preserve source',asy
  await expect(page.locator('#table-edit-mode')).toBeHidden();
  await expect(page.locator('#table-edit-content-warning')).toContainText('read-only');
  await expect(page.locator('#markdown-input')).toHaveValue(source);
- await expect(page.locator('#markdown-preview img')).toHaveAttribute('alt','Artwork');
+ await expect(page.locator('#markdown-preview img').first()).toHaveAttribute('alt','Artwork');
 });
 
 
