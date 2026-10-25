@@ -1,6 +1,6 @@
 import {state,docKey} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks} from '../core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage} from '../core/table-operations.js';
 
 const $=id=>document.getElementById(id);
 const UI={
@@ -53,6 +53,15 @@ const BLOCK_TEXT={
  ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода'}
 };
 const blockWords=()=>BLOCK_TEXT[state.lang]||BLOCK_TEXT.en;
+const IMAGE_TEXT={
+ en:{title:'Image properties',url:'Image URL (HTTPS)',alt:'Alternative text',decorative:'Decorative image (empty alt)',width:'Width (px)',height:'Height (px)',save:'Save image',hint:'Edit this image without replacing the cell text. External images need internet when exported.',invalid:'Enter a valid HTTPS image URL, alt text (unless decorative), and dimensions of 1–1600 px.'},
+ cs:{title:'Vlastnosti obrázku',url:'URL obrázku (HTTPS)',alt:'Alternativní text',decorative:'Dekorativní obrázek (prázdný alt)',width:'Šířka (px)',height:'Výška (px)',save:'Uložit obrázek',hint:'Upravte obrázek bez změny textu buňky. Externí obrázky v exportu vyžadují internet.',invalid:'Zadejte platnou HTTPS adresu, alternativní text a rozměry 1–1600 px.'},
+ uk:{title:'Властивості зображення',url:'URL зображення (HTTPS)',alt:'Альтернативний текст',decorative:'Декоративне зображення (порожній alt)',width:'Ширина (px)',height:'Висота (px)',save:'Зберегти зображення',hint:'Редагуйте зображення, не змінюючи текст клітинки. Для зовнішніх зображень потрібен інтернет.',invalid:'Вкажіть коректну HTTPS-адресу, альтернативний текст та розміри 1–1600 px.'},
+ ro:{title:'Proprietăți imagine',url:'URL imagine (HTTPS)',alt:'Text alternativ',decorative:'Imagine decorativă (alt gol)',width:'Lățime (px)',height:'Înălțime (px)',save:'Salvează imaginea',hint:'Editați imaginea fără a înlocui textul celulei. Imaginile externe necesită internet la export.',invalid:'Introduceți o adresă HTTPS, text alternativ și dimensiuni 1–1600 px.'},
+ ru:{title:'Свойства изображения',url:'URL изображения (HTTPS)',alt:'Альтернативный текст',decorative:'Декоративное изображение (пустой alt)',width:'Ширина (пикс.)',height:'Высота (пикс.)',save:'Сохранить изображение',hint:'Изменение изображения не заменяет текст ячейки. Внешние изображения требуют интернета при экспорте.',invalid:'Нужны корректный HTTPS-адрес, альтернативный текст и размеры от 1 до 1600 пикселей.'}
+};
+const imageWords=()=>IMAGE_TEXT[state.lang]||IMAGE_TEXT.en;
+
 
 const GROUPS=[
  {key:'rows',items:['row-above','row-below','delete-row']},
@@ -72,11 +81,15 @@ function showCellMode(){
  const source=area().value,index=selected.tableIndex,row=selected.row,col=selected.col;
  const inline=getTableCellHTML(source,index,row,col);
  const blocks=getTableCellBlocks(source,index,row,col);
+ const image=getTableCellImage(source,index,row,col);
+ const imageActive=image!==null;
  const eligible=blocks!==null;
- const unsupported=!eligible&&findEditableTables(source)[index]?.type!=='gfm';
+ const unsupported=!eligible&&!imageActive&&findEditableTables(source)[index]?.type!=='gfm';
  const richActive=eligible&&Boolean(selected.richMode);
  const blockActive=richActive&&Boolean(selected.blockMode);
- $('table-edit-mode').hidden=!eligible;
+ $('table-edit-mode').hidden=!eligible||imageActive;
+ $('table-edit-content-form').hidden=imageActive;
+ $('table-edit-image-form').hidden=!imageActive;
  $('table-edit-content-input').hidden=richActive;
  $('table-edit-rich-panel').hidden=!richActive;
  $('table-edit-block-actions').hidden=!blockActive;
@@ -85,7 +98,7 @@ function showCellMode(){
  $('table-edit-block-choice').setAttribute('aria-pressed',String(blockActive));
  $('table-edit-plain-choice').setAttribute('aria-pressed',String(!richActive));
  $('table-edit-content-label').htmlFor=richActive?'table-edit-rich-content':'table-edit-content-input';
- $('table-edit-content-warning').textContent=unsupported?richWords().unsupported:
+ $('table-edit-content-warning').textContent=imageActive?imageWords().hint:unsupported?richWords().unsupported:
   blockActive?blockWords().hint:richActive?richWords().hint:(CONTENT_TEXT[state.lang]||CONTENT_TEXT.en)[2];
 }
 function refreshCellText(){
@@ -94,6 +107,7 @@ function refreshCellText(){
  const text=getTableCellText(source,index,row,col);
  const inline=getTableCellHTML(source,index,row,col);
  const blocks=getTableCellBlocks(source,index,row,col);
+ const image=getTableCellImage(source,index,row,col);
  $('table-edit-content-input').value=text??'';
  const entry=findEditableTables(source)[index];
  const readonly=text===null||(entry?.type!=='gfm'&&blocks===null);
@@ -103,6 +117,14 @@ function refreshCellText(){
  else if(inline!==null)$('table-edit-rich-content').innerHTML=inline;
  else $('table-edit-rich-content').replaceChildren();
  selected.pendingRichHTML=undefined;
+ if(image){
+  $('table-edit-image-url').value=image.url;
+  $('table-edit-image-alt').value=image.alt;
+  $('table-edit-image-decorative').checked=image.decorative;
+  $('table-edit-image-alt').disabled=image.decorative;
+  $('table-edit-image-width').value=image.width;
+  $('table-edit-image-height').value=image.height;
+ }
  showCellMode();
 }
 function setCellMode(mode){
@@ -141,6 +163,29 @@ function saveCell(){
  const edit=blockMode?setTableCellBlocks(...args,value):
   richMode?setTableCellHTML(...args,value):setTableCellText(...args,value);
  if(!edit){$('table-edit-message').textContent=labels().invalid;return;}
+ selected.raw=findEditableTables(edit.text)[selected.tableIndex]?.raw||'';
+ $('table-edit-message').textContent='';
+ applyEdit(edit.text,edit.start,edit.start,{focus:false});
+ syncTableEditorPreview();
+ refreshCellText();
+}
+function saveImage(){
+ if(!selected)return;
+ const source=area().value,entry=findEditableTables(source)[selected.tableIndex];
+ if(!entry||entry.raw!==selected.raw){clearSelection();return;}
+ const args=[source,selected.tableIndex,selected.row,selected.col];
+ const current=getTableCellImage(...args);
+ if(!current)return;
+ const options={
+  url:$('table-edit-image-url').value.trim(),
+  alt:$('table-edit-image-alt').value,
+  decorative:$('table-edit-image-decorative').checked,
+  width:$('table-edit-image-width').value,
+  height:$('table-edit-image-height').value
+ };
+ if(Object.entries(options).every(([key,value])=>value===current[key]))return;
+ const edit=setTableCellImage(...args,options);
+ if(!edit){$('table-edit-message').textContent=imageWords().invalid;return;}
  selected.raw=findEditableTables(edit.text)[selected.tableIndex]?.raw||'';
  $('table-edit-message').textContent='';
  applyEdit(edit.text,edit.start,edit.start,{focus:false});
@@ -252,9 +297,10 @@ function chooseCell(event){
  }else{
   const html=getTableCellHTML(area().value,index,coords.row,coords.col);
   const blocks=getTableCellBlocks(area().value,index,coords.row,coords.col);
+  const image=getTableCellImage(area().value,index,coords.row,coords.col);
   const blockMode=blocks!==null&&/<(?:p|div|ul|ol|li|blockquote|pre|h[2-4])\b/i.test(blocks);
   selected={tableIndex:index,doc:docKey(),row:coords.row,col:coords.col,other:null,
-   raw:sourceTables[index].raw,blockMode,richMode:blockMode||
+   raw:sourceTables[index].raw,imageMode:image!==null,blockMode,richMode:blockMode||
     (html!==null&&/<(?:strong|b|em|i|u|s|del|sup|sub|mark|code|span|a|br)\b/i.test(html))};
  }
  highlight();
@@ -287,6 +333,14 @@ export function renderTableEditorLanguage(){
  $('table-edit-rich-choice').textContent=rich.rich;
  $('table-edit-plain-choice').textContent=rich.plain;
  const block=blockWords();
+ const media=imageWords();
+ $('table-edit-image-title').textContent=media.title;
+ for(const [name,key] of [['url','url'],['alt','alt'],['width','width'],['height','height']]){
+  const label=$('table-edit-image-'+name+'-label');
+  label.textContent=media[key];
+ }
+ $('table-edit-image-decorative-label').textContent=media.decorative;
+ $('table-edit-image-save').textContent=media.save;
  $('table-edit-block-choice').textContent=block.mode;
  for(const kind of ['p','ul','ol','quote','pre']){
   const button=$('table-edit-block-'+kind);
@@ -324,6 +378,14 @@ export function initTableEditor(){
   +'<div id="table-edit-block-actions" class="table-edit-block-actions" hidden>'+['p','ul','ol','quote','pre'].map(kind=>'<button type="button" id="table-edit-block-'+kind+'"></button>').join('')+'</div>'
   +'<div id="table-edit-rich-content" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true"></div></div>'
   +'<button id="table-edit-content-save" type="submit"></button></form>'
+  +'<form id="table-edit-image-form" class="table-edit-image-form" hidden>'
+  +'<strong id="table-edit-image-title"></strong>'
+  +'<label><span id="table-edit-image-url-label"></span><input id="table-edit-image-url" type="url" required maxlength="2048" autocomplete="off"></label>'
+  +'<label><span id="table-edit-image-alt-label"></span><input id="table-edit-image-alt" maxlength="400" autocomplete="off"></label>'
+  +'<label class="table-edit-image-decorative"><input id="table-edit-image-decorative" type="checkbox"><span id="table-edit-image-decorative-label"></span></label>'
+  +'<label><span id="table-edit-image-width-label"></span><input id="table-edit-image-width" type="number" min="1" max="1600"></label>'
+  +'<label><span id="table-edit-image-height-label"></span><input id="table-edit-image-height" type="number" min="1" max="1600"></label>'
+  +'<button type="submit" id="table-edit-image-save"></button></form>'
   +'<p id="table-edit-content-warning"></p><p id="table-edit-hint"></p><p id="table-edit-message" role="status" aria-live="polite"></p>';
  const actions=bar.querySelector('.table-edit-actions');
  for(const {key} of GROUPS){
@@ -336,6 +398,12 @@ export function initTableEditor(){
  document.body.append(bar);
  $('table-edit-close').addEventListener('click',clearSelection);
  $('table-edit-content-form').addEventListener('submit',e=>{e.preventDefault();saveCell();});
+ $('table-edit-image-form').addEventListener('submit',e=>{e.preventDefault();saveImage();});
+ $('table-edit-image-decorative').addEventListener('change',()=>{
+  const decorative=$('table-edit-image-decorative').checked;
+  $('table-edit-image-alt').disabled=decorative;
+  if(decorative)$('table-edit-image-alt').value='';
+ });
  $('table-edit-rich-choice').addEventListener('click',()=>setCellMode('rich'));
  $('table-edit-plain-choice').addEventListener('click',()=>setCellMode('plain'));
  $('table-edit-block-choice').addEventListener('click',()=>setCellMode('blocks'));
@@ -362,7 +430,11 @@ export function initTableEditor(){
  $('markdown-preview').addEventListener('keydown',e=>{
   if((e.key==='Enter'||e.key===' ')&&/^(TD|TH)$/.test(e.target.tagName)){
    e.preventDefault();chooseCell({target:e.target,shiftKey:e.shiftKey});
-   if(e.key==='Enter')$('table-edit-content-input').focus();
+   if(e.key==='Enter'){
+    const focusTarget=!$('table-edit-image-form').hidden?$('table-edit-image-url'):
+     !$('table-edit-rich-panel').hidden?$('table-edit-rich-content'):$('table-edit-content-input');
+    focusTarget.focus();
+   }
   }
  });
  renderTableEditorLanguage();

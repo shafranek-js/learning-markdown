@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,sanitizeBlockCellHTML,sanitizeInlineCellHTML} from '../js/core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,sanitizeBlockCellHTML,sanitizeInlineCellHTML,getTableCellImage,setTableCellImage} from '../js/core/table-operations.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
@@ -270,5 +270,97 @@ assert(nestedBlockChange.text.includes('tail'));
 assert(nestedBlockChange.text.includes('<p>Changed</p>'));
 assert(nestedBlockChange.text.includes('Safe</strong> leaf'));
 assert.equal(findEditableTables(nestedBlockChange.text).length,2);
+
+
+
+// #6: Image properties are edited in place without flattening mixed content.
+const pictureSrc='Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
+ '<p>Caption <strong>bold</strong> <a href="https://example.org/guide">guide</a>.</p>'+
+ '<img src="https://example.org/old.png" alt="Old picture" width="300" height="150">'+
+ '<blockquote><p>Original quote</p></blockquote></td><td>Other cell</td></tr>'+
+ '<tr><td>Second cell</td></tr></table>\n\nAfter';
+assert.deepEqual(getTableCellImage(pictureSrc,0,0,0),{
+ url:'https://example.org/old.png',alt:'Old picture',decorative:false,width:'300',height:'150'
+});
+assert.equal(getTableCellImage(pictureSrc,0,1,0).url,'https://example.org/old.png');
+assert.equal(getTableCellImage(pictureSrc,0,0,1),null);
+assert.equal(getTableCellImage(editSource,0,1,0),null,'GFM remains untouched');
+const pictureEdit=setTableCellImage(pictureSrc,0,0,0,{
+ url:'https://example.org/new.png',alt:'Updated artwork',decorative:false,width:'600',height:''
+});
+assert(pictureEdit?.text.startsWith('Before\n\n'));
+assert(pictureEdit.text.endsWith('\n\nAfter'));
+for(const t of ['rowspan="2"','class="af-table-outline"','Other cell','Second cell',
+ '<strong>bold</strong>','https://example.org/guide','<blockquote>','Original quote',
+ 'src="https://example.org/new.png"','alt="Updated artwork"','width="600"'])
+ assert(pictureEdit.text.includes(t),'preserves surrounding markup: '+t);
+assert(!pictureEdit.text.includes('height="150"'));
+assert(!pictureEdit.text.includes('old.png'));
+assert.deepEqual(getTableCellImage(pictureEdit.text,0,0,0),{
+ url:'https://example.org/new.png',alt:'Updated artwork',decorative:false,width:'600',height:''
+});
+const decorativePicture=setTableCellImage(pictureSrc,0,0,0,{
+ url:'https://example.org/decorative.png',alt:'',decorative:true,width:'',height:''
+});
+assert(decorativePicture?.text.includes('alt=""'));
+assert(!decorativePicture.text.includes('width="300"'));
+assert.equal(getTableCellImage(decorativePicture.text,0,0,0).decorative,true);
+const badPicture={
+ url:'javascript:alert(1)',alt:'Bad',decorative:false,width:'300',height:'150'
+};
+assert.equal(setTableCellImage(pictureSrc,0,0,0,badPicture),null);
+assert.equal(setTableCellImage(pictureSrc,0,0,0,{...badPicture,url:'http://example.org/image.png'}),null);
+assert.equal(setTableCellImage(pictureSrc,0,0,0,{...badPicture,url:'data:image/svg+xml,<svg />'}),null);
+assert.equal(setTableCellImage(pictureSrc,0,0,0,{...badPicture,url:'https://example.org/x.png',alt:''}),null);
+assert.equal(setTableCellImage(pictureSrc,0,0,0,{...badPicture,url:'https://example.org/x.png',width:'1601'}),null);
+assert.equal(setTableCellImage(pictureSrc,0,0,0,{...badPicture,url:'https://example.org/x.png',height:'-1'}),null);
+assert.equal(setTableCellImage(pictureSrc,0,0,0,{...badPicture,url:'https://example.org/x.png',alt:'x'.repeat(401)}),null);
+assert.equal(setTableCellImage(pictureSrc,0,0,0,{...badPicture,url:'https://example.org/'+ 'x'.repeat(2049)}),null);
+const twoPictures='<table><tr><td>Both <img src="https://example.org/a.png" alt="A">'+
+ '<img src="https://example.org/b.png" alt="B"></td></tr></table>';
+assert.equal(getTableCellImage(twoPictures,0,0,0),null);
+assert.equal(setTableCellImage(twoPictures,0,0,0,{...badPicture,url:'https://example.org/x.png'}),null);
+assert.equal(getTableCellImage('<table><tr><td><img src="http://example.org/a.png" alt="A"></td></tr></table>',0,0,0),null);
+
+const unsafeExisting='<table><tr><td><img src="https://example.org/ok.png" alt="OK">'+
+ '<video src="https://example.org/video.mp4"></video></td></tr></table>';
+assert.equal(getTableCellImage(unsafeExisting,0,0,0),null,
+ 'unsupported original foreign/media tags must remain read-only even if sanitizer drops them');
+assert.equal(setTableCellImage(unsafeExisting,0,0,0,{
+ url:'https://example.org/new.png',alt:'New',decorative:false,width:'',height:''
+}),null);
+const scriptedExisting='<table><tr><td><img src="https://example.org/ok.png" alt="OK">'+
+ '<script>doSomething()</script></td></tr></table>';
+assert.equal(getTableCellImage(scriptedExisting,0,0,0),null);
+const rejectedSiblingImage='<table><tr><td><img src="https://example.org/ok.png" alt="OK"></td>'+
+ '<td><img src="data:image/svg+xml,%3Csvg%3E" alt="Untrusted"></td></tr></table>';
+assert.equal(getTableCellImage(rejectedSiblingImage,0,0,0),null,
+ 'editing one image must not silently delete an unsafe image in another cell');
+
+const figureImage='<table><tr><td><figure class="af-figure">'+
+ '<img src="https://example.org/figure.png" alt="Captioned">'+
+ '<figcaption><strong>Keep this caption</strong></figcaption></figure>'+
+ '<p>And this paragraph</p></td></tr></table>';
+const figureUpdated=setTableCellImage(figureImage,0,0,0,{
+ url:'https://example.org/revised.png',alt:'New picture',decorative:false,width:'480',height:''
+});
+assert(figureUpdated?.text.includes('af-figure'));
+assert(figureUpdated.text.includes('<figcaption><strong>Keep this caption</strong></figcaption>'));
+assert(figureUpdated.text.includes('<p>And this paragraph</p>'));
+
+assert.equal(getTableCellImage(nestedHTML,0,0,0),null);
+const nestedImage='<table><tr><td>Outer text <table><tr><td><p>Inner text</p>'+
+ '<img src="https://example.org/leaf.png" alt="Leaf"></td></tr></table>'+
+ ' Closing text</td></tr></table>';
+assert.equal(getTableCellImage(nestedImage,0,0,0),null);
+assert.equal(getTableCellImage(nestedImage,1,0,0).url,'https://example.org/leaf.png');
+const nestedPictureEdit=setTableCellImage(nestedImage,1,0,0,{
+ url:'https://example.org/leaf-new.png',alt:'New leaf',decorative:false,width:'280',height:''
+});
+assert(nestedPictureEdit?.text.includes('Outer text'));
+assert(nestedPictureEdit?.text.includes('Closing text'));
+assert(nestedPictureEdit?.text.includes('Inner text'));
+assert(nestedPictureEdit?.text.includes('New leaf'));
+assert.equal(findEditableTables(nestedPictureEdit.text).length,2);
 
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
