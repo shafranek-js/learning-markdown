@@ -211,3 +211,15 @@
  #table-edit-rich-panel{flex-basis:100%;min-width:0}
  #table-edit-rich-content{max-height:100px}
 }
+
+/* Issue #6: block cell editing is explicitly separate from inline Rich text. */
+#table-edit-block-actions[hidden]{display:none!important}
+#table-edit-block-actions{display:flex;flex-wrap:wrap;gap:4px}
+#table-edit-block-actions button{font:600 11px Arial,sans-serif;border:1px solid var(--border-ui);
+ background:var(--bg-panel-alt);color:var(--text-ui);border-radius:5px;padding:5px 8px;cursor:pointer}
+#table-edit-block-actions button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#table-edit-rich-content :is(ul,ol){margin:4px 0;padding-left:24px}
+#table-edit-rich-content blockquote{margin:5px 0;padding:4px 10px;border-left:3px solid var(--accent)}
+#table-edit-rich-content p{margin:3px 0}
+#table-edit-rich-content pre{white-space:pre-wrap;background:var(--bg-panel-alt);padding:8px;border-radius:4px}
+@media(max-width:600px){#table-edit-block-actions{max-height:80px;overflow-y:auto}}
