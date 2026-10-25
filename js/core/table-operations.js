@@ -458,7 +458,7 @@ export function setTableCellImage(source,index,row,col,options={}){
  const found=imageCellOwner(source,index,row,col);
  if(!found||!options||typeof options!=='object')return null;
  const {url,alt,decorative,width,height}=options;
- if(typeof url!=='string'||!safeFigureUrl(url))return null;
+ if(typeof url!=='string'||url.length>2048||!safeFigureUrl(url))return null;
  if(typeof alt!=='string'||alt.length>400)return null;
  if(decorative!==true&&!alt.trim())return null;
  const optionalDimension=value=>value==null||value===''?'':figureDimension(value);
