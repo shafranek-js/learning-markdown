@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,sanitizeBlockCellHTML,sanitizeInlineCellHTML,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../js/core/table-operations.js';
+import {findEditableTables,getTableReadOnlyReason,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,sanitizeBlockCellHTML,sanitizeInlineCellHTML,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../js/core/table-operations.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
@@ -151,6 +151,18 @@ const convertedAligned=apply(gfmAligned,'cell-blue',select(1,0));
 assert(convertedAligned?.text.includes('<table'));
 assert(convertedAligned.text.includes('align="left"'));
 assert(convertedAligned.text.includes('align="right"'));
+
+// Source-side read-only classifications used by the contextual Preview.
+assert.equal(getTableReadOnlyReason(source,0),null,'GFM tables remain editable');
+assert.equal(getTableReadOnlyReason(html,0),null,'ordinary HTML tables remain editable');
+assert.equal(getTableReadOnlyReason(adjacentTables,0),'multiple-roots');
+assert.equal(getTableReadOnlyReason(brokenCells,0),'malformed');
+assert.equal(getTableReadOnlyReason(invalidSpan,0),'invalid-spans');
+assert.equal(getTableReadOnlyReason(semanticSections,0),'unsupported');
+assert.equal(getTableReadOnlyReason(customSection,0),'unsupported');
+assert.equal(getTableReadOnlyReason(nestedHTML,0),'container');
+assert.equal(getTableReadOnlyReason(nestedHTML,1),null,'nested leaf stays editable');
+assert.equal(getTableReadOnlyReason('No tables',0),'unmapped');
 
 // Rich editing is allowed only for safe inline HTML within standalone tables.
 const richSource='Before\n\n<table class="af-table-outline"><tr><td rowspan="2" colspan="2" class="af-cell-mint">'+
