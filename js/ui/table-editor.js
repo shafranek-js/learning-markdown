@@ -121,6 +121,7 @@ function clearSelection(){
  readonlyState=null;
  $('table-edit-bar').hidden=true;
  $('table-edit-bar').removeAttribute('data-readonly');
+ $('table-edit-bar').setAttribute('role','toolbar');
  $('table-edit-readonly-message').hidden=true;
  document.querySelectorAll('#markdown-preview .table-edit-selected').forEach(c=>c.classList.remove('table-edit-selected'));
 }
@@ -128,6 +129,8 @@ function renderReadonlyNotice(){
  if(!readonlyState)return;
  const words=readonlyWords();
  $('table-edit-title').textContent=words.title;
+ $('table-edit-bar').setAttribute('role','region');
+ $('table-edit-bar').setAttribute('aria-label',words.title);
  $('table-edit-status').textContent='';
  $('table-edit-readonly-message').textContent=(words[readonlyState.reason]||words['invalid-grid'])+' '+words.source;
 }
