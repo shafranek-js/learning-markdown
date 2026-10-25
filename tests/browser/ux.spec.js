@@ -2936,6 +2936,11 @@ test('issue #6: rich cell editing preserves emphasis, links, spans and undo hist
  await expect(rich.locator('strong')).toHaveText('Bold');
  await expect(rich.locator('em')).toHaveText('Italic');
  await expect(rich.locator('a')).toHaveAttribute('href','https://example.org/docs');
+ await page.locator('#table-edit-plain-choice').click();
+ await page.locator('#table-edit-rich-choice').click();
+ await expect(rich.locator('strong')).toHaveText('Bold');
+ await expect(rich.locator('em')).toHaveText('Italic');
+ await expect(rich.locator('a')).toHaveAttribute('href','https://example.org/docs');
  await rich.focus();
  await rich.press('End');
  await page.keyboard.type(' addition');
