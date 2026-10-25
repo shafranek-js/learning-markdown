@@ -3073,11 +3073,11 @@ test('issue #6 nested leaf merge and row insertion preserve outer table geometry
  await expect(page.locator('#markdown-preview table table .table-edit-selected')).toHaveCount(2);
  await page.locator('#table-edit-merge').selectOption('merge');
  await expect(page.locator('#markdown-preview table table td[colspan="2"]')).toHaveText('AB');
- await expect(page.locator('#markdown-preview table > tbody > tr > td')).toHaveCount(2);
+ await expect(page.locator('#markdown-preview > table > tbody > tr > td')).toHaveCount(2);
  await page.locator('#markdown-preview table table td[colspan="2"]').click();
  await page.locator('#table-edit-rows').selectOption('row-below');
  await expect(page.locator('#markdown-preview table table tr')).toHaveCount(3);
- await expect(page.locator('#markdown-preview table > tbody > tr')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview > table > tbody > tr')).toHaveCount(1);
  await expect(page.locator('#markdown-preview table')).toContainText('Sibling');
 });
 
@@ -3096,7 +3096,7 @@ test('issue #6 nested table editing remains accessible on mobile with locales',a
  await page.locator('#table-edit-content-input').fill('Изменена');
  await page.locator('#table-edit-content-save').click();
  await expect(page.locator('#markdown-preview table table td')).toHaveText('Изменена');
- await expect(page.locator('#markdown-preview table > tbody > tr > td')).toContainText('Внешняя');
+ await expect(page.locator('#markdown-preview > table > tbody > tr > td')).toContainText('Внешняя');
  const raw=await page.locator('#markdown-input').inputValue();
  expect(raw).toContain('конец');
  expect(raw).toContain('Изменена');
