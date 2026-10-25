@@ -48,7 +48,7 @@ test('nested parent is read-only with Russian explanation; leaf remains editable
  const source='<table><tr><td>Снаружи<table><tr><td>Внутри</td></tr></table>Конец</td></tr></table>';
  await editor.fill(source);
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
- await page.locator('#markdown-preview table').first().locator(':scope > tbody > tr > td').first().click();
+ await page.locator('#markdown-preview table').first().locator(':scope > tbody > tr > td').first().click({position:{x:5,y:5}});
  await expect(page.locator('#table-edit-title')).toHaveText('Таблица только для просмотра');
  await expect(page.locator('#table-edit-readonly-message')).toContainText('вложенные таблицы');
  await expect(page.locator('#table-edit-bar')).toBeInViewport();
