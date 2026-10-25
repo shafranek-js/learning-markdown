@@ -24,7 +24,7 @@ test('unsupported HTML table explains why visual editing is disabled, without ch
  await expect(page.locator('#markdown-preview tbody tr')).toHaveCount(2);
 });
 
-test('unmapped adjacent tables display a safe read-only notice, keyboard-accessibly',async({page})=>{
+test('adjacent table roots display a specific read-only notice, keyboard-accessibly',async({page})=>{
  await page.goto('/');
  const editor=page.locator('#markdown-input');
  const source='<table><tr><td>First</td></tr></table>'+
@@ -35,7 +35,7 @@ test('unmapped adjacent tables display a safe read-only notice, keyboard-accessi
  await cell.focus();
  await cell.press('Enter');
  await expect(page.locator('#table-edit-bar')).toHaveAttribute('data-readonly','true');
- await expect(page.locator('#table-edit-readonly-message')).toContainText('cannot be reliably matched');
+ await expect(page.locator('#table-edit-readonly-message')).toContainText('multiple table roots');
  await expect(editor).toHaveValue(source);
  await expect(page.locator('#table-edit-content-input')).toBeHidden();
 });
@@ -48,7 +48,9 @@ test('nested parent is read-only with Russian explanation; leaf remains editable
  const source='<table><tr><td>Снаружи<table><tr><td>Внутри</td></tr></table>Конец</td></tr></table>';
  await editor.fill(source);
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
- await page.locator('#markdown-preview table').first().locator(':scope > tbody > tr > td').first().click({position:{x:5,y:5}});
+ const outerCell=page.locator('#markdown-preview table').first().locator(':scope > tbody > tr > td').first();
+ await outerCell.focus();
+ await outerCell.press('Enter');
  await expect(page.locator('#table-edit-title')).toHaveText('Таблица только для просмотра');
  await expect(page.locator('#table-edit-readonly-message')).toContainText('вложенные таблицы');
  await expect(page.locator('#table-edit-bar')).toBeInViewport();
