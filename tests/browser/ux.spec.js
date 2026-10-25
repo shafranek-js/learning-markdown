@@ -2556,7 +2556,7 @@ test('issue #18 additional Mermaid types render as safe images',async({page})=>{
   await editor.fill(source);
   const image=page.locator('#markdown-preview figure.mermaid-diagram img');
   await expect(image).toHaveCount(1,{timeout:25000});
-  await expect(image).toHaveAttribute('src',/^data:image\\/svg\\+xml;charset=utf-8,/);
+  await expect(image).toHaveAttribute('src',/^data:image\/svg\+xml;charset=utf-8,/);
   await expect(image).toHaveJSProperty('complete',true);
   expect(await image.evaluate(el=>el.naturalWidth),kind).toBeGreaterThan(0);
   await expect(page.locator('#markdown-preview .mermaid-error')).toHaveCount(0);
@@ -2573,7 +2573,7 @@ test('issue #18 Mermaid has accessible zoom, fit and source controls',async({pag
  await expect(toolbar.locator('button')).toHaveCount(3);
  await toolbar.getByRole('button',{name:'Zoom in'}).click();
  await expect(toolbar.locator('output')).toHaveText('125%');
- await expect(image).toHaveAttribute('style',/width:\\s*125%/);
+ await expect(image).toHaveAttribute('style',/width:\s*125%/);
  await toolbar.getByRole('button',{name:'Zoom out'}).click();
  await expect(toolbar.locator('output')).toHaveText('100%');
  await toolbar.getByRole('button',{name:'Zoom out'}).click();
