@@ -230,6 +230,8 @@
 #table-edit-block-actions button{font:600 11px Arial,sans-serif;border:1px solid var(--border-ui);
  background:var(--bg-panel-alt);color:var(--text-ui);border-radius:5px;padding:5px 8px;cursor:pointer}
 #table-edit-block-actions button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.table-edit-convert-separator{width:1px;align-self:stretch;min-height:20px;background:var(--border-ui);margin:2px 3px}
+#table-edit-block-actions button[id^="table-edit-convert-"]{border-style:dashed}
 #table-edit-rich-content :is(ul,ol){margin:4px 0;padding-left:24px}
 #table-edit-rich-content blockquote{margin:5px 0;padding:4px 10px;border-left:3px solid var(--accent)}
 #table-edit-rich-content p{margin:3px 0}
