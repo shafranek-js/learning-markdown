@@ -430,7 +430,11 @@ export function initTableEditor(){
  $('markdown-preview').addEventListener('keydown',e=>{
   if((e.key==='Enter'||e.key===' ')&&/^(TD|TH)$/.test(e.target.tagName)){
    e.preventDefault();chooseCell({target:e.target,shiftKey:e.shiftKey});
-   if(e.key==='Enter')$('table-edit-content-input').focus();
+   if(e.key==='Enter'){
+    const focusTarget=!$('table-edit-image-form').hidden?$('table-edit-image-url'):
+     !$('table-edit-rich-panel').hidden?$('table-edit-rich-content'):$('table-edit-content-input');
+    focusTarget.focus();
+   }
   }
  });
  renderTableEditorLanguage();
