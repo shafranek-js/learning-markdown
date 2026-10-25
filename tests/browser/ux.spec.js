@@ -2530,3 +2530,17 @@ test('Mermaid Advanced insertion labels are localized in all five languages',asy
   await expect(page.locator('#mermaid-template-choice option')).toHaveCount(3);
  }
 });
+
+
+test('Mermaid diagram cache avoids re-rendering after unrelated Markdown changes',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const source='```mermaid\nflowchart LR\n A[Stable] --> B[Diagram]\n```';
+ await input.fill(source);
+ const diagram=page.locator('#markdown-preview figure.mermaid-diagram img');
+ await expect(diagram).toBeVisible({timeout:20000});
+ const previous=await diagram.getAttribute('src');
+ await input.fill(source+'\n\nSome unrelated paragraph.');
+ await expect(page.locator('#markdown-preview figure.mermaid-diagram img')).toHaveAttribute('src',previous);
+ await expect(page.locator('#markdown-preview .mermaid-status')).toHaveCount(0);
+});
