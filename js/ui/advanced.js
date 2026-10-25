@@ -4,6 +4,7 @@ import {insertSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolb
 import {ADVANCED_PRESETS} from '../core/advanced-presets.js';
 import {RICH_CONTENT,RICH_GROUPS,richLabels} from '../data/rich-content.js';
 import {insertRichContent} from './toolbar.js';
+import {MERMAID_TEMPLATES,mermaidLabels,mermaidSnippet} from '../data/mermaid-templates.js';
 
 const $=id=>document.getElementById(id);
 export const ADVANCED_EXAMPLES=[
@@ -58,6 +59,7 @@ function applyCategoryVisibility(){
  const presetRoot=$('advanced-preset-controls');
  presetRoot.classList.toggle('hidden',!all&&!['text','paragraph'].includes(current));
  rich.classList.toggle('hidden',!state.advancedToolsOpen||(!all&&!['tables','blocks','lists'].includes(current)));
+ $('mermaid-insert-controls')?.classList.toggle('hidden',!all&&current!=='blocks');
  for(const group of RICH_GROUPS){
   const label=$('rich-'+group)?.closest('label');
   if(label)label.classList.toggle('hidden',!all&&current!==group);
@@ -174,6 +176,42 @@ function renderRichControls(){
  }
  $('advanced-rich-lab-title').textContent=locale.heading+' · '+locale.description;
 }
+
+function renderMermaidControls(){
+ const bar=$('advanced-rich-toolbar');
+ let root=$('mermaid-insert-controls');
+ if(!root){
+  root=document.createElement('div');root.id='mermaid-insert-controls';
+  root.className='flex items-center gap-1.5 shrink-0 border-l theme-border pl-3';
+  bar.append(root);
+ }
+ root.replaceChildren();
+ const locale=mermaidLabels(state.lang);
+ root.setAttribute('role','group');root.setAttribute('aria-label',locale.group);
+ const label=document.createElement('label');
+ label.className='text-[11px] font-semibold theme-muted shrink-0';
+ label.textContent=locale.group;
+ label.htmlFor='mermaid-template-choice';
+ const select=document.createElement('select');
+ select.id='mermaid-template-choice';
+ select.className='rounded-md theme-panel-alt border theme-border px-1.5 py-1 text-[11px]';
+ select.setAttribute('aria-label',locale.group);
+ Object.keys(MERMAID_TEMPLATES).forEach((name,i)=>{
+  const option=document.createElement('option');option.value=name;
+  option.textContent=locale.types[i];select.append(option);
+ });
+ const button=document.createElement('button');button.type='button';
+ button.id='mermaid-template-insert';
+ button.className='rounded-md theme-accent-soft border theme-border px-2 py-1 text-[11px] font-bold';
+ button.textContent=locale.insert;button.title=locale.note;
+ button.setAttribute('aria-label',locale.insert+': '+locale.group);
+ button.addEventListener('click',()=>{
+  const snippet=mermaidSnippet(select.value);
+  if(snippet)insertSnippet(snippet);
+ });
+ root.append(label,select,button);
+}
+
 export const advancedLabels=lang=>TEXT[lang]||TEXT.en;
 function applyAdvancedVisibility(){
  const panel=$('advanced-toolbar'),open=state.advancedToolsOpen;
@@ -192,6 +230,7 @@ export function renderAdvancedUI(){
  $('definition-html-insert').title=definitionText(state.lang).htmlWarning;
  renderPresetControls();
  renderRichControls();
+ renderMermaidControls();
  renderAdvancedCategoryControls();
  $('advanced-lab-title').textContent=words.lab;
  $('advanced-lab-description').textContent=words.description;
