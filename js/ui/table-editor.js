@@ -38,11 +38,11 @@ const CONTENT_TEXT={
  ru:['Текст ячейки','Сохранить ячейку','Только текст; прежняя разметка ячейки будет заменена.','Изменить содержимое ячейки']
 };
 const RICH_TEXT={
- en:{rich:'Rich text',plain:'Plain text',hint:'Edit formatting safely; paste inserts plain text. Changes apply on Save.',bold:'Bold',italic:'Italic',underline:'Underline',code:'Code',unsupported:'Rich editing supports inline HTML in standalone tables only.'},
- cs:{rich:'Formátovaný text',plain:'Prostý text',hint:'Formátujte bezpečně; vložený text se převede na prostý text. Změny uložíte tlačítkem Uložit.',bold:'Tučné',italic:'Kurzíva',underline:'Podtržení',code:'Kód',unsupported:'Formátování lze upravit jen v samostatných HTML tabulkách.'},
- uk:{rich:'Форматований текст',plain:'Звичайний текст',hint:'Безпечне форматування; вставлений текст без розмітки. Для збереження натисніть кнопку.',bold:'Жирний',italic:'Курсив',underline:'Підкреслення',code:'Код',unsupported:'Форматування доступне лише для окремих HTML-таблиць.'},
- ro:{rich:'Text formatat',plain:'Text simplu',hint:'Formatare sigură; lipirea adaugă doar text. Salvați pentru a aplica.',bold:'Aldin',italic:'Cursiv',underline:'Subliniat',code:'Cod',unsupported:'Editarea formatării este disponibilă doar în tabele HTML independente.'},
- ru:{rich:'Форматированный',plain:'Обычный текст',hint:'Безопасное форматирование; вставка — только текст. Изменения применяются после сохранения.',bold:'Жирный',italic:'Курсив',underline:'Подчёркнутый',code:'Код',unsupported:'Форматирование доступно только для отдельных HTML-таблиц.'}
+ en:{rich:'Rich text',plain:'Plain text',hint:'Edit formatting safely; paste inserts plain text. Changes apply on Save.',bold:'Bold',italic:'Italic',underline:'Underline',code:'Code',unsupported:'This cell contains unsupported elements and is read-only in the visual editor.'},
+ cs:{rich:'Formátovaný text',plain:'Prostý text',hint:'Formátujte bezpečně; vložený text se převede na prostý text. Změny uložíte tlačítkem Uložit.',bold:'Tučné',italic:'Kurzíva',underline:'Podtržení',code:'Kód',unsupported:'Tato buňka obsahuje nepodporované prvky a ve vizuálním editoru je pouze pro čtení.'},
+ uk:{rich:'Форматований текст',plain:'Звичайний текст',hint:'Безпечне форматування; вставлений текст без розмітки. Для збереження натисніть кнопку.',bold:'Жирний',italic:'Курсив',underline:'Підкреслення',code:'Код',unsupported:'Ця клітинка містить непідтримувані елементи та доступна лише для перегляду.'},
+ ro:{rich:'Text formatat',plain:'Text simplu',hint:'Formatare sigură; lipirea adaugă doar text. Salvați pentru a aplica.',bold:'Aldin',italic:'Cursiv',underline:'Subliniat',code:'Cod',unsupported:'Această celulă conține elemente neacceptate și poate fi doar vizualizată.'},
+ ru:{rich:'Форматированный',plain:'Обычный текст',hint:'Безопасное форматирование; вставка — только текст. Изменения применяются после сохранения.',bold:'Жирный',italic:'Курсив',underline:'Подчёркнутый',code:'Код',unsupported:'Эта ячейка содержит неподдерживаемые элементы и доступна только для просмотра.'}
 };
 const richWords=()=>RICH_TEXT[state.lang]||RICH_TEXT.en;
 const BLOCK_TEXT={
