@@ -78,38 +78,38 @@ const spanValue=(el,name)=>{const n=Number(el.getAttribute(name)||1);return Numb
 // reject source that the HTML parser would repair, or structures the serializer
 // cannot reproduce (multiple roots, section metadata, malformed spans).
 // Keeping such source read-only is safer than silently rewriting it.
-function sourceTableTopologySafe(raw){
+function sourceTableTopologyReason(raw){
  const doc=new DOMParser().parseFromString(raw,'text/html');
  if(doc.head.children.length||doc.body.children.length!==1||
     doc.body.firstElementChild?.tagName!=='TABLE'||[...doc.body.childNodes]
-     .some(node=>node.nodeType!==1&&(node.nodeType!==3||node.textContent.trim())))return false;
+     .some(node=>node.nodeType!==1&&(node.nodeType!==3||node.textContent.trim())))return 'multiple-roots';
  // A DOM parser silently supplies missing </td>, </tr>, etc. Check the
  // structural source tags before accepting its repaired table model.
  const stack=[];
  for(const match of raw.matchAll(/<\s*(\/?)\s*(table|thead|tbody|tfoot|tr|td|th)\b[^>]*>/gi)){
   const tag=match[2].toLowerCase();
-  if(match[1]){if(stack.pop()!==tag)return false;}
+  if(match[1]){if(stack.pop()!==tag)return 'malformed';}
   else stack.push(tag);
  }
- if(stack.length)return false;
+ if(stack.length)return 'malformed';
  for(const table of doc.body.querySelectorAll('table')){
   // The current serializer writes one tbody and cannot retain thead/tfoot,
   // captions, colgroups, row classes or attributes on section containers.
   if(table.children.length!==1||table.firstElementChild.tagName!=='TBODY'||
-     table.firstElementChild.attributes.length)return false;
+     table.firstElementChild.attributes.length)return 'unsupported';
   for(const tr of table.firstElementChild.children){
    if(tr.tagName!=='TR'||tr.attributes.length||
-      [...tr.children].some(cell=>cell.tagName!=='TD'&&cell.tagName!=='TH'))return false;
+      [...tr.children].some(cell=>cell.tagName!=='TD'&&cell.tagName!=='TH'))return 'unsupported';
   }
   for(const cell of table.querySelectorAll('td,th')){
    for(const name of ['rowspan','colspan']){
     if(!cell.hasAttribute(name))continue;
     const value=cell.getAttribute(name);
-    if(!/^[1-9][0-9]?$/.test(value)||Number(value)>20)return false;
+    if(!/^[1-9][0-9]?$/.test(value)||Number(value)>20)return 'invalid-spans';
    }
   }
  }
- return true;
+ return null;
 }
 function modelFromHTML(html){
  const doc=new DOMParser().parseFromString(sanitizeHTML(html),'text/html');
@@ -139,7 +139,7 @@ function modelFromHTML(html){
 }
 // Resolve the selected leaf table from its original source-backed HTML block.
 function selectedHTMLTable(entry){
- if(!entry||!['html','nested'].includes(entry.type)||!sourceTableTopologySafe(entry.raw))return null;
+ if(!entry||!['html','nested'].includes(entry.type)||sourceTableTopologyReason(entry.raw))return null;
  const doc=new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html');
  const tables=[...doc.querySelectorAll('table')];
  if(tables.length>26)return null;
@@ -158,6 +158,21 @@ function selectedHTMLTable(entry){
   }
  }
  return {doc,target,root:tables[0],model:modelFromHTML(target.outerHTML)};
+}
+// Reason codes are UI-neutral. The Preview explains why this table is
+// read-only instead of silently dropping the user's cell selection.
+export function getTableReadOnlyReason(source,index){
+ const entry=findEditableTables(source)[index];
+ if(!entry)return 'unmapped';
+ if(entry.type==='gfm')return null;
+ const reason=sourceTableTopologyReason(entry.raw);
+ if(reason)return reason;
+ const doc=new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html');
+ const tables=[...doc.querySelectorAll('table')];
+ const target=tables[entry.innerIndex||0];
+ if(!target)return 'unmapped';
+ if(target.querySelector('table'))return 'container';
+ return selectedHTMLTable(entry)?.model?null:'invalid-grid';
 }
 function replaceSelectedTable(entry,resolved,updated){
  if(!updated)return null;
