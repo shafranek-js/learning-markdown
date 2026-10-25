@@ -1,28 +1,33 @@
 import {state,docKey} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText} from '../core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds} from '../core/table-operations.js';
 
 const $=id=>document.getElementById(id);
 const UI={
  en:{title:'Edit table',cell:'Cell',rows:'Rows',cols:'Columns',merge:'Merge / Split',style:'Style',close:'Close',
   invalid:'This table structure cannot be edited safely. The source remains unchanged.',
   select:'Shift+click another cell to select a rectangular area.',
+  expanded:"Selection automatically includes entire merged cells.",
   ops:['Row above','Row below','Delete row','Column left','Column right','Delete column','Merge selection','Merge right','Merge down','Split cell','Blue cell','Mint cell','Sand cell','No borders','Borders']},
  cs:{title:'Upravit tabulku',cell:'Buňka',rows:'Řádky',cols:'Sloupce',merge:'Sloučit / Rozdělit',style:'Styl',close:'Zavřít',
   invalid:'Tuto strukturu tabulky nelze bezpečně upravit. Zdroj se nezměnil.',
   select:'Shift+kliknutí na další buňku vybere oblast.',
+  expanded:"Výběr automaticky zahrnuje celé sloučené buňky.",
   ops:['Řádek nad','Řádek pod','Smazat řádek','Sloupec vlevo','Sloupec vpravo','Smazat sloupec','Sloučit výběr','Sloučit vpravo','Sloučit dolů','Rozdělit buňku','Modrá buňka','Mátová buňka','Žlutá buňka','Bez okrajů','Okraje']},
  uk:{title:'Редагувати таблицю',cell:'Клітинка',rows:'Рядки',cols:'Стовпці',merge:'Об’єднати / Розділити',style:'Стиль',close:'Закрити',
   invalid:'Не вдалося безпечно змінити структуру таблиці. Вихідний текст не змінено.',
   select:'Shift+клік по іншій клітинці виділяє прямокутну область.',
+  expanded:"Виділення автоматично охоплює всі об’єднані клітинки повністю.",
   ops:['Рядок вище','Рядок нижче','Видалити рядок','Стовпець ліворуч','Стовпець праворуч','Видалити стовпець','Об’єднати вибране','Об’єднати праворуч','Об’єднати вниз','Розділити клітинку','Синя клітинка','М’ятна клітинка','Жовта клітинка','Без меж','Межі']},
  ro:{title:'Editează tabel',cell:'Celulă',rows:'Rânduri',cols:'Coloane',merge:'Îmbină / Separă',style:'Stil',close:'Închide',
   invalid:'Structura tabelului nu poate fi modificată în siguranță. Sursa rămâne neschimbată.',
   select:'Shift+clic pe o altă celulă selectează o zonă dreptunghiulară.',
+  expanded:"Selecția include automat toate celulele îmbinate în întregime.",
   ops:['Rând deasupra','Rând dedesubt','Șterge rândul','Coloană stânga','Coloană dreapta','Șterge coloana','Îmbină selecția','Îmbină la dreapta','Îmbină în jos','Separă celula','Celulă albastră','Celulă mentă','Celulă galbenă','Fără borduri','Borduri']},
  ru:{title:'Изменить таблицу',cell:'Ячейка',rows:'Строки',cols:'Столбцы',merge:'Объединить / Разделить',style:'Оформление',close:'Закрыть',
   invalid:'Нельзя безопасно изменить эту структуру таблицы. Исходный код не изменён.',
   select:'Shift+клик по другой ячейке выделяет прямоугольную область.',
+  expanded:"Выделение автоматически захватывает объединённые ячейки целиком.",
   ops:['Строка выше','Строка ниже','Удалить строку','Столбец слева','Столбец справа','Удалить столбец','Объединить выделение','Объединить вправо','Объединить вниз','Разделить ячейку','Синяя ячейка','Мятная ячейка','Жёлтая ячейка','Без границ','Границы']}
 };
 const CONTENT_TEXT={
@@ -73,17 +78,24 @@ function highlight(){
  const tables=[...preview.querySelectorAll('table')];
  const table=tables[selected.tableIndex];
  if(!table)return clearSelection();
+ const bounds=tableSelectionBounds(area().value,selected.tableIndex,selected);
+ if(!bounds)return clearSelection();
  const cells=[...table.querySelectorAll('th,td')];
  for(const cell of cells){
   const p=previewTableCoordinates(table,cell);
   if(!p)continue;
-  const other=selected.other||{row:selected.row,col:selected.col};
-  const r0=Math.min(selected.row,other.row),r1=Math.max(selected.row,other.row);
-  const c0=Math.min(selected.col,other.col),c1=Math.max(selected.col,other.col);
-  if(p.row<=r1&&p.row+p.rs-1>=r0&&p.col<=c1&&p.col+p.cs-1>=c0)cell.classList.add('table-edit-selected');
+  if(p.row<=bounds.r1&&p.row+p.rs-1>=bounds.r0&&
+     p.col<=bounds.c1&&p.col+p.cs-1>=bounds.c0)cell.classList.add('table-edit-selected');
  }
  const l=labels();
- $('table-edit-status').textContent=l.cell+' '+(selected.row+1)+', '+(selected.col+1)+(selected.other?' → '+(selected.other.row+1)+', '+(selected.other.col+1):'');
+ const other=selected.other||{row:selected.row,col:selected.col};
+ const expanded=bounds.r0!==Math.min(selected.row,other.row)||
+  bounds.r1!==Math.max(selected.row,other.row)||
+  bounds.c0!==Math.min(selected.col,other.col)||
+  bounds.c1!==Math.max(selected.col,other.col);
+ $('table-edit-status').textContent=l.cell+' '+(bounds.r0+1)+', '+(bounds.c0+1)+
+  (selected.other?' → '+(bounds.r1+1)+', '+(bounds.c1+1):'')+
+  (expanded?' · '+l.expanded:'');
  $('table-edit-bar').hidden=false;
 }
 export function syncTableEditorPreview(){

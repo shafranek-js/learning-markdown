@@ -2851,3 +2851,72 @@ test('issue #19 Mermaid exercise descriptions and results are localized on mobil
   await expect(page.locator('#extensions-lab-modal')).toBeHidden();
  }
 });
+
+
+test('issue #6: merging a rectangle crossing a colspan expands its visual selection',async({page})=>{
+ await page.goto('/');
+ const source='<table class="af-table-outline"><tr><td>A</td><td>B</td><td>C</td></tr>'+
+  '<tr><td colspan="2">D</td><td>E</td></tr>'+
+  '<tr><td>F</td><td>G</td><td>H</td></tr></table>';
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ const rows=page.locator('#markdown-preview table tr');
+ await rows.nth(0).locator('td').nth(1).click();
+ await rows.nth(2).locator('td').nth(1).click({modifiers:['Shift']});
+ await expect(page.locator('#markdown-preview .table-edit-selected')).toHaveCount(5);
+ await expect(page.locator('#table-edit-status')).toContainText('Selection automatically includes entire merged cells');
+ await page.locator('#table-edit-merge').selectOption('merge');
+ const merged=page.locator('#markdown-preview td[rowspan="3"][colspan="2"]');
+ await expect(merged).toHaveCount(1);
+ for(const value of ['A','B','D','F','G'])await expect(merged).toContainText(value);
+ for(const value of ['C','E','H'])await expect(page.locator('#markdown-preview table')).toContainText(value);
+ const raw=await editor.inputValue();
+ expect(raw).toContain('rowspan="3"');
+ expect(raw).toContain('colspan="2"');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview td[rowspan="3"][colspan="2"]')).toHaveCount(1);
+ const downloadPromise=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const saved=await downloadPromise;
+ const html=await readFile(await saved.path(),'utf8');
+ expect(html).toContain('rowspan="3"');
+ expect(html).toContain('colspan="2"');
+ expect(html).not.toMatch(/onclick=|onerror=|<script[\s>]/i);
+});
+
+test('issue #6: merging right and down uses the edge of an existing merged cell',async({page})=>{
+ await page.goto('/');
+ const source='<table><tr><td colspan="2">Top</td><td>Right</td></tr>'+
+  '<tr><td>Below 1</td><td>Below 2</td><td>Below 3</td></tr></table>';
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ await page.locator('#markdown-preview td[colspan="2"]').click();
+ await page.locator('#table-edit-merge').selectOption('merge-right');
+ await expect(page.locator('#markdown-preview td[colspan="3"]')).toHaveText('TopRight');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue(source);
+ await page.locator('#markdown-preview td[colspan="2"]').click();
+ await page.locator('#table-edit-merge').selectOption('merge-down');
+ const merged=page.locator('#markdown-preview td[rowspan="2"][colspan="2"]');
+ await expect(merged).toHaveCount(1);
+ await expect(merged).toContainText('Below 1');
+ await expect(merged).toContainText('Below 2');
+ await expect(page.locator('#markdown-preview table')).toContainText('Below 3');
+});
+
+test('issue #6: span-aware table selection is localized on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ await page.locator('#markdown-input').fill('<table><tr><td>A</td><td>B</td></tr>'+
+  '<tr><td colspan="2">C</td></tr><tr><td>D</td><td>E</td></tr></table>');
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ const rows=page.locator('#markdown-preview table tr');
+ await rows.nth(0).locator('td').nth(1).click();
+ await rows.nth(2).locator('td').nth(1).click({modifiers:['Shift']});
+ await expect(page.locator('#markdown-preview .table-edit-selected')).toHaveCount(5);
+ await expect(page.locator('#table-edit-status')).toContainText('объединённые ячейки');
+ await expect(page.locator('#table-edit-bar')).toBeInViewport();
+});
