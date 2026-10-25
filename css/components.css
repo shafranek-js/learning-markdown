@@ -106,6 +106,18 @@
  color:var(--text-ui);border:1px solid var(--border-ui);border-radius:6px;padding:7px;font-size:12px}
 #table-edit-hint,#table-edit-message{font-size:10px;color:var(--text-ui-muted);margin-top:3px}
 #table-edit-message:not(:empty){color:#e99a27;font-weight:600}
+/* A table we cannot round-trip stays visible, but edit controls are hidden.
+   This avoids disabled inputs with no explanation or accidental rewrites. */
+.table-edit-bar[data-readonly="true"] .table-edit-actions,
+.table-edit-bar[data-readonly="true"] .table-edit-mode,
+.table-edit-bar[data-readonly="true"] .table-edit-image-add,
+.table-edit-bar[data-readonly="true"] .table-edit-content-form,
+.table-edit-bar[data-readonly="true"] .table-edit-image-form,
+.table-edit-bar[data-readonly="true"] #table-edit-content-warning,
+.table-edit-bar[data-readonly="true"] #table-edit-hint,
+.table-edit-bar[data-readonly="true"] #table-edit-message{display:none!important}
+#table-edit-readonly-message{font-size:12px;line-height:1.5;margin:6px 0 2px;color:var(--text-ui)}
+#table-edit-readonly-message[hidden]{display:none!important}
 .md-preview td.table-edit-selected,.md-preview th.table-edit-selected{
  outline:2px solid var(--accent)!important;outline-offset:-2px;box-shadow:inset 0 0 0 2px var(--accent-soft);
  cursor:crosshair}

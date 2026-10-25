@@ -1,7 +1,7 @@
 import {state,docKey} from '../core/state.js';
 import {handleBlockListKeydown} from './table-list-keyboard.js';
 import {area,applyEdit} from './editor.js';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../core/table-operations.js';
+import {findEditableTables,getTableReadOnlyReason,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../core/table-operations.js';
 
 const $=id=>document.getElementById(id);
 const UI={
@@ -45,6 +45,49 @@ const RICH_TEXT={
  ro:{rich:'Text formatat',plain:'Text simplu',hint:'Formatare sigură; lipirea adaugă doar text. Salvați pentru a aplica.',bold:'Aldin',italic:'Cursiv',underline:'Subliniat',code:'Cod',unsupported:'Această celulă conține elemente neacceptate și poate fi doar vizualizată.'},
  ru:{rich:'Форматированный',plain:'Обычный текст',hint:'Безопасное форматирование; вставка — только текст. Изменения применяются после сохранения.',bold:'Жирный',italic:'Курсив',underline:'Подчёркнутый',code:'Код',unsupported:'Эта ячейка содержит неподдерживаемые элементы и доступна только для просмотра.'}
 };
+const READ_ONLY={
+ en:{title:'Table is read-only',source:'The Markdown source was not changed. Edit this table directly in the source editor.',
+  'unmapped':'The Preview table cannot be reliably matched to a Markdown source table.',
+  'multiple-roots':'This HTML block has multiple table roots or extra content.',
+  malformed:'The table has missing or mismatched HTML closing tags.',
+  unsupported:'This table uses sections or attributes the visual editor cannot preserve.',
+  'invalid-spans':'One or more table cell spans are invalid or out of range.',
+  container:'This table contains nested tables. Select a cell in the innermost table instead.',
+  'invalid-grid':'The table grid or its nested structure cannot be edited safely.'},
+ cs:{title:'Tabulka je pouze pro čtení',source:'Zdroj Markdown zůstal beze změny. Tabulku upravte přímo ve zdrojovém editoru.',
+  unmapped:'Tabulku v náhledu nelze spolehlivě přiřadit k tabulce ve zdroji Markdown.',
+  'multiple-roots':'Tento blok HTML obsahuje více tabulek nebo další obsah.',
+  malformed:'V tabulce chybějí uzavírací značky HTML nebo si neodpovídají.',
+  unsupported:'Tabulka používá oddíly nebo atributy, které vizuální editor nedokáže zachovat.',
+  'invalid-spans':'Některá sloučení buněk jsou neplatná nebo mimo povolený rozsah.',
+  container:'Tato tabulka obsahuje vnořené tabulky. Vyberte buňku v nejvnitřnější tabulce.',
+  'invalid-grid':'Mřížku tabulky nebo její vnořenou strukturu nelze bezpečně upravit.'},
+ uk:{title:'Таблиця лише для читання',source:'Вихідний Markdown не змінено. Редагуйте таблицю безпосередньо у вихідному редакторі.',
+  unmapped:'Неможливо надійно зіставити таблицю в попередньому перегляді з вихідним Markdown.',
+  'multiple-roots':'Цей HTML-блок містить кілька таблиць або додатковий вміст.',
+  malformed:'У таблиці відсутні або неправильно закриті HTML-теги.',
+  unsupported:'Таблиця містить секції або атрибути, які візуальний редактор не може зберегти.',
+  'invalid-spans':'Об’єднання деяких клітинок некоректні або перевищують допустимий діапазон.',
+  container:'Ця таблиця містить вкладені таблиці. Виберіть клітинку найглибшої таблиці.',
+  'invalid-grid':'Сітку таблиці або вкладену структуру неможливо безпечно редагувати.'},
+ ro:{title:'Tabel doar pentru citire',source:'Sursa Markdown nu a fost modificată. Editați tabelul direct în editorul sursă.',
+  unmapped:'Tabelul din previzualizare nu poate fi asociat în siguranță cu sursa Markdown.',
+  'multiple-roots':'Acest bloc HTML conține mai multe tabele sau conținut suplimentar.',
+  malformed:'Tabelul are etichete HTML de închidere lipsă sau incorecte.',
+  unsupported:'Tabelul conține secțiuni sau atribute pe care editorul vizual nu le poate păstra.',
+  'invalid-spans':'Unele celule îmbinate au dimensiuni nevalide sau depășesc limita.',
+  container:'Acest tabel conține tabele imbricate. Selectați o celulă din tabelul cel mai interior.',
+  'invalid-grid':'Grila tabelului sau structura sa imbricată nu poate fi editată în siguranță.'},
+ ru:{title:'Таблица только для просмотра',source:'Исходный Markdown не изменён. Эту таблицу можно редактировать непосредственно в исходном редакторе.',
+  unmapped:'Не удалось надёжно сопоставить таблицу в предпросмотре с исходным Markdown.',
+  'multiple-roots':'В этом HTML-блоке несколько таблиц или есть дополнительное содержимое.',
+  malformed:'В таблице отсутствуют или неправильно расположены закрывающие HTML-теги.',
+  unsupported:'Таблица содержит секции или атрибуты, которые визуальный редактор не может сохранить.',
+  'invalid-spans':'Некоторые объединения ячеек некорректны или выходят за допустимые пределы.',
+  container:'Эта таблица содержит вложенные таблицы. Выберите ячейку самой внутренней таблицы.',
+  'invalid-grid':'Структуру или вложенность таблицы нельзя безопасно изменить визуально.'}
+};
+const readonlyWords=()=>READ_ONLY[state.lang]||READ_ONLY.en;
 const richWords=()=>RICH_TEXT[state.lang]||RICH_TEXT.en;
 const BLOCK_TEXT={
  en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell. In a list: Tab indents, Shift+Tab outdents, Enter exits an empty item, and Backspace at the start outdents.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block'},
@@ -71,11 +114,34 @@ const GROUPS=[
  {key:'style',items:['cell-blue','cell-mint','cell-sand','borderless','outline']}
 ];
 let selected=null;
+let readonlyState=null;
 function labels(){return UI[state.lang]||UI.en;}
 function clearSelection(){
  selected=null;
+ readonlyState=null;
  $('table-edit-bar').hidden=true;
+ $('table-edit-bar').removeAttribute('data-readonly');
+ $('table-edit-bar').setAttribute('role','toolbar');
+ $('table-edit-readonly-message').hidden=true;
  document.querySelectorAll('#markdown-preview .table-edit-selected').forEach(c=>c.classList.remove('table-edit-selected'));
+}
+function renderReadonlyNotice(){
+ if(!readonlyState)return;
+ const words=readonlyWords();
+ $('table-edit-title').textContent=words.title;
+ $('table-edit-bar').setAttribute('role','region');
+ $('table-edit-bar').setAttribute('aria-label',words.title);
+ $('table-edit-status').textContent='';
+ $('table-edit-readonly-message').textContent=(words[readonlyState.reason]||words['invalid-grid'])+' '+words.source;
+}
+function showReadonlyNotice(reason){
+ clearSelection();
+ readonlyState={reason,doc:docKey(),source:area().value};
+ const bar=$('table-edit-bar');
+ bar.dataset.readonly='true';
+ $('table-edit-readonly-message').hidden=false;
+ bar.hidden=false;
+ renderReadonlyNotice();
 }
 function showCellMode(){
  if(!selected)return;
@@ -324,8 +390,12 @@ function highlight(){
 }
 export function syncTableEditorPreview(){
  const tables=[...$('markdown-preview').querySelectorAll('table')],sourceTables=findEditableTables(area().value);
- if(tables.length!==sourceTables.length)return clearSelection();
  for(const table of tables)for(const cell of table.querySelectorAll('td,th'))cell.tabIndex=0;
+ if(readonlyState&&(readonlyState.doc!==docKey()||readonlyState.source!==area().value))clearSelection();
+ if(tables.length!==sourceTables.length){
+  if(selected)clearSelection();
+  return;
+ }
  if(!selected)return;
  if(selected.doc!==docKey()||!tables[selected.tableIndex]||sourceTables[selected.tableIndex]?.raw!==selected.raw)return clearSelection();
  highlight();
@@ -336,9 +406,13 @@ function chooseCell(event){
  const table=cell.closest('table');if(!table||!$('markdown-preview').contains(table))return;
  const tables=[...$('markdown-preview').querySelectorAll('table')],index=tables.indexOf(table);
  const sourceTables=findEditableTables(area().value);
- if(index<0||sourceTables.length!==tables.length)return;
+ if(index<0)return;
+ if(sourceTables.length!==tables.length)return showReadonlyNotice('unmapped');
+ const reason=getTableReadOnlyReason(area().value,index);
+ if(reason)return showReadonlyNotice(reason);
  const coords=previewTableCoordinates(table,cell);
- if(!coords)return;
+ if(!coords)return showReadonlyNotice('invalid-grid');
+ if(readonlyState)clearSelection();
  if(event.shiftKey&&selected?.doc===docKey()&&selected.tableIndex===index){
   selected.other={row:coords.row,col:coords.col};
  }else{
@@ -371,6 +445,8 @@ export function renderTableEditorLanguage(){
  const l=labels(),bar=$('table-edit-bar');if(!bar)return;
  $('table-edit-title').textContent=l.title;
  $('table-edit-close').setAttribute('aria-label',l.close);
+ bar.setAttribute('aria-label',readonlyState?readonlyWords().title:l.title);
+ if(readonlyState)renderReadonlyNotice();
  $('table-edit-hint').textContent=l.select;
  const content=CONTENT_TEXT[state.lang]||CONTENT_TEXT.en;
  $('table-edit-content-label').textContent=content[0];
@@ -417,6 +493,7 @@ export function initTableEditor(){
  bar.setAttribute('role','toolbar');bar.setAttribute('aria-label','Edit table');
  bar.innerHTML='<div class="table-edit-heading"><strong id="table-edit-title"></strong>'
   +'<span id="table-edit-status" aria-live="polite"></span><button id="table-edit-close" type="button">✕</button></div>'
+  +'<p id="table-edit-readonly-message" role="status" aria-live="polite" hidden></p>'
   +'<div class="table-edit-actions"></div>'
   +'<div id="table-edit-mode" class="table-edit-mode" role="group" hidden><button type="button" id="table-edit-rich-choice" aria-pressed="false"></button><button type="button" id="table-edit-block-choice" aria-pressed="false"></button><button type="button" id="table-edit-plain-choice" aria-pressed="true"></button></div>'
   +'<button id="table-edit-image-add" class="table-edit-image-add" type="button" aria-pressed="false" hidden></button>'
@@ -482,7 +559,7 @@ export function initTableEditor(){
  $('markdown-preview').addEventListener('keydown',e=>{
   if((e.key==='Enter'||e.key===' ')&&/^(TD|TH)$/.test(e.target.tagName)){
    e.preventDefault();chooseCell({target:e.target,shiftKey:e.shiftKey});
-   if(e.key==='Enter'){
+   if(e.key==='Enter'&&!readonlyState){
     const focusTarget=!$('table-edit-image-form').hidden?$('table-edit-image-url'):
      !$('table-edit-rich-panel').hidden?$('table-edit-rich-content'):$('table-edit-content-input');
     focusTarget.focus();
