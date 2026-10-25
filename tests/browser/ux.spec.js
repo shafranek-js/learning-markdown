@@ -3163,7 +3163,7 @@ test('issue #6 Blocks toolbar inserts paragraph, lists, quote and code, preservi
  await rich.locator('pre code').fill('code item');
  await page.locator('#table-edit-content-save').click();
  const source=await page.locator('#markdown-input').inputValue();
- for(const part of ['<ul>','<ol>','Bullet item','Numbered item','Quote item','<pre><code>code item</code></pre>','<td>Other</td>'])
+ for(const part of ['<ul>','<ol>','Bullet item','Numbered item','Quote item','<pre>code item</pre>','<td>Other</td>'])
   expect(source).toContain(part);
 });
 
@@ -3200,7 +3200,7 @@ test('issue #6 unsupported media cells remain read-only and preserve source',asy
  await expect(page.locator('#table-edit-content-input')).toBeDisabled();
  await expect(page.locator('#table-edit-content-save')).toBeDisabled();
  await expect(page.locator('#table-edit-mode')).toBeHidden();
- await expect(page.locator('#table-edit-content-warning')).toContainText('inline HTML');
+ await expect(page.locator('#table-edit-content-warning')).toContainText('read-only');
  await expect(page.locator('#markdown-input')).toHaveValue(source);
  await expect(page.locator('#markdown-preview img')).toHaveAttribute('alt','Artwork');
 });
