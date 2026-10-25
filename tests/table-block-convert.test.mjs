@@ -117,6 +117,13 @@ function select(selection,a,ao,b,bo){
  assert.equal(editor.lastElementChild.textContent,'After');
  assert.equal(selection.rangeCount,1);
  assert.equal(selection.anchorNode.isConnected,true);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),{ok:true,blocks:1},
+  'subsequent conversion must still target the nested level');
+ assert.equal(outer.getAttribute('type'),'i','outer roman numbering is unchanged');
+ assert.equal(outer.firstElementChild.querySelector(':scope > ol').children.length,2);
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),{ok:true,blocks:1});
+ assert.equal(outer.firstElementChild.querySelector(':scope > ul').children.length,2);
+ assert.equal(editor.textContent,original);
 }
 // A text selection spanning every nested sibling converts just that level.
 {
