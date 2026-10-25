@@ -1,6 +1,6 @@
 import {state,docKey} from '../core/state.js';
 import {area,applyEdit} from './editor.js';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML} from '../core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks} from '../core/table-operations.js';
 
 const $=id=>document.getElementById(id);
 const UI={
@@ -38,13 +38,22 @@ const CONTENT_TEXT={
  ru:['Текст ячейки','Сохранить ячейку','Только текст; прежняя разметка ячейки будет заменена.','Изменить содержимое ячейки']
 };
 const RICH_TEXT={
- en:{rich:'Rich text',plain:'Plain text',hint:'Edit formatting safely; paste inserts plain text. Changes apply on Save.',bold:'Bold',italic:'Italic',underline:'Underline',code:'Code',unsupported:'Rich editing supports inline HTML in standalone tables only.'},
- cs:{rich:'Formátovaný text',plain:'Prostý text',hint:'Formátujte bezpečně; vložený text se převede na prostý text. Změny uložíte tlačítkem Uložit.',bold:'Tučné',italic:'Kurzíva',underline:'Podtržení',code:'Kód',unsupported:'Formátování lze upravit jen v samostatných HTML tabulkách.'},
- uk:{rich:'Форматований текст',plain:'Звичайний текст',hint:'Безпечне форматування; вставлений текст без розмітки. Для збереження натисніть кнопку.',bold:'Жирний',italic:'Курсив',underline:'Підкреслення',code:'Код',unsupported:'Форматування доступне лише для окремих HTML-таблиць.'},
- ro:{rich:'Text formatat',plain:'Text simplu',hint:'Formatare sigură; lipirea adaugă doar text. Salvați pentru a aplica.',bold:'Aldin',italic:'Cursiv',underline:'Subliniat',code:'Cod',unsupported:'Editarea formatării este disponibilă doar în tabele HTML independente.'},
- ru:{rich:'Форматированный',plain:'Обычный текст',hint:'Безопасное форматирование; вставка — только текст. Изменения применяются после сохранения.',bold:'Жирный',italic:'Курсив',underline:'Подчёркнутый',code:'Код',unsupported:'Форматирование доступно только для отдельных HTML-таблиц.'}
+ en:{rich:'Rich text',plain:'Plain text',hint:'Edit formatting safely; paste inserts plain text. Changes apply on Save.',bold:'Bold',italic:'Italic',underline:'Underline',code:'Code',unsupported:'This cell contains unsupported elements and is read-only in the visual editor.'},
+ cs:{rich:'Formátovaný text',plain:'Prostý text',hint:'Formátujte bezpečně; vložený text se převede na prostý text. Změny uložíte tlačítkem Uložit.',bold:'Tučné',italic:'Kurzíva',underline:'Podtržení',code:'Kód',unsupported:'Tato buňka obsahuje nepodporované prvky a ve vizuálním editoru je pouze pro čtení.'},
+ uk:{rich:'Форматований текст',plain:'Звичайний текст',hint:'Безпечне форматування; вставлений текст без розмітки. Для збереження натисніть кнопку.',bold:'Жирний',italic:'Курсив',underline:'Підкреслення',code:'Код',unsupported:'Ця клітинка містить непідтримувані елементи та доступна лише для перегляду.'},
+ ro:{rich:'Text formatat',plain:'Text simplu',hint:'Formatare sigură; lipirea adaugă doar text. Salvați pentru a aplica.',bold:'Aldin',italic:'Cursiv',underline:'Subliniat',code:'Cod',unsupported:'Această celulă conține elemente neacceptate și poate fi doar vizualizată.'},
+ ru:{rich:'Форматированный',plain:'Обычный текст',hint:'Безопасное форматирование; вставка — только текст. Изменения применяются после сохранения.',bold:'Жирный',italic:'Курсив',underline:'Подчёркнутый',code:'Код',unsupported:'Эта ячейка содержит неподдерживаемые элементы и доступна только для просмотра.'}
 };
 const richWords=()=>RICH_TEXT[state.lang]||RICH_TEXT.en;
+const BLOCK_TEXT={
+ en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block'},
+ cs:{mode:'Bloky',hint:'Bezpečně upravujte odstavce, seznamy a citace. Vkládaný text je prostý; změny uložte.',p:'Přidat odstavec',ul:'Přidat odrážky',ol:'Přidat číslovaný seznam',quote:'Přidat citaci',pre:'Přidat blok kódu'},
+ uk:{mode:'Блоки',hint:'Безпечно редагуйте абзаци, списки та цитати. Вставляється лише текст.',p:'Додати абзац',ul:'Додати маркований список',ol:'Додати нумерований список',quote:'Додати цитату',pre:'Додати блок коду'},
+ ro:{mode:'Blocuri',hint:'Editați în siguranță paragrafe, liste și citate. Lipirea inserează doar text.',p:'Adaugă paragraf',ul:'Adaugă listă cu marcatori',ol:'Adaugă listă numerotată',quote:'Adaugă citat',pre:'Adaugă bloc de cod'},
+ ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода'}
+};
+const blockWords=()=>BLOCK_TEXT[state.lang]||BLOCK_TEXT.en;
+
 const GROUPS=[
  {key:'rows',items:['row-above','row-below','delete-row']},
  {key:'cols',items:['column-left','column-right','delete-column']},
@@ -60,63 +69,77 @@ function clearSelection(){
 }
 function showCellMode(){
  if(!selected)return;
- const rich=getTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col);
- const eligible=rich!==null;
- const richMode=eligible&&Boolean(selected.richMode);
+ const source=area().value,index=selected.tableIndex,row=selected.row,col=selected.col;
+ const inline=getTableCellHTML(source,index,row,col);
+ const blocks=getTableCellBlocks(source,index,row,col);
+ const eligible=blocks!==null;
+ const unsupported=!eligible&&findEditableTables(source)[index]?.type!=='gfm';
+ const richActive=eligible&&Boolean(selected.richMode);
+ const blockActive=richActive&&Boolean(selected.blockMode);
  $('table-edit-mode').hidden=!eligible;
- $('table-edit-content-input').hidden=richMode;
- $('table-edit-rich-panel').hidden=!richMode;
- $('table-edit-rich-choice').setAttribute('aria-pressed',String(richMode));
- $('table-edit-plain-choice').setAttribute('aria-pressed',String(!richMode));
- $('table-edit-content-label').htmlFor=richMode?'table-edit-rich-content':'table-edit-content-input';
- $('table-edit-content-warning').textContent=richMode?richWords().hint:(CONTENT_TEXT[state.lang]||CONTENT_TEXT.en)[2];
+ $('table-edit-content-input').hidden=richActive;
+ $('table-edit-rich-panel').hidden=!richActive;
+ $('table-edit-block-actions').hidden=!blockActive;
+ $('table-edit-rich-choice').disabled=inline===null;
+ $('table-edit-rich-choice').setAttribute('aria-pressed',String(richActive&&!blockActive));
+ $('table-edit-block-choice').setAttribute('aria-pressed',String(blockActive));
+ $('table-edit-plain-choice').setAttribute('aria-pressed',String(!richActive));
+ $('table-edit-content-label').htmlFor=richActive?'table-edit-rich-content':'table-edit-content-input';
+ $('table-edit-content-warning').textContent=unsupported?richWords().unsupported:
+  blockActive?blockWords().hint:richActive?richWords().hint:(CONTENT_TEXT[state.lang]||CONTENT_TEXT.en)[2];
 }
 function refreshCellText(){
  if(!selected)return;
- const source=area().value;
- const text=getTableCellText(source,selected.tableIndex,selected.row,selected.col);
- const html=getTableCellHTML(source,selected.tableIndex,selected.row,selected.col);
+ const source=area().value,index=selected.tableIndex,row=selected.row,col=selected.col;
+ const text=getTableCellText(source,index,row,col);
+ const inline=getTableCellHTML(source,index,row,col);
+ const blocks=getTableCellBlocks(source,index,row,col);
  $('table-edit-content-input').value=text??'';
- $('table-edit-content-input').disabled=text===null;
- $('table-edit-content-save').disabled=text===null;
- $('table-edit-rich-choice').disabled=html===null;
- if(html!==null)$('table-edit-rich-content').innerHTML=html;
+ const entry=findEditableTables(source)[index];
+ const readonly=text===null||(entry?.type!=='gfm'&&blocks===null);
+ $('table-edit-content-input').disabled=readonly;
+ $('table-edit-content-save').disabled=readonly;
+ if(blocks!==null)$('table-edit-rich-content').innerHTML=blocks;
+ else if(inline!==null)$('table-edit-rich-content').innerHTML=inline;
  else $('table-edit-rich-content').replaceChildren();
+ selected.pendingRichHTML=undefined;
  showCellMode();
 }
-function setCellMode(rich){
+function setCellMode(mode){
  if(!selected)return;
- if(rich&&getTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col)===null)return;
- if(rich===Boolean(selected.richMode))return;
- if(rich){
-  // Switching away and back without modifying text must NOT discard rich
-  // formatting. If the plain field was edited, use its explicit text instead.
+ const source=area().value,index=selected.tableIndex,row=selected.row,col=selected.col;
+ if(mode==='rich'&&getTableCellHTML(source,index,row,col)===null)return;
+ if(mode==='blocks'&&getTableCellBlocks(source,index,row,col)===null)return;
+ const current=selected.blockMode?'blocks':selected.richMode?'rich':'plain';
+ if(mode===current)return;
+ const editor=$('table-edit-rich-content'),input=$('table-edit-content-input');
+ if(mode==='plain'){
+  selected.pendingRichHTML=editor.innerHTML;
+  input.value=editor.textContent;
+ }else if(current==='plain'){
   const previous=selected.pendingRichHTML;
   if(previous!==undefined){
    const doc=new DOMParser().parseFromString(previous,'text/html');
-   if(doc.body.textContent===$('table-edit-content-input').value)
-    $('table-edit-rich-content').innerHTML=previous;
-   else $('table-edit-rich-content').textContent=$('table-edit-content-input').value;
-  }else $('table-edit-rich-content').textContent=$('table-edit-content-input').value;
- }else{
-  selected.pendingRichHTML=$('table-edit-rich-content').innerHTML;
-  $('table-edit-content-input').value=$('table-edit-rich-content').textContent;
+   if(doc.body.textContent===input.value)editor.innerHTML=previous;
+   else editor.textContent=input.value;
+  }else editor.textContent=input.value;
  }
- selected.richMode=rich;
+ selected.richMode=mode!=='plain';
+ selected.blockMode=mode==='blocks';
  showCellMode();
- (rich?$('table-edit-rich-content'):$('table-edit-content-input')).focus();
+ (mode==='plain'?input:editor).focus();
 }
 function saveCell(){
  if(!selected)return;
  const before=findEditableTables(area().value)[selected.tableIndex];
  if(!before||before.raw!==selected.raw){clearSelection();return;}
- const richMode=Boolean(selected.richMode);
+ const richMode=Boolean(selected.richMode),blockMode=richMode&&Boolean(selected.blockMode);
  const value=richMode?$('table-edit-rich-content').innerHTML:$('table-edit-content-input').value;
- const current=richMode?getTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col)
-  :getTableCellText(area().value,selected.tableIndex,selected.row,selected.col);
+ const args=[area().value,selected.tableIndex,selected.row,selected.col];
+ const current=blockMode?getTableCellBlocks(...args):richMode?getTableCellHTML(...args):getTableCellText(...args);
  if(value===current)return;
- const edit=richMode?setTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col,value)
-  :setTableCellText(area().value,selected.tableIndex,selected.row,selected.col,value);
+ const edit=blockMode?setTableCellBlocks(...args,value):
+  richMode?setTableCellHTML(...args,value):setTableCellText(...args,value);
  if(!edit){$('table-edit-message').textContent=labels().invalid;return;}
  selected.raw=findEditableTables(edit.text)[selected.tableIndex]?.raw||'';
  $('table-edit-message').textContent='';
@@ -147,6 +170,28 @@ function wrapRichSelection(tag){
  range.insertNode(node);
  range.selectNodeContents(node);range.collapse(false);
  selection.removeAllRanges();selection.addRange(range);
+ editor.focus();
+}
+function appendBlock(kind){
+ if(!selected?.blockMode)return;
+ const editor=$('table-edit-rich-content');
+ let block,focus;
+ if(kind==='ul'||kind==='ol'){
+  block=document.createElement(kind);
+  focus=document.createElement('li');focus.append(document.createElement('br'));block.append(focus);
+ }else if(kind==='quote'){
+  block=document.createElement('blockquote');
+  focus=document.createElement('p');focus.append(document.createElement('br'));block.append(focus);
+ }else if(kind==='pre'){
+  block=document.createElement('pre');
+  focus=document.createElement('code');focus.textContent=' ';block.append(focus);
+ }else{
+  block=document.createElement('p');focus=block;block.append(document.createElement('br'));
+ }
+ editor.append(block);
+ const range=document.createRange();
+ range.selectNodeContents(focus);range.collapse(true);
+ const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
  editor.focus();
 }
 function pastePlainText(text){
@@ -206,8 +251,11 @@ function chooseCell(event){
   selected.other={row:coords.row,col:coords.col};
  }else{
   const html=getTableCellHTML(area().value,index,coords.row,coords.col);
+  const blocks=getTableCellBlocks(area().value,index,coords.row,coords.col);
+  const blockMode=blocks!==null&&/<(?:p|div|ul|ol|li|blockquote|pre|h[2-4])\b/i.test(blocks);
   selected={tableIndex:index,doc:docKey(),row:coords.row,col:coords.col,other:null,
-   raw:sourceTables[index].raw,richMode:html!==null&&/<(?:strong|b|em|i|u|s|del|sup|sub|mark|code|span|a|br)\b/i.test(html)};
+   raw:sourceTables[index].raw,blockMode,richMode:blockMode||
+    (html!==null&&/<(?:strong|b|em|i|u|s|del|sup|sub|mark|code|span|a|br)\b/i.test(html))};
  }
  highlight();
  refreshCellText();
@@ -238,6 +286,12 @@ export function renderTableEditorLanguage(){
  const rich=richWords();
  $('table-edit-rich-choice').textContent=rich.rich;
  $('table-edit-plain-choice').textContent=rich.plain;
+ const block=blockWords();
+ $('table-edit-block-choice').textContent=block.mode;
+ for(const kind of ['p','ul','ol','quote','pre']){
+  const button=$('table-edit-block-'+kind);
+  button.textContent=block[kind];button.setAttribute('aria-label',block[kind]);
+ }
  for(const [key,label] of Object.entries({bold:rich.bold,italic:rich.italic,underline:rich.underline,code:rich.code})){
   const button=$('table-edit-rich-'+key);
   button.title=label;button.setAttribute('aria-label',label);
@@ -263,10 +317,11 @@ export function initTableEditor(){
  bar.innerHTML='<div class="table-edit-heading"><strong id="table-edit-title"></strong>'
   +'<span id="table-edit-status" aria-live="polite"></span><button id="table-edit-close" type="button">✕</button></div>'
   +'<div class="table-edit-actions"></div>'
-  +'<div id="table-edit-mode" class="table-edit-mode" role="group" hidden><button type="button" id="table-edit-rich-choice" aria-pressed="false"></button><button type="button" id="table-edit-plain-choice" aria-pressed="true"></button></div>'
+  +'<div id="table-edit-mode" class="table-edit-mode" role="group" hidden><button type="button" id="table-edit-rich-choice" aria-pressed="false"></button><button type="button" id="table-edit-block-choice" aria-pressed="false"></button><button type="button" id="table-edit-plain-choice" aria-pressed="true"></button></div>'
   +'<form id="table-edit-content-form" class="table-edit-content-form"><label id="table-edit-content-label" for="table-edit-content-input"></label><input id="table-edit-content-input" type="text" maxlength="2000" autocomplete="off">'
   +'<div id="table-edit-rich-panel" hidden><div class="table-edit-rich-actions" role="toolbar" aria-label="Rich cell formatting">'
   +'<button type="button" id="table-edit-rich-bold"><strong>B</strong></button><button type="button" id="table-edit-rich-italic"><em>I</em></button><button type="button" id="table-edit-rich-underline"><u>U</u></button><button type="button" id="table-edit-rich-code"><code>&lt;/&gt;</code></button></div>'
+  +'<div id="table-edit-block-actions" class="table-edit-block-actions" hidden>'+['p','ul','ol','quote','pre'].map(kind=>'<button type="button" id="table-edit-block-'+kind+'"></button>').join('')+'</div>'
   +'<div id="table-edit-rich-content" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true"></div></div>'
   +'<button id="table-edit-content-save" type="submit"></button></form>'
   +'<p id="table-edit-content-warning"></p><p id="table-edit-hint"></p><p id="table-edit-message" role="status" aria-live="polite"></p>';
@@ -281,8 +336,12 @@ export function initTableEditor(){
  document.body.append(bar);
  $('table-edit-close').addEventListener('click',clearSelection);
  $('table-edit-content-form').addEventListener('submit',e=>{e.preventDefault();saveCell();});
- $('table-edit-rich-choice').addEventListener('click',()=>setCellMode(true));
- $('table-edit-plain-choice').addEventListener('click',()=>setCellMode(false));
+ $('table-edit-rich-choice').addEventListener('click',()=>setCellMode('rich'));
+ $('table-edit-plain-choice').addEventListener('click',()=>setCellMode('plain'));
+ $('table-edit-block-choice').addEventListener('click',()=>setCellMode('blocks'));
+ for(const kind of ['p','ul','ol','quote','pre']){
+  $('table-edit-block-'+kind).addEventListener('click',()=>appendBlock(kind));
+ }
  for(const [kind,tag] of Object.entries({bold:'strong',italic:'em',underline:'u',code:'code'})){
   const btn=$('table-edit-rich-'+kind);
   btn.addEventListener('pointerdown',e=>e.preventDefault());
@@ -295,7 +354,7 @@ export function initTableEditor(){
  });
  editor.addEventListener('drop',event=>event.preventDefault());
  editor.addEventListener('beforeinput',event=>{
-  if(event.inputType==='insertParagraph'||event.inputType==='insertLineBreak'){
+  if(!selected?.blockMode&&(event.inputType==='insertParagraph'||event.inputType==='insertLineBreak')){
    event.preventDefault();insertRichNodes([document.createElement('br')]);
   }
  });

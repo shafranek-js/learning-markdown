@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,sanitizeInlineCellHTML} from '../js/core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,sanitizeBlockCellHTML,sanitizeInlineCellHTML} from '../js/core/table-operations.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
@@ -220,5 +220,55 @@ assert(deepEdit.text.includes('Middle'));
 assert.equal(getTableCellText(deepEdit.text,2,0,0),'Inner changed');
 const fencedNested='~~~html\n'+nestedDocument+'\n~~~';
 assert.equal(findEditableTables(fencedNested).length,0);
+
+
+// #6: Mixed block content is editable ONLY via the explicit Blocks mode.
+const blockCellSource='# Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
+ '<p>Introduction <strong>important</strong> <a href="https://example.org/manual">manual</a>.</p>'+
+ '<ul><li>First <em>item</em></li><li>Second<ul><li>Nested item</li></ul></li></ul>'+
+ '<blockquote><p>Quoted <u>text</u></p></blockquote><pre><code>let x = 1;</code></pre>'+
+ '</td><td>Neighbor 1</td></tr><tr><td>Neighbor 2</td></tr></table>\n\n# After';
+const initialBlocks=getTableCellBlocks(blockCellSource,0,0,0);
+assert(initialBlocks.includes('<p>Introduction'));
+assert(initialBlocks.includes('<ul><li>First'));
+assert(initialBlocks.includes('Nested item'));
+assert(initialBlocks.includes('<blockquote>'));
+assert(initialBlocks.includes('<pre><code>let x = 1;</code></pre>'));
+assert.equal(getTableCellHTML(blockCellSource,0,0,0),null,'inline mode must refuse mixed block content');
+assert.equal(getTableCellBlocks(editSource,0,1,0),null,'GFM pipe tables keep their source representation');
+const changedBlocks=setTableCellBlocks(blockCellSource,0,1,0,
+ initialBlocks.replace('First <em>item</em>','First <em>revised</em>')+
+ '<ol><li>New number</li></ol><p>Ending</p>');
+assert(changedBlocks?.text.startsWith('# Before\n\n'));
+assert(changedBlocks.text.endsWith('\n\n# After'));
+assert(changedBlocks.text.includes('rowspan="2"'));
+for(const content of ['manual','Neighbor 1','Neighbor 2','Nested item','Quoted','New number','Ending'])assert(changedBlocks.text.includes(content));
+assert(changedBlocks.text.includes('href="https://example.org/manual"'));
+assert.equal(getTableCellBlocks(changedBlocks.text,0,0,0).includes('First <em>revised</em>'),true);
+assert.equal(setTableCellHTML(blockCellSource,0,0,0,'<strong>Replacement</strong>'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'<script>alert(1)</script>'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'<table><tr><td>Nested</td></tr></table>'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'<img src="https://example.com/image.jpg">'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'<button>Button</button>'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'<ul><p>Illegal list child</p></ul>'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'<li>Orphan</li>'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'<style>body{display:none}</style>'),null);
+assert.equal(setTableCellBlocks(blockCellSource,0,0,0,'X'.repeat(5001)),null);
+assert.equal(sanitizeBlockCellHTML('<p><strong>Safe</strong></p><ul><li>One</li></ul>'),
+ '<p><strong>Safe</strong></p><ul><li>One</li></ul>');
+const harmlessAttrs=setTableCellBlocks(blockCellSource,0,0,0,
+ '<p style="position:absolute" onmouseover="alert(1)">Text</p><a href="javascript:alert(1)">Unsafe link</a>');
+assert(harmlessAttrs&&!/onmouseover=|position:absolute|javascript:/i.test(harmlessAttrs.text));
+const nestedBlocks='# A\n\n<table><tr><td>Parent <table><tr><td>'+
+ '<p>First</p><ul><li>Leaf item</li></ul></td></tr></table> tail</td></tr></table>\n\n# B';
+assert.equal(getTableCellBlocks(nestedBlocks,0,0,0),null);
+assert(getTableCellBlocks(nestedBlocks,1,0,0).includes('Leaf item'));
+const nestedBlockChange=setTableCellBlocks(nestedBlocks,1,0,0,
+ '<p>Changed</p><ul><li><strong>Safe</strong> leaf</li></ul>');
+assert(nestedBlockChange?.text.includes('Parent'));
+assert(nestedBlockChange.text.includes('tail'));
+assert(nestedBlockChange.text.includes('<p>Changed</p>'));
+assert(nestedBlockChange.text.includes('Safe</strong> leaf'));
+assert.equal(findEditableTables(nestedBlockChange.text).length,2);
 
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
