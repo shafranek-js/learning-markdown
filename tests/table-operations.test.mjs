@@ -321,6 +321,28 @@ const twoPictures='<table><tr><td>Both <img src="https://example.org/a.png" alt=
 assert.equal(getTableCellImage(twoPictures,0,0,0),null);
 assert.equal(setTableCellImage(twoPictures,0,0,0,{...badPicture,url:'https://example.org/x.png'}),null);
 assert.equal(getTableCellImage('<table><tr><td><img src="http://example.org/a.png" alt="A"></td></tr></table>',0,0,0),null);
+
+const unsafeExisting='<table><tr><td><img src="https://example.org/ok.png" alt="OK">'+
+ '<video src="https://example.org/video.mp4"></video></td></tr></table>';
+assert.equal(getTableCellImage(unsafeExisting,0,0,0),null,
+ 'unsupported original foreign/media tags must remain read-only even if sanitizer drops them');
+assert.equal(setTableCellImage(unsafeExisting,0,0,0,{
+ url:'https://example.org/new.png',alt:'New',decorative:false,width:'',height:''
+}),null);
+const scriptedExisting='<table><tr><td><img src="https://example.org/ok.png" alt="OK">'+
+ '<script>doSomething()</script></td></tr></table>';
+assert.equal(getTableCellImage(scriptedExisting,0,0,0),null);
+const figureImage='<table><tr><td><figure class="af-figure">'+
+ '<img src="https://example.org/figure.png" alt="Captioned">'+
+ '<figcaption><strong>Keep this caption</strong></figcaption></figure>'+
+ '<p>And this paragraph</p></td></tr></table>';
+const figureUpdated=setTableCellImage(figureImage,0,0,0,{
+ url:'https://example.org/revised.png',alt:'New picture',decorative:false,width:'480',height:''
+});
+assert(figureUpdated?.text.includes('af-figure'));
+assert(figureUpdated.text.includes('<figcaption><strong>Keep this caption</strong></figcaption>'));
+assert(figureUpdated.text.includes('<p>And this paragraph</p>'));
+
 assert.equal(getTableCellImage(nestedHTML,0,0,0),null);
 const nestedImage='<table><tr><td>Outer text <table><tr><td><p>Inner text</p>'+
  '<img src="https://example.org/leaf.png" alt="Leaf"></td></tr></table>'+
