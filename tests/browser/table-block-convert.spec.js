@@ -138,6 +138,12 @@ test('issue #6 nested list conversion changes only selected depth and keeps oute
  await expect(rich.locator(':scope > ol > li > ol > li em')).toHaveText('Inner two');
  await expect(rich.locator(':scope > ol > li > ol > li ul > li')).toHaveText('Deep');
  await expect(rich.locator(':scope > ol > li').last()).toHaveText('Outer two');
+ await page.locator('#table-edit-convert-ul').click();
+ await expect(rich.locator(':scope > ol > li > ul > li')).toHaveCount(2);
+ await expect(rich.locator(':scope > ol[type="i"]')).toHaveCount(1);
+ await page.locator('#table-edit-convert-ol').click();
+ await expect(rich.locator(':scope > ol > li > ol > li')).toHaveCount(2);
+ await expect(rich.locator(':scope > ol[type="i"]')).toHaveCount(1);
  await expect(input).toHaveValue(source);
  await page.locator('#table-edit-content-save').click();
  const updated=await input.inputValue();
