@@ -64,6 +64,9 @@ function visibleError(status,locale,index,message){
  status.textContent=locale.error+' '+index+': '+String(message||'').slice(0,180);
 }
 function showDiagram(pre,src,index,locale,status=null){
+ // Preserve insertion position before the source <pre> moves into <details>.
+ const anchor=status||document.createComment('Mermaid preview');
+ if(!status)pre.before(anchor);
  const container=document.createElement('figure');
  container.className='mermaid-diagram';
  const img=document.createElement('img');
@@ -75,8 +78,7 @@ function showDiagram(pre,src,index,locale,status=null){
  summary.textContent=locale.source;
  details.append(summary,pre);
  container.append(details);
- if(status)status.replaceWith(container);
- else pre.parentNode.insertBefore(container,pre);
+ anchor.replaceWith(container);
  // Moving the original code into <details> keeps a trustworthy source fallback.
  return container;
 }
