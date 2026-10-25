@@ -94,4 +94,77 @@ function select(selection,a,ao,b,bo){
  assert.equal(editor.children[2].querySelector('em').textContent,'rich');
  assert.equal(editor.lastElementChild.textContent,'Untouched last');
 }
+// A caret in a nested item converts only its direct child list. The outer
+// ordered list, its roman numbering, siblings, and deeper sublists survive.
+{
+ const {editor,selection}=setup('<p>Before</p><ol type="i"><li>Parent<ol type="a">'+
+  '<li>Inner A</li><li><em>Inner B</em><ul><li>Deep</li></ul></li></ol>Tail</li>'+
+  '<li>Outer second</li></ol><p>After</p>');
+ const inner=editor.querySelector('ol > li > ol > li em').firstChild;
+ select(selection,inner,2,inner,2);
+ const original=editor.textContent;
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),{ok:true,blocks:1});
+ assert.equal(editor.textContent,original);
+ const outer=editor.querySelector(':scope > ol');
+ assert.equal(outer.getAttribute('type'),'i','roman numbering outside selection survives');
+ assert.equal(outer.children.length,2);
+ assert.equal(outer.firstElementChild.querySelector(':scope > ol'),null);
+ const replacement=outer.firstElementChild.querySelector(':scope > ul');
+ assert.deepEqual([...replacement.children].map(li=>li.textContent),
+  ['Inner A','Inner BDeep']);
+ assert.equal(replacement.querySelector('em').textContent,'Inner B');
+ assert.equal(replacement.querySelector('ul > li').textContent,'Deep');
+ assert.equal(editor.lastElementChild.textContent,'After');
+ assert.equal(selection.rangeCount,1);
+ assert.equal(selection.anchorNode.isConnected,true);
+}
+// A text selection spanning every nested sibling converts just that level.
+{
+ const {editor,selection}=setup('<ul><li>Parent<ul><li>One</li>'+
+  '<li>Two <strong>strong</strong></li></ul>Tail</li><li>Outside</li></ul>');
+ const nested=editor.querySelectorAll('ul > li > ul > li');
+ select(selection,nested[0].firstChild,0,nested[1].querySelector('strong').firstChild,6);
+ const before=editor.textContent;
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),{ok:true,blocks:1});
+ assert.equal(editor.textContent,before);
+ assert.equal(editor.querySelector(':scope > ul > li > ul'),null);
+ assert.equal(editor.querySelector(':scope > ul > li > ol > li strong').textContent,'strong');
+ assert.equal(editor.querySelectorAll(':scope > ul > li').length,2);
+ assert.equal(editor.querySelector(':scope > ul > li:last-child').textContent,'Outside');
+}
+// Partial ranges and ranges spanning nested and parent levels fail atomically.
+{
+ const html='<ol type="i"><li>Parent<ul><li>One</li><li>Two</li>'+
+  '<li>Three</li></ul>Tail</li><li>Outside</li></ol>';
+ const {editor,selection}=setup(html);
+ const nested=editor.querySelectorAll('ol > li > ul > li');
+ select(selection,nested[0].firstChild,0,nested[1].firstChild,3);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),
+  {ok:false,reason:'partial-or-nested-list'});
+ assert.equal(editor.innerHTML,html);
+ select(selection,nested[0].firstChild,0,
+  editor.querySelector(':scope > ol > li:last-child').firstChild,3);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),
+  {ok:false,reason:'partial-or-nested-list'});
+ assert.equal(editor.innerHTML,html);
+ const parentText=editor.querySelector(':scope > ol > li').firstChild;
+ select(selection,parentText,0,nested[0].firstChild,2);
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),
+  {ok:false,reason:'partial-or-nested-list'});
+ assert.equal(editor.innerHTML,html);
+}
+// A nested list cannot be turned into direct paragraphs inside an outer LI.
+// Such a transformation requires a separate explicit UX/numbering policy.
+{
+ const html='<ul><li>Parent<ul><li>One</li><li>Two</li></ul></li></ul>';
+ const {editor,selection}=setup(html);
+ const text=editor.querySelector('ul > li > ul > li').firstChild;
+ select(selection,text,2,text,2);
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),
+  {ok:false,reason:'nested-to-paragraph'});
+ assert.equal(editor.innerHTML,html);
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),
+  {ok:false,reason:'already-formatted'});
+ assert.equal(editor.innerHTML,html);
+}
 console.log('PASS: #6 selected paragraph/list structural conversion preserves order and rejects ambiguous sources');
