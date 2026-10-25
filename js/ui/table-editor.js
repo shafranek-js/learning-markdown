@@ -1,6 +1,7 @@
 import {state,docKey} from '../core/state.js';
 import {handleBlockListKeydown} from './table-list-keyboard.js';
 import {formatBlockSelection} from './table-block-format.js';
+import {convertBlockSelection} from './table-block-convert.js';
 import {area,applyEdit} from './editor.js';
 import {findEditableTables,getTableReadOnlyReason,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../core/table-operations.js';
 
@@ -91,11 +92,11 @@ const READ_ONLY={
 const readonlyWords=()=>READ_ONLY[state.lang]||READ_ONLY.en;
 const richWords=()=>RICH_TEXT[state.lang]||RICH_TEXT.en;
 const BLOCK_TEXT={
- en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell. In a list: Tab indents, Shift+Tab outdents, Enter exits an empty item, and Backspace at the start outdents.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block',formatUnsupported:'This selection includes code or unsupported content. Nothing was changed; select text outside code blocks.',crossSelection:'Select items within one list to change their level. Mixed paragraph/list selections were left unchanged.'},
- cs:{mode:'Bloky',hint:'Bezpečně upravujte odstavce, seznamy a citace. Vkládaný text je prostý; změny uložte. V seznamu: Tab odsadí, Shift+Tab zruší odsazení, Enter ukončí prázdnou položku a Backspace na začátku zmenší odsazení.',p:'Přidat odstavec',ul:'Přidat odrážky',ol:'Přidat číslovaný seznam',quote:'Přidat citaci',pre:'Přidat blok kódu',formatUnsupported:'Výběr obsahuje kód nebo nepodporovaný obsah. Nic se nezměnilo; vyberte text mimo bloky kódu.',crossSelection:'Pro změnu úrovně vyberte položky v jednom seznamu. Výběr přes odstavce a seznamy zůstal beze změny.'},
- uk:{mode:'Блоки',hint:'Безпечно редагуйте абзаци, списки та цитати. Вставляється лише текст. У списку: Tab збільшує відступ, Shift+Tab зменшує, Enter завершує порожній пункт, Backspace на початку зменшує відступ.',p:'Додати абзац',ul:'Додати маркований список',ol:'Додати нумерований список',quote:'Додати цитату',pre:'Додати блок коду',formatUnsupported:'Виділення містить код або непідтримуваний вміст. Нічого не змінено; виберіть текст поза блоками коду.',crossSelection:'Щоб змінити рівень, виберіть елементи одного списку. Виділення між абзацами та списками не змінено.'},
- ro:{mode:'Blocuri',hint:'Editați în siguranță paragrafe, liste și citate. Lipirea inserează doar text. În liste: Tab indentează, Shift+Tab revine, Enter iese dintr-un element gol, iar Backspace la început reduce indentarea.',p:'Adaugă paragraf',ul:'Adaugă listă cu marcatori',ol:'Adaugă listă numerotată',quote:'Adaugă citat',pre:'Adaugă bloc de cod',formatUnsupported:'Selecția conține cod sau conținut incompatibil. Nimic nu a fost modificat; selectați text în afara blocurilor de cod.',crossSelection:'Pentru indentare, selectați elemente dintr-o singură listă. Selecția peste paragrafe și liste nu a fost modificată.'},
- ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения. В списке: Tab — увеличить отступ, Shift+Tab — уменьшить, Enter — выйти из пустого пункта, Backspace в начале — уменьшить отступ.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода',formatUnsupported:'В выделении есть код или неподдерживаемое содержимое. Ничего не изменено; выделите текст вне блоков кода.',crossSelection:'Для изменения уровня выделите пункты одного списка. Выделение между абзацами и списками оставлено без изменений.'}
+ en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell. In a list: Tab indents, Shift+Tab outdents, Enter exits an empty item, and Backspace at the start outdents.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block',formatUnsupported:'This selection includes code or unsupported content. Nothing was changed; select text outside code blocks.',crossSelection:'Select items within one list to change their level. Mixed paragraph/list selections were left unchanged.',convertP:'Paragraphs',convertUl:'Bullets',convertOl:'Numbered',convertInvalid:'Select complete list items and paragraphs only. Nested lists and other blocks cannot be converted to paragraphs.',convertSame:'Selected blocks already use this format.'},
+ cs:{mode:'Bloky',hint:'Bezpečně upravujte odstavce, seznamy a citace. Vkládaný text je prostý; změny uložte. V seznamu: Tab odsadí, Shift+Tab zruší odsazení, Enter ukončí prázdnou položku a Backspace na začátku zmenší odsazení.',p:'Přidat odstavec',ul:'Přidat odrážky',ol:'Přidat číslovaný seznam',quote:'Přidat citaci',pre:'Přidat blok kódu',formatUnsupported:'Výběr obsahuje kód nebo nepodporovaný obsah. Nic se nezměnilo; vyberte text mimo bloky kódu.',crossSelection:'Pro změnu úrovně vyberte položky v jednom seznamu. Výběr přes odstavce a seznamy zůstal beze změny.',convertP:'Odstavce',convertUl:'Odrážky',convertOl:'Číslování',convertInvalid:'Vyberte celé položky seznamu a odstavce. Vnořené seznamy a další bloky nelze bezpečně převést na odstavce.',convertSame:'Vybrané bloky už tento formát mají.'},
+ uk:{mode:'Блоки',hint:'Безпечно редагуйте абзаци, списки та цитати. Вставляється лише текст. У списку: Tab збільшує відступ, Shift+Tab зменшує, Enter завершує порожній пункт, Backspace на початку зменшує відступ.',p:'Додати абзац',ul:'Додати маркований список',ol:'Додати нумерований список',quote:'Додати цитату',pre:'Додати блок коду',formatUnsupported:'Виділення містить код або непідтримуваний вміст. Нічого не змінено; виберіть текст поза блоками коду.',crossSelection:'Щоб змінити рівень, виберіть елементи одного списку. Виділення між абзацами та списками не змінено.',convertP:'Абзаци',convertUl:'Маркери',convertOl:'Нумерація',convertInvalid:'Виберіть цілі пункти списку та абзаци. Вкладені списки й інші блоки неможливо безпечно перетворити на абзаци.',convertSame:'Вибрані блоки вже мають цей формат.'},
+ ro:{mode:'Blocuri',hint:'Editați în siguranță paragrafe, liste și citate. Lipirea inserează doar text. În liste: Tab indentează, Shift+Tab revine, Enter iese dintr-un element gol, iar Backspace la început reduce indentarea.',p:'Adaugă paragraf',ul:'Adaugă listă cu marcatori',ol:'Adaugă listă numerotată',quote:'Adaugă citat',pre:'Adaugă bloc de cod',formatUnsupported:'Selecția conține cod sau conținut incompatibil. Nimic nu a fost modificat; selectați text în afara blocurilor de cod.',crossSelection:'Pentru indentare, selectați elemente dintr-o singură listă. Selecția peste paragrafe și liste nu a fost modificată.',convertP:'Paragrafe',convertUl:'Marcatori',convertOl:'Numerotare',convertInvalid:'Selectați elemente complete din liste și paragrafe. Listele imbricate și alte blocuri nu pot fi transformate în siguranță în paragrafe.',convertSame:'Blocurile selectate au deja acest format.'},
+ ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения. В списке: Tab — увеличить отступ, Shift+Tab — уменьшить, Enter — выйти из пустого пункта, Backspace в начале — уменьшить отступ.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода',formatUnsupported:'В выделении есть код или неподдерживаемое содержимое. Ничего не изменено; выделите текст вне блоков кода.',crossSelection:'Для изменения уровня выделите пункты одного списка. Выделение между абзацами и списками оставлено без изменений.',convertP:'В абзацы',convertUl:'В маркеры',convertOl:'В нумерацию',convertInvalid:'Выделите целые пункты списка и абзацы. Вложенные списки и другие блоки нельзя безопасно преобразовать в абзацы.',convertSame:'Выделенные блоки уже имеют этот формат.'}
 };
 const blockWords=()=>BLOCK_TEXT[state.lang]||BLOCK_TEXT.en;
 const IMAGE_TEXT={
@@ -341,6 +342,18 @@ function wrapRichSelection(tag){
  selection.removeAllRanges();selection.addRange(range);
  editor.focus();
 }
+function convertSelectedBlocks(target){
+ if(!selected?.blockMode)return;
+ const editor=$('table-edit-rich-content'),selection=window.getSelection();
+ const result=convertBlockSelection(editor,target,selection);
+ if(!result.ok){
+  $('table-edit-message').textContent=result.reason==='already-formatted'?
+   blockWords().convertSame:blockWords().convertInvalid;
+  return;
+ }
+ $('table-edit-message').textContent='';
+ editor.focus();
+}
 function appendBlock(kind){
  if(!selected?.blockMode)return;
  const editor=$('table-edit-rich-content');
@@ -480,6 +493,11 @@ export function renderTableEditorLanguage(){
   const button=$('table-edit-block-'+kind);
   button.textContent=block[kind];button.setAttribute('aria-label',block[kind]);
  }
+ for(const kind of ['p','ul','ol']){
+  const button=$('table-edit-convert-'+kind);
+  const label=block['convert'+kind[0].toUpperCase()+kind.slice(1)];
+  button.textContent=label;button.setAttribute('aria-label',label);
+ }
  for(const [key,label] of Object.entries({bold:rich.bold,italic:rich.italic,underline:rich.underline,code:rich.code})){
   const button=$('table-edit-rich-'+key);
   button.title=label;button.setAttribute('aria-label',label);
@@ -511,7 +529,7 @@ export function initTableEditor(){
   +'<form id="table-edit-content-form" class="table-edit-content-form"><label id="table-edit-content-label" for="table-edit-content-input"></label><input id="table-edit-content-input" type="text" maxlength="2000" autocomplete="off">'
   +'<div id="table-edit-rich-panel" hidden><div class="table-edit-rich-actions" role="toolbar" aria-label="Rich cell formatting">'
   +'<button type="button" id="table-edit-rich-bold"><strong>B</strong></button><button type="button" id="table-edit-rich-italic"><em>I</em></button><button type="button" id="table-edit-rich-underline"><u>U</u></button><button type="button" id="table-edit-rich-code"><code>&lt;/&gt;</code></button></div>'
-  +'<div id="table-edit-block-actions" class="table-edit-block-actions" hidden>'+['p','ul','ol','quote','pre'].map(kind=>'<button type="button" id="table-edit-block-'+kind+'"></button>').join('')+'</div>'
+  +'<div id="table-edit-block-actions" class="table-edit-block-actions" hidden>'+['p','ul','ol','quote','pre'].map(kind=>'<button type="button" id="table-edit-block-'+kind+'"></button>').join('')+'<span class="table-edit-convert-separator" aria-hidden="true"></span>'+['p','ul','ol'].map(kind=>'<button type="button" id="table-edit-convert-'+kind+'"></button>').join('')+'</div>'
   +'<div id="table-edit-rich-content" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true"></div></div>'
   +'<button id="table-edit-content-save" type="submit"></button></form>'
   +'<form id="table-edit-image-form" class="table-edit-image-form" hidden>'
@@ -546,6 +564,11 @@ export function initTableEditor(){
  $('table-edit-block-choice').addEventListener('click',()=>setCellMode('blocks'));
  for(const kind of ['p','ul','ol','quote','pre']){
   $('table-edit-block-'+kind).addEventListener('click',()=>appendBlock(kind));
+ }
+ for(const kind of ['p','ul','ol']){
+  const button=$('table-edit-convert-'+kind);
+  button.addEventListener('pointerdown',event=>event.preventDefault());
+  button.addEventListener('click',()=>convertSelectedBlocks(kind));
  }
  for(const [kind,tag] of Object.entries({bold:'strong',italic:'em',underline:'u',code:'code'})){
   const btn=$('table-edit-rich-'+kind);
