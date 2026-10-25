@@ -74,6 +74,43 @@ function updateGFM(table,operation,row,col){
  return serializeGFM(matrix);
 }
 const spanValue=(el,name)=>{const n=Number(el.getAttribute(name)||1);return Number.isInteger(n)&&n>0&&n<=20?n:1};
+// Visual edits serialize the complete enclosing table block. Before doing so,
+// reject source that the HTML parser would repair, or structures the serializer
+// cannot reproduce (multiple roots, section metadata, malformed spans).
+// Keeping such source read-only is safer than silently rewriting it.
+function sourceTableTopologySafe(raw){
+ const doc=new DOMParser().parseFromString(raw,'text/html');
+ if(doc.head.children.length||doc.body.children.length!==1||
+    doc.body.firstElementChild?.tagName!=='TABLE'||[...doc.body.childNodes]
+     .some(node=>node.nodeType!==1&&(node.nodeType!==3||node.textContent.trim())))return false;
+ // A DOM parser silently supplies missing </td>, </tr>, etc. Check the
+ // structural source tags before accepting its repaired table model.
+ const stack=[];
+ for(const match of raw.matchAll(/<\s*(\/?)\s*(table|thead|tbody|tfoot|tr|td|th)\b[^>]*>/gi)){
+  const tag=match[2].toLowerCase();
+  if(match[1]){if(stack.pop()!==tag)return false;}
+  else stack.push(tag);
+ }
+ if(stack.length)return false;
+ for(const table of doc.body.querySelectorAll('table')){
+  // The current serializer writes one tbody and cannot retain thead/tfoot,
+  // captions, colgroups, row classes or attributes on section containers.
+  if(table.children.length!==1||table.firstElementChild.tagName!=='TBODY'||
+     table.firstElementChild.attributes.length)return false;
+  for(const tr of table.firstElementChild.children){
+   if(tr.tagName!=='TR'||tr.attributes.length||
+      [...tr.children].some(cell=>cell.tagName!=='TD'&&cell.tagName!=='TH'))return false;
+  }
+  for(const cell of table.querySelectorAll('td,th')){
+   for(const name of ['rowspan','colspan']){
+    if(!cell.hasAttribute(name))continue;
+    const value=cell.getAttribute(name);
+    if(!/^[1-9][0-9]?$/.test(value)||Number(value)>20)return false;
+   }
+  }
+ }
+ return true;
+}
 function modelFromHTML(html){
  const doc=new DOMParser().parseFromString(sanitizeHTML(html),'text/html');
  const table=doc.querySelector('table');
@@ -92,7 +129,7 @@ function modelFromHTML(html){
     occupied[r][c]=true;
    }
    cells.push({row,col,rs,cs,tag:el.tagName.toLowerCase(),html:el.innerHTML,
-    cls:el.getAttribute('class')||''});
+    cls:el.getAttribute('class')||'',align:el.getAttribute('align')||''});
    col+=cs;width=Math.max(width,col);
   }
  }
@@ -102,7 +139,7 @@ function modelFromHTML(html){
 }
 // Resolve the selected leaf table from its original source-backed HTML block.
 function selectedHTMLTable(entry){
- if(!entry||!['html','nested'].includes(entry.type))return null;
+ if(!entry||!['html','nested'].includes(entry.type)||!sourceTableTopologySafe(entry.raw))return null;
  const doc=new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html');
  const tables=[...doc.querySelectorAll('table')];
  if(tables.length>26)return null;
@@ -179,7 +216,7 @@ function serializeHTML(model){
   parts.push('<tr>');
   for(const c of model.cells.filter(c=>c.row===r).sort((a,b)=>a.col-b.col)){
    parts.push('<'+c.tag+(c.cs>1?' colspan="'+c.cs+'"':'')+(c.rs>1?' rowspan="'+c.rs+'"':'')
-     +(c.cls?' class="'+c.cls+'"':'')+'>'+c.html+'</'+c.tag+'>');
+     +(c.cls?' class="'+c.cls+'"':'')+(c.align?' align="'+c.align+'"':'')+'>'+c.html+'</'+c.tag+'>');
   }
   parts.push('</tr>');
  }

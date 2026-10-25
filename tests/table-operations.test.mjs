@@ -119,6 +119,39 @@ assert.equal(tableSelectionBounds(nestedHTML,0,select(0,0)),null);
 assert.equal(apply(nestedHTML,'merge-right',select(0,0)),null);
 
 
+// #6: The source-backed visual editor must not silently repair malformed
+// topology, combine adjacent tables, or erase unsupported table sections.
+const adjacentTables='<table><tr><td>First</td></tr></table>'+
+ '<table><tr><td>Second</td></tr></table>';
+assert.equal(editTableAt(adjacentTables,0,'cell-blue',select(0,0)),null,
+ 'adjacent independent tables may never be serialized as one');
+assert.equal(setTableCellText(adjacentTables,0,0,0,'Lost sibling'),null);
+const brokenCells='<table><tr><td>First<td>Second</td></tr></table>';
+assert.equal(apply(brokenCells,'merge-right',select(0,0)),null,
+ 'browser-inserted closing tags must not alter user source');
+assert.equal(setTableCellText(brokenCells,0,0,0,'Changed'),null);
+const invalidSpan='<table><tr><td colspan="0">First</td><td>Second</td></tr></table>';
+assert.equal(apply(invalidSpan,'cell-blue',select(0,0)),null,
+ 'invalid spans must not be quietly normalized to 1');
+const semanticSections='<table><thead><tr><th>Title</th></tr></thead>'+
+ '<tbody><tr><td>Value</td></tr></tbody></table>';
+assert.equal(apply(semanticSections,'cell-blue',select(1,0)),null,
+ 'do not silently remove thead/tfoot or captions');
+const customSection='<table><tbody class="important"><tr><td>Value</td></tr></tbody></table>';
+assert.equal(apply(customSection,'cell-blue',select(0,0)),null,
+ 'unmodeled section metadata must be preserved by declining visual editing');
+// Alignment is allowed by the sanitizer and must survive safe HTML operations,
+// including GFM-to-HTML conversion for advanced cell formatting.
+const htmlAligned='<table><tr><td align="right">One</td><td align="center">Two</td></tr></table>';
+const changedAligned=apply(htmlAligned,'cell-blue',select(0,0));
+assert(changedAligned?.text.includes('align="right"'));
+assert(changedAligned.text.includes('align="center"'));
+const gfmAligned='| Left | Right |\n| :--- | ---: |\n| one | two |\n';
+const convertedAligned=apply(gfmAligned,'cell-blue',select(1,0));
+assert(convertedAligned?.text.includes('<table'));
+assert(convertedAligned.text.includes('align="left"'));
+assert(convertedAligned.text.includes('align="right"'));
+
 // Rich editing is allowed only for safe inline HTML within standalone tables.
 const richSource='Before\n\n<table class="af-table-outline"><tr><td rowspan="2" colspan="2" class="af-cell-mint">'+
  '<strong>Title</strong> <em>italic</em> <a href="https://example.org/guide">read</a>'+
