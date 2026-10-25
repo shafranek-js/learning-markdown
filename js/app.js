@@ -18,6 +18,7 @@ import {initUnicodePicker,renderUnicodePickerLanguage} from './ui/unicode-picker
 import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
 import {initTOC,TOC_TEXT} from './ui/toc.js';
 import {standaloneHTML} from './core/export-html.js';
+import {renderMermaidExportImages} from './ui/mermaid-preview.js';
 import {renderPortability,portabilityStatus,portabilityLabels,initExtensionSettings} from './ui/compatibility.js';
 import {extensionText,footnoteText,definitionText} from './core/extensions.js';
 import {paletteLabels} from './core/unicode-palette.js';
@@ -136,6 +137,37 @@ function setTheme(theme){state.theme=theme;document.documentElement.dataset.them
 function setLanguage(lang){state.lang=lang;save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false,scroll:false});syncRoute(state);}
 function download(text,name,mime){const url=URL.createObjectURL(new Blob([text],{type:mime}));const a=document.createElement('a');a.href=url;a.download=name;a.style.display='none';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);}
 async function copy(text){try{await navigator.clipboard.writeText(text);}catch{const temp=document.createElement('textarea');temp.value=text;document.body.append(temp);temp.select();document.execCommand('copy');temp.remove();}}
+// Resolve the exact source snapshot being exported; a user may continue
+// editing while Mermaid runs. The .md download never changes.
+const EXPORT_MESSAGES={
+ en:{fallback:'Some Mermaid diagrams failed to render; their source code is included in the exported document.',error:'Document export failed.',print:'The browser blocked the print tab.'},
+ cs:{fallback:'Některé diagramy Mermaid se nepodařilo vykreslit; v exportu zůstává jejich zdrojový kód.',error:'Export dokumentu selhal.',print:'Prohlížeč zablokoval kartu pro tisk.'},
+ uk:{fallback:'Деякі діаграми Mermaid не вдалося побудувати; у документі збережено їхній код.',error:'Помилка експорту документа.',print:'Браузер заблокував вкладку друку.'},
+ ro:{fallback:'Unele diagrame Mermaid nu au putut fi redate; codul sursă rămâne în document.',error:'Exportul documentului a eșuat.',print:'Browserul a blocat fila pentru imprimare.'},
+ ru:{fallback:'Некоторые диаграммы Mermaid не удалось построить; их исходный код сохранён в экспортированном документе.',error:'Не удалось экспортировать документ.',print:'Браузер заблокировал вкладку печати.'}
+};
+async function exportDocument({print=false}={}){
+ const sourceHtml=currentHtml(),language=state.lang;
+ const labels=EXPORT_MESSAGES[language]||EXPORT_MESSAGES.en;
+ // Opening the print tab synchronously avoids popup blockers after await.
+ const tab=print?window.open('about:blank','_blank'):null;
+ if(print&&!tab){alert(labels.print);return;}
+ if(tab){tab.opener=null;tab.document.body.textContent='Preparing document…';}
+ try{
+  const {images,failures}=await renderMermaidExportImages(sourceHtml);
+  const content=standaloneHTML(sourceHtml,language,images);
+  if(print){
+   const url=URL.createObjectURL(new Blob([content],{type:'text/html;charset=utf-8'}));
+   tab.location.replace(url);
+   setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }else download(content,'markdown-export.html','text/html;charset=utf-8');
+  if(failures.length)alert(labels.fallback);
+ }catch(error){
+  console.error('Document export failed',error);
+  if(tab)tab.close();
+  alert(labels.error);
+ }
+}
 function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang!==state.lang){state.lang=r.lang;rerender=true;}if(r.theme&&r.theme!==state.theme){state.theme=r.theme;document.documentElement.dataset.theme=state.theme;rerender=true;}
  if(r.dialect&&r.dialect!==state.dialect){state.dialect=r.dialect;rerender=true;}
  if(r.index!==null&&r.index!==state.currentLessonIndex){state.currentLessonIndex=r.index;rerender=true;}
@@ -171,14 +203,8 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
   if(portabilityStatus()?.emojiShortcodesActive && !confirm(paletteLabels(state.lang).warning))return;
   download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8');
  });
- $('download-html-btn').addEventListener('click',()=>download(standaloneHTML(currentHtml(),state.lang),'markdown-export.html','text/html;charset=utf-8'));
- $('print-document-btn').addEventListener('click',()=>{
-  const content=standaloneHTML(currentHtml(),state.lang);
-  const url=URL.createObjectURL(new Blob([content],{type:'text/html;charset=utf-8'}));
-  window.open(url,'_blank','noopener');
-  // New tab displays the printable document; Ctrl+P opens the native PDF dialog.
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
- });
+ $('download-html-btn').addEventListener('click',()=>exportDocument());
+ $('print-document-btn').addEventListener('click',()=>exportDocument({print:true}));
  $('reset-course-btn').addEventListener('click',()=>{if(!confirm(t(state.lang,'confirmReset')))return;resetCourse();clearHistory();selectLesson(0,{route:false});syncRoute(state);toggleContents(false);});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.activeElement!==area())area().blur();});
  if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));
