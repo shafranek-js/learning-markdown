@@ -42,6 +42,9 @@ export function convertBlockSelection(editor,target,selection=window.getSelectio
  }
  if(blocks.every(block=>block.tagName.toLowerCase()===target))
   return {ok:false,reason:'already-formatted'};
+ // Remember the insertion boundary BEFORE any selected paragraph is moved.
+ // Otherwise a trailing paragraph would become detached and lose nextSibling.
+ const after=blocks.at(-1).nextSibling;
  const doc=editor.ownerDocument,fragment=doc.createDocumentFragment();
  const inserted=[];
  if(target==='p'){
@@ -69,7 +72,6 @@ export function convertBlockSelection(editor,target,selection=window.getSelectio
  // Inserting before a selected block that was MOVED into the fragment would
  // fail; retain the position with a marker independent of the moved content.
  // Use its previous sibling if available, otherwise the original next sibling.
- const after=blocks.at(-1).nextSibling;
  for(const block of blocks)if(block.parentElement===editor)block.remove();
  editor.insertBefore(fragment,after);
  const replacement=doc.createRange();
