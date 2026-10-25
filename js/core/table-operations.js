@@ -378,6 +378,53 @@ export function setTableCellHTML(source,index,row,col,value){
   start:table.start,end:table.end,kind:'html'};
 }
 
+
+// Block cell editing is a separate explicit mode: inline-only operations must
+// never flatten paragraphs, lists, quotations or preformatted text.
+const CELL_BLOCK_TAGS=new Set('p div ul ol li blockquote pre h2 h3 h4'.split(' '));
+const CELL_SAFE_TAGS=new Set([...CELL_INLINE_TAGS,...CELL_BLOCK_TAGS]);
+export function sanitizeBlockCellHTML(value){
+ if(typeof value!=='string'||value.length>20000)return null;
+ const parsed=new DOMParser().parseFromString(value,'text/html');
+ if(parsed.head.children.length||[...parsed.body.querySelectorAll('*')]
+   .some(el=>!CELL_SAFE_TAGS.has(el.tagName.toLowerCase())))return null;
+ if((parsed.body.textContent||'').length>5000)return null;
+ // Reject orphan list items, and improper children inside list containers.
+ for(const el of parsed.body.querySelectorAll('li,ul,ol')){
+  const type=el.tagName.toLowerCase(),parent=el.parentElement?.tagName.toLowerCase();
+  if(type==='li'&&parent!=='ul'&&parent!=='ol')return null;
+  if((type==='ul'||type==='ol')&&[...el.children].some(child=>child.tagName!=='LI'))return null;
+ }
+ const clean=sanitizeHTML(value);
+ const doc=new DOMParser().parseFromString(clean,'text/html');
+ if(doc.head.children.length||[...doc.body.querySelectorAll('*')]
+   .some(el=>!CELL_SAFE_TAGS.has(el.tagName.toLowerCase())))return null;
+ return doc.body.innerHTML;
+}
+export function getTableCellBlocks(source,index,row,col){
+ const table=findEditableTables(source)[index];
+ if(!['html','nested'].includes(table?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ const model=selectedHTMLTable(table)?.model;
+ if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
+ const owner=cellsAt(model,row,col);
+ return owner?sanitizeBlockCellHTML(owner.html):null;
+}
+export function setTableCellBlocks(source,index,row,col,value){
+ const safe=sanitizeBlockCellHTML(value);
+ if(safe===null)return null;
+ const table=findEditableTables(source)[index];
+ if(!['html','nested'].includes(table?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ const target=selectedHTMLTable(table),model=target?.model;
+ if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
+ const owner=cellsAt(model,row,col);
+ if(!owner||sanitizeBlockCellHTML(owner.html)===null)return null;
+ owner.html=safe;
+ const updated=replaceSelectedTable(table,target,serializeHTML(model));
+ if(!updated||updated===table.raw)return null;
+ return {text:source.slice(0,table.start)+updated+source.slice(table.end),
+  start:table.start,end:table.end,kind:'html'};
+}
+
 const previewCache=new WeakMap();
 export function previewTableCoordinates(table,cell){
  const rows=[...table.querySelectorAll('tr')],row=rows.indexOf(cell.closest('tr'));
