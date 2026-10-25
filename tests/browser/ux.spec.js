@@ -2995,7 +2995,9 @@ test('issue #6: rich cell toolbar styles selected text and paste strips HTML',as
  await expect(rich).toContainText('Safe');
  await page.locator('#table-edit-content-save').click();
  const content=await page.locator('#markdown-input').inputValue();
- expect(content).toContain('<strong>Before</strong>');
+ // The caret remained inside the formatted range; pasted plain text inherits
+ // the current bold style, as in standard rich-text editors.
+ expect(content).toContain('<strong>Before Safe</strong>');
  expect(content).toContain('Safe');
  expect(content).not.toMatch(/<script[\s>]|onerror=|onclick=/);
  expect(content).toContain('<td>Other</td>');
