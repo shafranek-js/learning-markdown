@@ -508,7 +508,9 @@ function imageInsertionTarget(source,index,row,col){
   const original=matrix.rows[row][col];
   // Conservatively reject any existing Markdown/HTML image or raw HTML.
   // The canonical GFM serializer is not a general mixed HTML editor.
-  if(/!\[[^\]]*\]\s*\(|<\s*[a-z!/]/i.test(original))return null;
+  if(/!\[|<\s*[a-z!/]/i.test(original)||
+     new DOMParser().parseFromString(marked.parseInline(original,{gfm:true}),'text/html')
+      .querySelector('img'))return null;
   return {format:'gfm',entry,matrix,row,col};
  }
  if(!imageTableSourceSafe(entry))return null;
