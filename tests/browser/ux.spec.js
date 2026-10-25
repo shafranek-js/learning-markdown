@@ -3294,3 +3294,17 @@ test('issue #6 Russian mobile image editing supports decorative alt and nested l
  expect(updated).toContain('<strong>важно</strong>');
  await expect(page.locator('#markdown-preview table table img')).toHaveAttribute('alt','');
 });
+
+
+test('issue #6 keyboard Enter targets image URL without flattening a cell',async({page})=>{
+ await page.goto('/');
+ const source='<table><tr><td>Text before <img src="https://example.org/a.png" alt="A"> after</td></tr></table>';
+ await page.locator('#markdown-input').fill(source);
+ const cell=page.locator('#markdown-preview td');
+ await cell.focus();
+ await cell.press('Enter');
+ await expect(page.locator('#table-edit-image-form')).toBeVisible();
+ await expect(page.locator('#table-edit-image-url')).toBeFocused();
+ await expect(page.locator('#table-edit-content-form')).toBeHidden();
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
+});
