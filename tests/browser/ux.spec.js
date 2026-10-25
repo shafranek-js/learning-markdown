@@ -2212,13 +2212,13 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  const modal=page.locator('#extensions-lab-modal');
  await expect(modal).toBeVisible();
  await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 13');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('0 / 16');
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
  const source=page.locator('#extensions-lab-source');
  await source.fill('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-preview th[align="center"]')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview td[align="right"]')).toHaveText('5');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 16');
  await page.locator('#extensions-lab-close').click();
  await expect(modal).toBeHidden();
  await expect(main).toHaveValue(originalMarkdown);
@@ -2227,7 +2227,7 @@ test('issue #17 optional GFM lab validates rendered alignment and preserves isol
  await expect(page.locator('#advanced-progress-label')).toHaveText(advancedProgress);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 13');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('1 / 16');
  await page.locator('#extensions-lab-open').click();
  await expect(source).toHaveValue('| Feature | Score |\n| :---: | ---: |\n| Markdown | 5 |');
  await expect(page.locator('#extensions-lab-status')).toContainText('All checks pass');
@@ -2246,11 +2246,11 @@ test('issue #17 fenced examples cannot pass without rendered highlighting; succe
  await expect(page.locator('#extensions-lab-preview code.language-javascript')).toHaveCount(1);
  await expect(page.locator('#extensions-lab-preview code.language-javascript .hljs-keyword')).toContainText('const');
  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ ']);
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 16');
  await page.locator('#extensions-lab-reset').click();
  await expect(source).toHaveValue(/^~~~\nconst answer/);
  await expect(page.locator('#extensions-lab-status')).toContainText('Keep editing');
- await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 13'); // historical achievement persists
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('1 / 16'); // historical achievement persists
  await page.locator('#extensions-lab-close').click();
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
@@ -2307,7 +2307,7 @@ test('issue #17 second learning wave: four opt-in exercises pass with real sanit
  await page.locator('#extensions-lab-open').click();
  const select=page.locator('#extensions-lab-select');
  const source=page.locator('#extensions-lab-source');
- await expect(select.locator('option')).toHaveCount(13);
+ await expect(select.locator('option')).toHaveCount(16);
  for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
   await select.selectOption(id);
   await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
@@ -2329,13 +2329,13 @@ test('issue #17 second learning wave: four opt-in exercises pass with real sanit
    await expect(page.locator('#extensions-lab-preview dl.md-definition-list dd')).toHaveCount(2);
   }
  }
- await expect(page.locator('#extensions-lab-progress')).toHaveText('4 / 13');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('4 / 16');
  await page.locator('#extensions-lab-close').click();
  await expect(page.locator('#markdown-input')).toHaveValue(originalDraft);
  expect(new URL(page.url()).hash).toBe(originalHash);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 13');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('4 / 16');
  await page.locator('#extensions-lab-open').click();
  await expect(select).toHaveValue('definition-list');
  await expect(source).toHaveValue(/First \*\*definition\*\*/);
@@ -2373,7 +2373,7 @@ test('issue #17 all exercises show localized titles and portability notes in fiv
   await page.locator('#lang-selector').selectOption(language);
   await page.locator('#contents-toggle-btn').click();
   await page.locator('#extensions-lab-open').click();
-  await expect(page.locator('#extensions-lab-select option')).toHaveCount(13);
+  await expect(page.locator('#extensions-lab-select option')).toHaveCount(16);
   for(const id of ['github-footnotes','custom-heading-toc','figure-caption','definition-list']){
    await page.locator('#extensions-lab-select').selectOption(id);
    await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
@@ -2391,7 +2391,7 @@ test('issue #17 practical lessons: seven complete by rendered effects and persis
  await page.locator('#contents-toggle-btn').click();
  await page.locator('#extensions-lab-open').click();
  const source=page.locator('#extensions-lab-source'),select=page.locator('#extensions-lab-select');
- await expect(select.locator('option')).toHaveCount(13);
+ await expect(select.locator('option')).toHaveCount(16);
  const ids=['unicode-entities','emoji-shortcodes','gfm-table-tricks','html-table-list','portable-callout','author-notes','video-preview-links'];
  for(const id of ids){
   await select.selectOption(id);
@@ -2418,13 +2418,13 @@ test('issue #17 practical lessons: seven complete by rendered effects and persis
    await expect(page.locator('#extensions-lab-preview iframe')).toHaveCount(0);
   }
  }
- await expect(page.locator('#extensions-lab-progress')).toHaveText('7 / 13');
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('7 / 16');
  await page.locator('#extensions-lab-close').click();
  await expect(page.locator('#markdown-input')).toHaveValue(mainBefore);
  expect(new URL(page.url()).hash).toBe(routeBefore);
  await page.reload();
  await page.locator('#contents-toggle-btn').click();
- await expect(page.locator('#extensions-lab-open-progress')).toHaveText('7 / 13');
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('7 / 16');
  await page.locator('#extensions-lab-open').click();
  await expect(select).toHaveValue('video-preview-links');
  await expect(source).toHaveValue(/\[!\[Video preview\]/);
@@ -2458,7 +2458,7 @@ test('issue #17 practical instructions are complete across five locales on mobil
   await page.locator('#lang-selector').selectOption(lang);
   await page.locator('#contents-toggle-btn').click();
   await page.locator('#extensions-lab-open').click();
-  await expect(page.locator('#extensions-lab-select option')).toHaveCount(13);
+  await expect(page.locator('#extensions-lab-select option')).toHaveCount(16);
   for(const id of ['unicode-entities','emoji-shortcodes','gfm-table-tricks','html-table-list','portable-callout','author-notes','video-preview-links']){
    await page.locator('#extensions-lab-select').selectOption(id);
    await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
@@ -2778,4 +2778,76 @@ test('issue #19 standalone HTML drops hostile inline SVG/image payloads',async({
  await expect(page2.locator('.md-mermaid-export img')).toHaveCount(1);
  expect(await page2.evaluate(()=>window.__svgAttack)).toBeUndefined();
  await page2.close();
+});
+
+
+test('issue #19 optional Mermaid labs render real diagrams and persist separately',async({page})=>{
+ test.setTimeout(90000);
+ await page.goto('/');
+ const mainDraft=await page.locator('#markdown-input').inputValue();
+ const progressBefore=await page.locator('#progress-label').innerText();
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ await expect(page.locator('#extensions-lab-select option')).toHaveCount(16);
+ const ids=['mermaid-flowchart','mermaid-sequence','mermaid-pie'];
+ const source=page.locator('#extensions-lab-source');
+ for(const id of ids){
+  await page.locator('#extensions-lab-select').selectOption(id);
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+  await page.locator('#extensions-lab-example').click();
+  await expect(page.locator('#extensions-lab-preview figure.mermaid-diagram img')).toHaveCount(1,{timeout:25000});
+  const image=page.locator('#extensions-lab-preview figure.mermaid-diagram img');
+  expect(await image.evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['✓ ','✓ '],{timeout:20000});
+  await expect(source).toHaveValue(/~~~mermaid/);
+ }
+ await expect(page.locator('#extensions-lab-progress')).toHaveText('3 / 16');
+ await page.locator('#extensions-lab-close').click();
+ await expect(page.locator('#markdown-input')).toHaveValue(mainDraft);
+ await expect(page.locator('#progress-label')).toHaveText(progressBefore);
+ await page.reload();
+ await page.locator('#contents-toggle-btn').click();
+ await expect(page.locator('#extensions-lab-open-progress')).toHaveText('3 / 16');
+ await page.locator('#extensions-lab-open').click();
+ await expect(page.locator('#extensions-lab-select')).toHaveValue('mermaid-pie');
+ await expect(source).toHaveValue(/pie showData/);
+});
+
+test('issue #19 Mermaid labs refuse code examples and invalid Mermaid input',async({page})=>{
+ test.setTimeout(65000);
+ await page.goto('/');
+ await page.locator('#contents-toggle-btn').click();
+ await page.locator('#extensions-lab-open').click();
+ const source=page.locator('#extensions-lab-source');
+ for(const id of ['mermaid-flowchart','mermaid-sequence','mermaid-pie']){
+  await page.locator('#extensions-lab-select').selectOption(id);
+  await page.locator('#extensions-lab-example').click();
+  const example=await source.inputValue();
+  await source.fill('~~~~markdown\n'+example+'\n~~~~');
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+  await source.fill('~~~mermaid\nthisIsNotARealDiagram\n~~~');
+  await expect(page.locator('#extensions-lab-checks li strong')).toHaveText(['○ ','○ ']);
+  await expect(page.locator('#extensions-lab-preview figure.mermaid-diagram img')).toHaveCount(0);
+ }
+});
+
+test('issue #19 Mermaid exercise descriptions and results are localized on mobile',async({page})=>{
+ test.setTimeout(90000);
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ const titles={en:'Mermaid',cs:'Mermaid',uk:'Mermaid',ro:'Mermaid',ru:'Mermaid'};
+ for(const lang of Object.keys(titles)){
+  await page.locator('#lang-selector').selectOption(lang);
+  await page.locator('#contents-toggle-btn').click();
+  await page.locator('#extensions-lab-open').click();
+  await expect(page.locator('#extensions-lab-select option')).toHaveCount(16);
+  for(const id of ['mermaid-flowchart','mermaid-sequence','mermaid-pie']){
+   await page.locator('#extensions-lab-select').selectOption(id);
+   await expect(page.locator('#extensions-lab-description')).not.toBeEmpty();
+   await expect(page.locator('#extensions-lab-portability')).toContainText('Mermaid');
+   await expect(page.locator('#extensions-lab-checks li')).toHaveCount(2);
+  }
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#extensions-lab-modal')).toBeHidden();
+ }
 });

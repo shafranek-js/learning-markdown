@@ -1,10 +1,14 @@
 import {state,save} from '../core/state.js';
 import {markdownToHTML} from './preview.js';
 import {EXTENSIONS_LABS,extensionsLabText,evaluateExtensionsLab} from '../data/extensions-track.js';
+import {evaluateMermaidLab} from '../data/extensions-track-mermaid.js';
+import {renderMermaidExportImages,validatedMermaidImageUrl} from './mermaid-preview.js';
+import {mermaidLabels} from '../data/mermaid-templates.js';
 
 const $=id=>document.getElementById(id);
 const byId=id=>EXTENSIONS_LABS.find(item=>item.id===id) || EXTENSIONS_LABS[0];
 let previousFocus=null;
+let labRenderVersion=0,labRenderTimer=null;
 
 function selected(){return byId(state.extensionsLabCurrent);}
 function isOpen(){return !$('extensions-lab-modal').classList.contains('hidden');}
@@ -17,11 +21,7 @@ function showProgress(){
 
 // Both output and validation use the same sanitized renderer as main Preview.
 // No extension settings from the active core lesson are permitted to leak in.
-function checkLive(){
- const lab=selected(),source=$('extensions-lab-source').value;
- const html=markdownToHTML(source,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
- $('extensions-lab-preview').innerHTML=html;
- const checks=evaluateExtensionsLab(lab.id,html,source);
+function applyChecks(lab,checks){
  const locale=extensionsLabText(state.lang),entry=locale.entry[lab.id];
  const root=$('extensions-lab-checks');root.replaceChildren();
  checks.forEach((passed,index)=>{
@@ -39,6 +39,60 @@ function checkLive(){
   save();
  }
  showProgress();
+}
+// Validate Mermaid only after the actual parser/renderer returns a safe image.
+// A pasted screenshot or a Mermaid snippet quoted inside a code example
+// cannot earn completion. Ignore stale asynchronous work after every edit.
+function checkLive(){
+ const ticket=++labRenderVersion;
+ clearTimeout(labRenderTimer);
+ const lab=selected(),source=$('extensions-lab-source').value;
+ const html=markdownToHTML(source,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
+ const preview=$('extensions-lab-preview');
+ preview.innerHTML=html;
+ if(!lab.mermaidType){
+  applyChecks(lab,evaluateExtensionsLab(lab.id,html,source));
+  return;
+ }
+ applyChecks(lab,[false,false]);
+ if(preview.querySelectorAll('pre > code.language-mermaid').length!==1)return;
+ labRenderTimer=setTimeout(async()=>{
+  try{
+   const {images}=await renderMermaidExportImages(html);
+   if(ticket!==labRenderVersion||selected().id!==lab.id||
+     $('extensions-lab-source').value!==source)return;
+   const checks=evaluateMermaidLab(lab.id,html,images);
+   const imageUrl=images[0]?.uri;
+   if(imageUrl){
+    const code=preview.querySelector('pre > code.language-mermaid');
+    if(code){
+     const pre=code.parentElement,placeholder=document.createComment('Mermaid lab');
+     pre.before(placeholder);
+     const figure=document.createElement('figure');
+     figure.className='mermaid-diagram';
+     const image=document.createElement('img');
+     image.src=validatedMermaidImageUrl(imageUrl);
+     image.alt=mermaidLabels(state.lang).alt;
+     figure.append(image);
+     const details=document.createElement('details');
+     details.className='mermaid-source';
+     const title=document.createElement('summary');
+     title.textContent=mermaidLabels(state.lang).source;
+     details.append(title,pre);
+     figure.append(details);
+     // Record the original position before moving <pre> into <details>.
+     // The figure must be inserted at that same position.
+     placeholder.replaceWith(figure);
+    }
+   }
+   applyChecks(lab,checks);
+  }catch(error){
+   if(ticket===labRenderVersion){
+    console.warn('Mermaid lab rendering failed',error);
+    applyChecks(lab,[false,false]);
+   }
+  }
+ },300);
 }
 function renderSelected(){
  const lab=selected(),locale=extensionsLabText(state.lang),entry=locale.entry[lab.id];
@@ -69,6 +123,7 @@ export function renderExtensionsLabLanguage(){
  renderSelected();
 }
 function close(){
+ ++labRenderVersion;clearTimeout(labRenderTimer);
  $('extensions-lab-modal').classList.add('hidden');
  if(previousFocus?.isConnected)previousFocus.focus();
  previousFocus=null;

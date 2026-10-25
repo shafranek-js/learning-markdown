@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {EXTENSIONS_LABS,EXTENSIONS_LAB_TEXT,extensionsLabText,evaluateExtensionsLab} from '../js/data/extensions-track.js';
+import {evaluateMermaidLab} from '../js/data/extensions-track-mermaid.js';
 const win=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'}).window;
 const bogusDraft='x'.repeat(20001);
 const storage=JSON.stringify({
@@ -15,8 +16,8 @@ Object.assign(globalThis,{
 });
 const {state,resetCourse}=await import('../js/core/state.js');
 const {markdownToHTML}=await import('../js/ui/preview.js');
-assert.equal(EXTENSIONS_LABS.length,13);
-assert.equal(new Set(EXTENSIONS_LABS.map(x=>x.id)).size,13);
+assert.equal(EXTENSIONS_LABS.length,16);
+assert.equal(new Set(EXTENSIONS_LABS.map(x=>x.id)).size,16);
 assert.equal(state.extensionsLabCurrent,EXTENSIONS_LABS[0].id);
 assert.deepEqual(state.extensionsLabCompleted,['gfm-table-alignment']);
 assert.equal(state.extensionsLabDrafts['gfm-table-alignment'],'saved work');
@@ -36,6 +37,15 @@ for(const lang of ['en','cs','uk','ro','ru']){
  }
 }
 for(const lab of EXTENSIONS_LABS){
+ if(lab.mermaidType){
+  assert.deepEqual(evaluateMermaidLab(lab.id,'',[]),[false,false]);
+  assert.deepEqual(evaluateExtensionsLab(lab.id,'',lab.example),[]);
+  const rendered=markdownToHTML(lab.example,'gfm',{extensions:false});
+  assert(rendered.includes('language-mermaid'),'Mermaid source remains a fenced code block');
+  const starter=markdownToHTML(lab.starter,'gfm',{extensions:false});
+  assert(!starter.includes('language-mermaid'),'starter should require the learner to add a Mermaid language');
+  continue;
+ }
  const start=markdownToHTML(lab.starter,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
  assert.deepEqual(evaluateExtensionsLab(lab.id,start,lab.starter),[false,false],'starter must be incomplete: '+lab.id);
  const finished=markdownToHTML(lab.example,'gfm',{extensions:false,labFeatures:lab.labFeatures||[]});
@@ -80,7 +90,26 @@ assert(!/<iframe|javascript:/i.test(cleanPractical));
 const attack=markdownToHTML('<img src="javascript:alert(1)" onerror="alert(2)">\n<script>alert(3)</script>','gfm',{extensions:false});
 assert(!/<script|onerror=|javascript:/i.test(attack));
 assert.deepEqual(evaluateExtensionsLab('invalid','<table></table>'),[]);
+
+// Mermaid lab checks must inspect rendered SVG label semantics and verified type.
+for(const [id,type,labels] of [
+ ['mermaid-flowchart','flowchart-v2',['Draft','Review']],
+ ['mermaid-sequence','sequence',['User','App','Request']],
+ ['mermaid-pie','pie',['Write','Preview']]
+]){
+ const source=EXTENSIONS_LABS.find(lab=>lab.id===id).example;
+ const html=markdownToHTML(source,'gfm',{extensions:false});
+ const svg='<svg xmlns="http://www.w3.org/2000/svg">'+labels.map(s=>'<text>'+s+'</text>').join('')+'</svg>';
+ const item={source:html.match(/<code class="language-mermaid">([\s\S]*?)<\/code>/)?.[1]??'',uri:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),type};
+ const coded=new DOMParser().parseFromString(html,'text/html').querySelector('code.language-mermaid');
+ item.source=coded?.textContent.trim();
+ assert.deepEqual(evaluateMermaidLab(id,html,[item]),[true,true]);
+ assert.deepEqual(evaluateMermaidLab(id,html,[{...item,type:'not-mermaid'}]),[false,false]);
+ assert.deepEqual(evaluateMermaidLab(id,html,[{...item,uri:'https://invalid.test/x.svg'}]),[false,false]);
+ const fenced=markdownToHTML('~~~~markdown\n'+source+'\n~~~~','gfm',{extensions:false});
+ assert.deepEqual(evaluateMermaidLab(id,fenced,[item]),[false,false]);
+}
 resetCourse();
 assert.equal(state.extensionsLabDrafts['gfm-table-alignment'],'saved work','core reset must not erase optional lab');
 assert.deepEqual(state.extensionsLabCompleted,['gfm-table-alignment'],'core reset must not erase optional progress');
-console.log('PASS: #17 thirteen optional labs, semantic outcomes, five locales, isolated state and XSS');
+console.log('PASS: #17/#19 sixteen optional labs, semantic outcomes, five locales, isolated state and XSS');
