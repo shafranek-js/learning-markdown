@@ -2683,7 +2683,7 @@ test('issue #19 copy Mermaid source is accessible and localized',async({page,con
 });
 
 
-test('issue #19 standalone HTML embeds multiple Mermaid diagrams as safe offline images',async({page,context})=>{
+test('issue #19 standalone HTML embeds multiple Mermaid diagrams as safe offline images',async({page,context},testInfo)=>{
  test.setTimeout(90000);
  await page.goto('/');
  const source=mermaidSnippet('flowchart')+'\nBetween diagrams.\n'+mermaidSnippet('sequence');
@@ -2693,7 +2693,10 @@ test('issue #19 standalone HTML embeds multiple Mermaid diagrams as safe offline
  const downloadPromise=page.waitForEvent('download');
  await page.locator('#download-html-btn').click();
  const download=await downloadPromise;
- const path=await download.path();
+ // Chromium treats Playwright's extensionless temporary download as text/plain.
+ // Save with a real .html extension to test the browser's HTML file handler.
+ const path=testInfo.outputPath('offline-mermaid-export.html');
+ await download.saveAs(path);
  const html=await readFile(path,'utf8');
  expect(html).toContain('Content-Security-Policy');
  expect(html).not.toMatch(/<script[\s>]|<iframe[\s>]|<foreignObject[\s>]/i);
@@ -2757,7 +2760,7 @@ test('issue #19 failed Mermaid render keeps source visible and warns on HTML exp
  await expect(page.locator('#markdown-input')).toHaveValue(source);
 });
 
-test('issue #19 standalone HTML drops hostile inline SVG/image payloads',async({page})=>{
+test('issue #19 standalone HTML drops hostile inline SVG/image payloads',async({page},testInfo)=>{
  await page.goto('/');
  const source=mermaidSnippet('flowchart')+'\n<svg onload="window.__svgAttack=1"><script>window.__svgAttack=2</script></svg>\n\n'+
   '<img src="data:image/svg+xml,%3Csvg%20onload%3D%22alert(1)%22%3E" onerror="window.__svgAttack=3">';
@@ -2765,11 +2768,13 @@ test('issue #19 standalone HTML drops hostile inline SVG/image payloads',async({
  const downloadPromise=page.waitForEvent('download');
  await page.locator('#download-html-btn').click();
  const dl=await downloadPromise;
- const html=await readFile(await dl.path(),'utf8');
+ const exportedPath=testInfo.outputPath('safe-mermaid-export.html');
+ await dl.saveAs(exportedPath);
+ const html=await readFile(exportedPath,'utf8');
  expect((html.match(/class="md-mermaid-export"/g)||[]).length).toBe(1);
  expect(html).not.toMatch(/<script[\s>]|<svg[\s>]|onload=|onerror=|javascript:/i);
  const page2=await page.context().newPage();
- await page2.goto(pathToFileURL(await dl.path()).href);
+ await page2.goto(pathToFileURL(exportedPath).href);
  await expect(page2.locator('.md-mermaid-export img')).toHaveCount(1);
  expect(await page2.evaluate(()=>window.__svgAttack)).toBeUndefined();
  await page2.close();
