@@ -117,9 +117,9 @@ test('issue #6 convert-selection controls have labels in all five locales',async
 
 test('issue #6 nested list conversion changes only selected depth and keeps outer roman numbering',async({page})=>{
  await page.goto('/');
- const source='Before\\n\\n<table><tr><td><ol type="i"><li>Parent<ul>'+
+ const source='Before\n\n<table><tr><td><ol type="i"><li>Parent<ul>'+
   '<li>Inner one</li><li><em>Inner two</em><ul><li>Deep</li></ul></li>'+
-  '</ul>Tail</li><li>Outer two</li></ol></td><td>Neighbor</td></tr></table>\\n\\nAfter';
+  '</ul>Tail</li><li>Outer two</li></ol></td><td>Neighbor</td></tr></table>\n\nAfter';
  const input=page.locator('#markdown-input');
  await input.fill(source);
  await page.locator('#markdown-preview td').first().click();
