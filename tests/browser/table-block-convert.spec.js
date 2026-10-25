@@ -89,3 +89,25 @@ test('issue #6 Russian mobile refuses partially selected list conversion without
  await expect(input).toHaveValue(source);
  await expect(page.locator('#table-edit-bar')).toBeInViewport();
 });
+
+
+test('issue #6 convert-selection controls have labels in all five locales',async({page})=>{
+ await page.goto('/');
+ await page.locator('#markdown-input').fill('<table><tr><td><p>Example</p></td></tr></table>');
+ const words={
+  en:['Paragraphs','Bullets','Numbered'],
+  cs:['Odstavce','Odrážky','Číslování'],
+  uk:['Абзаци','Маркери','Нумерація'],
+  ro:['Paragrafe','Marcatori','Numerotare'],
+  ru:['В абзацы','В маркеры','В нумерацию']
+ };
+ for(const [language,expected] of Object.entries(words)){
+  await page.locator('#lang-selector').selectOption(language);
+  await page.locator('#markdown-preview td').first().click();
+  for(const [index,kind] of ['p','ul','ol'].entries()){
+   const button=page.locator('#table-edit-convert-'+kind);
+   await expect(button).toHaveText(expected[index]);
+   await expect(button).toHaveAttribute('aria-label',expected[index]);
+  }
+ }
+});
