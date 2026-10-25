@@ -281,3 +281,12 @@
  .md-preview dl dd{break-inside:avoid-page}
  .md-preview dl dd{border-color:#94a3b8}
 }
+
+/* #18 Mermaid: responsive images, visible loading/error states and source fallback. */
+.md-preview .mermaid-diagram{max-width:100%;margin:1.1rem 0;overflow-x:auto}
+.md-preview .mermaid-diagram>img{display:block;max-width:100%;height:auto;margin:.5rem auto;border:0}
+.md-preview .mermaid-diagram .mermaid-source{margin:.65rem 0}
+.md-preview .mermaid-diagram .mermaid-source pre{max-width:100%;overflow-x:auto}
+.md-preview .mermaid-status{font-size:.86rem;line-height:1.5;padding:.55rem .8rem;border-left:3px solid var(--preview-border);margin:.5rem 0}
+.md-preview .mermaid-error{border-left-color:#b42332}
+@media print{.md-preview .mermaid-diagram{break-inside:avoid;page-break-inside:avoid}}
