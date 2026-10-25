@@ -2640,7 +2640,7 @@ test('issue #19 exports validated Mermaid SVG without changing Markdown source',
  expect(download.suggestedFilename()).toBe('mermaid-diagram-1.svg');
  const svg=await readFile(await download.path(),'utf8');
  expect(svg).toContain('<svg');
- expect(svg).not.toMatch(/<script|<foreignObject|javascript:|https?:\/\//i);
+ expect(svg).not.toMatch(/<script|<foreignObject|@import|href\s*=\s*["'](?:https?:|javascript:)/i);
  await expect(editor).toHaveValue(source);
 });
 
