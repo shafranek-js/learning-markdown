@@ -146,7 +146,7 @@ const htmlAligned='<table><tr><td align="right">One</td><td align="center">Two</
 const changedAligned=apply(htmlAligned,'cell-blue',select(0,0));
 assert(changedAligned?.text.includes('align="right"'));
 assert(changedAligned.text.includes('align="center"'));
-const gfmAligned='| Left | Right |\\n| :--- | ---: |\\n| one | two |\\n';
+const gfmAligned='| Left | Right |\n| :--- | ---: |\n| one | two |\n';
 const convertedAligned=apply(gfmAligned,'cell-blue',select(1,0));
 assert(convertedAligned?.text.includes('<table'));
 assert(convertedAligned.text.includes('align="left"'));
