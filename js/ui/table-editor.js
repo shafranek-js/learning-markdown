@@ -89,9 +89,17 @@ function setCellMode(rich){
  if(rich&&getTableCellHTML(area().value,selected.tableIndex,selected.row,selected.col)===null)return;
  if(rich===Boolean(selected.richMode))return;
  if(rich){
-  // Keep unsaved plain text when switching into the rich editor.
-  $('table-edit-rich-content').textContent=$('table-edit-content-input').value;
+  // Switching away and back without modifying text must NOT discard rich
+  // formatting. If the plain field was edited, use its explicit text instead.
+  const previous=selected.pendingRichHTML;
+  if(previous!==undefined){
+   const doc=new DOMParser().parseFromString(previous,'text/html');
+   if(doc.body.textContent===$('table-edit-content-input').value)
+    $('table-edit-rich-content').innerHTML=previous;
+   else $('table-edit-rich-content').textContent=$('table-edit-content-input').value;
+  }else $('table-edit-rich-content').textContent=$('table-edit-content-input').value;
  }else{
+  selected.pendingRichHTML=$('table-edit-rich-content').innerHTML;
   $('table-edit-content-input').value=$('table-edit-rich-content').textContent;
  }
  selected.richMode=rich;
