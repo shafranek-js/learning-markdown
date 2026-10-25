@@ -12,6 +12,8 @@ let version=0;
 let debounceTimer=null;
 let mermaidModule=null;
 let workQueue=Promise.resolve();
+const diagramCache=new Map();
+const MAX_CACHED_DIAGRAMS=24;
 function getMermaid(){
  if(!mermaidModule)mermaidModule=import('mermaid').then(({default:mermaid})=>{
   mermaid.initialize({
@@ -61,6 +63,29 @@ function visibleError(status,locale,index,message){
  status.setAttribute('role','alert');
  status.textContent=locale.error+' '+index+': '+String(message||'').slice(0,180);
 }
+function showDiagram(pre,src,index,locale,status=null){
+ const container=document.createElement('figure');
+ container.className='mermaid-diagram';
+ const img=document.createElement('img');
+ img.src=src;img.alt=locale.alt+' '+index;img.loading='eager';
+ container.append(img);
+ const details=document.createElement('details');
+ details.className='mermaid-source';
+ const summary=document.createElement('summary');
+ summary.textContent=locale.source;
+ details.append(summary,pre);
+ container.append(details);
+ if(status)status.replaceWith(container);
+ else pre.parentNode.insertBefore(container,pre);
+ // Moving the original code into <details> keeps a trustworthy source fallback.
+ return container;
+}
+function rememberDiagram(source,src){
+ if(diagramCache.has(source))diagramCache.delete(source);
+ diagramCache.set(source,src);
+ if(diagramCache.size>MAX_CACHED_DIAGRAMS)
+  diagramCache.delete(diagramCache.keys().next().value);
+}
 async function renderOne(pre,source,index,ticket,locale){
  if(ticket!==version||!pre.isConnected)return;
  const status=document.createElement('p');
@@ -76,20 +101,8 @@ async function renderOne(pre,source,index,ticket,locale){
   const {svg}=await mermaid.render('md-mermaid-'+ticket+'-'+index,source);
   if(ticket!==version||!pre.isConnected)return;
   const src=mermaidImageDataUrl(svg);
-  const container=document.createElement('figure');
-  container.className='mermaid-diagram';
-  const img=document.createElement('img');
-  img.src=src;
-  img.alt=locale.alt+' '+index;
-  img.loading='lazy';
-  container.append(img);
-  const details=document.createElement('details');
-  details.className='mermaid-source';
-  const summary=document.createElement('summary');
-  summary.textContent=locale.source;
-  details.append(summary,pre);
-  container.append(details);
-  status.replaceWith(container);
+  rememberDiagram(source,src);
+  showDiagram(pre,src,index,locale,status);
  }catch(error){
   if(ticket!==version||!pre.isConnected)return;
   visibleError(status,locale,index,error?.message);
@@ -100,11 +113,17 @@ export function scheduleMermaidPreview(root,language='en'){
  clearTimeout(debounceTimer);
  const blocks=[...root.querySelectorAll('pre > code.language-mermaid')];
  if(!blocks.length)return;
- const locale=mermaidLabels(language);
+ const locale=mermaidLabels(language),pending=[];
+ for(const [i,code] of blocks.entries()){
+  const pre=code.parentElement,source=code.textContent.trim();
+  const cached=diagramCache.get(source);
+  if(cached)showDiagram(pre,cached,i+1,locale);
+  else pending.push({pre,source,index:i+1});
+ }
+ if(!pending.length)return;
  debounceTimer=setTimeout(()=>{
-  for(const [i,code] of blocks.entries()){
-   const pre=code.parentElement,source=code.textContent.trim();
-   workQueue=workQueue.catch(()=>{}).then(()=>renderOne(pre,source,i+1,ticket,locale));
+  for(const {pre,source,index} of pending){
+   workQueue=workQueue.catch(()=>{}).then(()=>renderOne(pre,source,index,ticket,locale));
   }
  },300);
 }
