@@ -53,8 +53,11 @@ function convertNestedList(editor,target,selection,range){
  const changed=editor.ownerDocument.createElement(target);
  while(list.firstChild)changed.append(list.firstChild);
  list.replaceWith(changed);
+ // Keep selection anchored *inside* the converted nested list. Selecting
+ // the list element itself would make a second conversion target its parent LI.
  const replacement=editor.ownerDocument.createRange();
- replacement.selectNodeContents(changed);
+ replacement.setStart(changed.firstElementChild,0);
+ replacement.setEnd(changed.lastElementChild,changed.lastElementChild.childNodes.length);
  selection.removeAllRanges();selection.addRange(replacement);
  return {ok:true,blocks:1};
 }
