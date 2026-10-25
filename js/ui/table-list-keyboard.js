@@ -54,6 +54,17 @@ function outdent(info){
  const {list,items}=info,holder=list.parentElement;
  if(!isItem(holder)||!isList(holder.parentElement))return false;
  const outer=holder.parentElement,after=holder.nextSibling;
+ // Lifting a middle range must not reorder the unselected trailing items.
+ // Keep their reading order by nesting that tail under the LAST lifted item.
+ // Clone the list shell to retain ordered-list type and approved presets.
+ const trailing=[];
+ for(let next=items.at(-1).nextElementSibling;next;next=next.nextElementSibling)
+  if(isItem(next))trailing.push(next);
+ if(trailing.length){
+  const remainder=list.cloneNode(false);
+  for(const item of trailing)remainder.append(item);
+  items.at(-1).append(remainder);
+ }
  for(const item of items)outer.insertBefore(item,after);
  if(!children(list).length)list.remove();
  return true;
@@ -101,11 +112,23 @@ function exitToParagraph(item,editor){
 // Enter exits an empty top-level item, or outdents an empty nested item.
 // Backspace at the start of a nested item outdents; at the beginning of the
 // first top-level item it promotes the existing inline content to a paragraph.
-export function handleBlockListKeydown(editor,event,selection=window.getSelection()){
+export function handleBlockListKeydown(editor,event,selection=window.getSelection(),onUnsupportedSelection){
  if(!editor||!['Tab','Enter','Backspace'].includes(event.key)||
     event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return false;
  const info=activeItems(editor,selection);
- if(!info)return false;
+ if(!info){
+  // Browser Tab would otherwise abandon an active selection crossing a
+  // paragraph/list boundary, losing the user's selection with no explanation.
+  // Such mixed-depth edits need a structural algorithm, not native focus Tab.
+  if(event.key==='Tab'&&selection?.rangeCount&&!selection.isCollapsed&&
+     editor.contains(selection.anchorNode)&&editor.contains(selection.focusNode)&&
+     (nearestItem(selection.anchorNode,editor)||nearestItem(selection.focusNode,editor))){
+   event.preventDefault();
+   if(typeof onUnsupportedSelection==='function')onUnsupportedSelection();
+   return true;
+  }
+  return false;
+ }
  const {list,items}=info;
  const snapshot=[selection.anchorNode,selection.anchorOffset,
   selection.focusNode,selection.focusOffset];
