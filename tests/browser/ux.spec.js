@@ -3023,3 +3023,81 @@ test('issue #6: Russian mobile cell editor can retain rich formatting or choose 
  expect(content).not.toContain('<strong>');
  expect(content).toContain('Новый текст');
 });
+
+
+test('issue #6 nested leaf table edits remain scoped and undoable',async({page})=>{
+ test.setTimeout(65000);
+ await page.goto('/');
+ const source='# Before\n\n<table class="af-table-outline"><tr><td>'+
+  'Outer <strong>content</strong> <table class="af-table-borderless"><tr>'+
+  '<td><strong>Inner</strong></td><td>Second</td></tr>'+
+  '<tr><td>Third</td><td>Fourth</td></tr></table> After</td>'+
+  '<td>Outside sibling</td></tr></table>\n\n# After';
+ const editor=page.locator('#markdown-input');
+ await editor.fill(source);
+ await expect(page.locator('#markdown-preview table')).toHaveCount(2);
+ await page.locator('#markdown-preview table table td').first().click();
+ await expect(page.locator('#table-edit-content-input')).toHaveValue('Inner');
+ await expect(page.locator('#table-edit-rich-panel')).toBeVisible();
+ await page.locator('#table-edit-rich-content').fill('Nested revised');
+ await page.locator('#table-edit-content-save').click();
+ await expect(page.locator('#markdown-preview table table td').first()).toHaveText('Nested revised');
+ const changed=await editor.inputValue();
+ expect(changed).toContain('Outer <strong>content</strong>');
+ expect(changed).toContain('Outside sibling');
+ expect(changed).toContain('After</td>');
+ expect(changed).toContain('class="af-table-outline"');
+ expect(changed).toContain('class="af-table-borderless"');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview table table td').first()).toHaveText('Nested revised');
+ const downloading=page.waitForEvent('download');
+ await page.locator('#download-html-btn').click();
+ const file=await downloading;
+ const html=await readFile(await file.path(),'utf8');
+ expect(html).toContain('Nested revised');
+ expect(html).toContain('Outside sibling');
+ expect(html).not.toMatch(/<script[\s>]|onerror=|onclick=/);
+});
+
+test('issue #6 nested leaf merge and row insertion preserve outer table geometry',async({page})=>{
+ await page.goto('/');
+ const source='<table class="af-table-outline"><tr><td>Parent '+
+  '<table class="af-table-borderless"><tr><td>A</td><td>B</td></tr>'+
+  '<tr><td>C</td><td>D</td></tr></table> End</td><td>Sibling</td></tr></table>';
+ await page.locator('#markdown-input').fill(source);
+ const leafCells=page.locator('#markdown-preview table table td');
+ await leafCells.first().click();
+ await leafCells.nth(1).click({modifiers:['Shift']});
+ await expect(page.locator('#markdown-preview table table .table-edit-selected')).toHaveCount(2);
+ await page.locator('#table-edit-merge').selectOption('merge');
+ await expect(page.locator('#markdown-preview table table td[colspan="2"]')).toHaveText('AB');
+ await expect(page.locator('#markdown-preview table > tbody > tr > td')).toHaveCount(2);
+ await page.locator('#markdown-preview table table td[colspan="2"]').click();
+ await page.locator('#table-edit-rows').selectOption('row-below');
+ await expect(page.locator('#markdown-preview table table tr')).toHaveCount(3);
+ await expect(page.locator('#markdown-preview table > tbody > tr')).toHaveCount(1);
+ await expect(page.locator('#markdown-preview table')).toContainText('Sibling');
+});
+
+test('issue #6 nested table editing remains accessible on mobile with locales',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ const source='<table><tr><td>Внешняя '+
+  '<table><tr><td>Внутренняя</td></tr></table> конец</td></tr></table>';
+ await page.locator('#markdown-input').fill(source);
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview table table td').click();
+ await expect(page.locator('#table-edit-title')).toHaveText('Изменить таблицу');
+ await expect(page.locator('#table-edit-content-input')).toHaveValue('Внутренняя');
+ await expect(page.locator('#table-edit-bar')).toBeInViewport();
+ await page.locator('#table-edit-content-input').fill('Изменена');
+ await page.locator('#table-edit-content-save').click();
+ await expect(page.locator('#markdown-preview table table td')).toHaveText('Изменена');
+ await expect(page.locator('#markdown-preview table > tbody > tr > td')).toContainText('Внешняя');
+ const raw=await page.locator('#markdown-input').inputValue();
+ expect(raw).toContain('конец');
+ expect(raw).toContain('Изменена');
+});
