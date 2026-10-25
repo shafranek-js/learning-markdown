@@ -332,6 +332,11 @@ assert.equal(setTableCellImage(unsafeExisting,0,0,0,{
 const scriptedExisting='<table><tr><td><img src="https://example.org/ok.png" alt="OK">'+
  '<script>doSomething()</script></td></tr></table>';
 assert.equal(getTableCellImage(scriptedExisting,0,0,0),null);
+const rejectedSiblingImage='<table><tr><td><img src="https://example.org/ok.png" alt="OK"></td>'+
+ '<td><img src="data:image/svg+xml,%3Csvg%3E" alt="Untrusted"></td></tr></table>';
+assert.equal(getTableCellImage(rejectedSiblingImage,0,0,0),null,
+ 'editing one image must not silently delete an unsafe image in another cell');
+
 const figureImage='<table><tr><td><figure class="af-figure">'+
  '<img src="https://example.org/figure.png" alt="Captioned">'+
  '<figcaption><strong>Keep this caption</strong></figcaption></figure>'+
