@@ -3,8 +3,12 @@ import {JSDOM} from 'jsdom';
 import {MERMAID_TEMPLATES,MERMAID_LABELS,mermaidLabels,mermaidSnippet} from '../js/data/mermaid-templates.js';
 import {mermaidImageDataUrl} from '../js/ui/mermaid-preview.js';
 
-assert.deepEqual(Object.keys(MERMAID_TEMPLATES),['flowchart','sequence','pie']);
+assert.deepEqual(Object.keys(MERMAID_TEMPLATES),['flowchart','sequence','pie','class','state','er','gantt','mindmap','timeline']);
 assert.deepEqual(Object.keys(MERMAID_LABELS).sort(),['cs','en','ro','ru','uk']);
+for(const locale of Object.values(MERMAID_LABELS)){
+ assert.equal(locale.types.length,Object.keys(MERMAID_TEMPLATES).length);
+ for(const label of [locale.zoomIn,locale.zoomOut,locale.fit])assert.ok(label.length>2);
+}
 for(const [type,source] of Object.entries(MERMAID_TEMPLATES)){
  const fence=mermaidSnippet(type);
  assert.ok(fence.startsWith('\n\n```mermaid\n'));
