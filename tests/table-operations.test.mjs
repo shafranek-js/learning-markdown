@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText} from '../js/core/table-operations.js';
+import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds} from '../js/core/table-operations.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://example.test/'});
@@ -81,5 +81,41 @@ const changedMerged=setTableCellText(mergedText,0,0,0,'Safe <img onerror="go()">
 assert(changedMerged.text.includes('colspan="2"'));
 assert(changedMerged.text.includes('&lt;img')&&!changedMerged.text.includes('<img'));
 assert(changedMerged.text.includes('One')&&changedMerged.text.includes('Two'));
+
+
+const complicated='<table class="af-table-outline">'+
+ '<tr><td>A</td><td>B</td><td>C</td></tr>'+
+ '<tr><td colspan="2">D</td><td>E</td></tr>'+
+ '<tr><td>F</td><td>G</td><td>H</td></tr></table>';
+const partial=select(0,1,{row:2,col:1});
+assert.deepEqual(tableSelectionBounds(complicated,0,partial),{r0:0,r1:2,c0:0,c1:1});
+const closed=apply(complicated,'merge',partial);
+assert(closed,'partial intersection of a merged owner must expand to a full rectangle');
+const closedTable=new DOMParser().parseFromString(closed.text,'text/html').querySelector('table');
+const owner=closedTable.querySelector('td[rowspan="3"][colspan="2"]');
+assert(owner,'expanded region contains all three rows and both columns');
+for(const value of ['A','B','D','F','G'])assert(owner.textContent.includes(value));
+for(const value of ['C','E','H'])assert(closedTable.textContent.includes(value));
+assert.equal(closedTable.querySelectorAll('td').length,4);
+assert.equal(getTableCellText(closed.text,0,1,1),owner.textContent);
+const repeatMerge=apply(closed.text,'merge',select(0,0,{row:2,col:1}));
+assert.equal(repeatMerge,null,'merging one existing owner is a no-op');
+
+const wideTop='<table><tr><td colspan="2">Top</td><td>Right</td></tr>'+
+ '<tr><td>Below 1</td><td>Below 2</td><td>Below 3</td></tr></table>';
+const rightOfSpan=apply(wideTop,'merge-right',select(0,0));
+assert(rightOfSpan?.text.includes('colspan="3"'));
+assert(rightOfSpan.text.includes('Top<br>Right'));
+const belowSpan=apply(wideTop,'merge-down',select(0,0));
+assert(belowSpan?.text.includes('rowspan="2"'));
+assert(belowSpan.text.includes('colspan="2"'));
+for(const value of ['Top','Below 1','Below 2'])assert(belowSpan.text.includes(value));
+assert(belowSpan.text.includes('Below 3'));
+assert.equal(apply(wideTop,'merge-right',select(0,2)),null,'right edge must not wrap');
+assert.equal(tableSelectionBounds(wideTop,0,select(0,0,{row:80,col:1})),null);
+assert.equal(tableSelectionBounds(wideTop,0,select(0,0,{row:0.4,col:1})),null);
+const nestedHTML='<table><tr><td>Outer<table><tr><td>Inner</td></tr></table></td></tr></table>';
+assert.equal(tableSelectionBounds(nestedHTML,0,select(0,0)),null);
+assert.equal(apply(nestedHTML,'merge-right',select(0,0)),null);
 
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
