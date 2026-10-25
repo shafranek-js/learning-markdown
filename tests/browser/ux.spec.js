@@ -3558,3 +3558,69 @@ test('issue #6 Blocks Russian mobile help and Backspace at first list item',asyn
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue(original);
 });
+
+
+test('issue #6 multi-item outdent preserves trailing nested list order, formatting and Undo',async({page})=>{
+ await page.goto('/');
+ const source='Before\\n\\n<table><tr><td><ol><li>Root<ol type="i">'+
+  '<li>One</li><li>Two <em>rich</em></li><li>Three</li><li>Four</li></ol></li>'+
+  '<li>End</li></ol></td><td>Neighbor</td></tr></table>\\n\\nAfter';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ await rich.locator(':scope > ol > li > ol > li').nth(1).evaluate(el=>{
+  const next=el.nextElementSibling;
+  const sel=window.getSelection(),range=document.createRange();
+  el.closest('[contenteditable]').focus();
+  range.setStart(el.firstChild,0);range.setEnd(next.firstChild,4);
+  sel.removeAllRanges();sel.addRange(range);
+ });
+ await page.keyboard.press('Shift+Tab');
+ const top=rich.locator(':scope > ol > li');
+ await expect(top).toHaveCount(4);
+ await expect(top.nth(0).locator(':scope > ol > li')).toHaveText(['One']);
+ await expect(top.nth(1)).toContainText('Two rich');
+ await expect(top.nth(1).locator('em')).toHaveText('rich');
+ await expect(top.nth(2).locator(':scope > ol > li')).toHaveText(['Four']);
+ await expect(top.nth(2).locator(':scope > ol')).toHaveAttribute('type','i');
+ await expect(top.nth(3)).toHaveText('End');
+ await expect(input).toHaveValue(source);
+ await page.locator('#table-edit-content-save').click();
+ const updated=await input.inputValue();
+ expect(updated).toContain('Neighbor');
+ expect(updated).toContain('<em>rich</em>');
+ expect(updated).toContain('type="i"');
+ await expect(page.locator('#markdown-preview td').first()).toContainText('RootOneTwo richThreeFourEnd');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview td').first()).toContainText('RootOneTwo richThreeFourEnd');
+});
+
+test('issue #6 mixed list/paragraph selection safely keeps focus and shows Russian guidance',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ const source='<table><tr><td><p>Начало</p><ul><li>Один</li>'+
+  '<li>Два</li></ul><p>Конец</p></td></tr></table>';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ const original=await rich.innerHTML();
+ await rich.locator('ul > li').first().evaluate(el=>{
+  const end=el.closest('[contenteditable]').querySelector('p:last-child').firstChild;
+  const sel=window.getSelection(),range=document.createRange();
+  el.closest('[contenteditable]').focus();
+  range.setStart(el.firstChild,0);range.setEnd(end,3);
+  sel.removeAllRanges();sel.addRange(range);
+ });
+ await page.keyboard.press('Tab');
+ await expect(page.locator('#table-edit-message')).toContainText('Выделение между абзацами и списками');
+ await expect(rich).toBeFocused();
+ await expect(rich).toHaveJSProperty('innerHTML',original);
+ await expect(input).toHaveValue(source);
+ await expect(page.locator('#table-edit-bar')).toBeInViewport();
+});
