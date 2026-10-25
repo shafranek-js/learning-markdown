@@ -21,7 +21,7 @@ function safeList(list,target,range){
  // When converting a list, all items must be selected. Partial list
  // conversions can renumber the remaining ordered items unexpectedly.
  if(!items.length||items.some(item=>!range.intersectsNode(item)))return false;
- if(target==='p'&&items.some(item=>[...item.querySelectorAll('*')].some(el=>
+ if(target==='p'&&items.some(item=>item.attributes.length||[...item.querySelectorAll('*')].some(el=>
     el.tagName==='UL'||el.tagName==='OL'||!SAFE_INLINE.has(el.tagName.toLowerCase()))))return false;
  return true;
 }
