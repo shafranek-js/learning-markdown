@@ -2672,6 +2672,9 @@ test('issue #19 copy Mermaid source is accessible and localized',async({page,con
  expect(await page.evaluate(()=>navigator.clipboard.readText())).toContain('pie showData');
  await expect(page.locator('#markdown-preview .mermaid-export-status')).toContainText('copied');
  await page.locator('#lang-selector').selectOption('ru');
+ // Lessons have language-specific drafts: insert the same source into the RU draft.
+ await page.locator('#markdown-input').fill(source);
+ await expect(page.locator('#markdown-preview .mermaid-export-controls')).toBeVisible({timeout:20000});
  await expect(page.locator('#markdown-preview .mermaid-export-controls')).toContainText('Экспорт SVG');
  await expect(page.locator('#markdown-preview .mermaid-export-controls')).toContainText('Экспорт PNG');
  await expect(page.locator('#markdown-preview .mermaid-export-controls')).toContainText('Копировать код');
