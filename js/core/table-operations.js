@@ -433,6 +433,13 @@ const IMAGE_CELL_TAGS=new Set([...CELL_SAFE_TAGS,'img','figure','figcaption']);
 function imageCellOwner(source,index,row,col){
  const entry=findEditableTables(source)[index];
  if(!['html','nested'].includes(entry?.type)||!Number.isInteger(row)||!Number.isInteger(col))return null;
+ // Inspect the raw HTML block as well as its sanitized representation:
+ // dropped foreign/media tags elsewhere in the containing table must not be
+ // silently removed during an otherwise legitimate image-property edit.
+ const rawDoc=new DOMParser().parseFromString(entry.raw,'text/html');
+ const allowed=new Set([...IMAGE_CELL_TAGS,'table','thead','tbody','tfoot','tr','td','th']);
+ if(rawDoc.head.children.length||[...rawDoc.body.querySelectorAll('*')]
+    .some(el=>!allowed.has(el.tagName.toLowerCase())))return null;
  const target=selectedHTMLTable(entry),model=target?.model;
  if(!model||row<0||col<0||row>=model.rows||col>=model.cols)return null;
  const owner=cellsAt(model,row,col);
