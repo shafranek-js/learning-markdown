@@ -357,3 +357,14 @@ The optional lab now has **13 exercises**, including seven practical additions, 
 All examples remain editable in an independent, locally saved lab workspace and do not change the user's main Markdown source. The source-only author-note checks explicitly exclude code fences; all other validators inspect the **sanitized rendered DOM**. The existing parser allowlist prevents the app-specific emoji expansion from affecting normative GFM, CommonMark, Original or other lessons. Browser regression tests include all five languages, mobile view, safe HTML and local storage persistence.
 
 Issue #17's non-Mermaid practical curriculum is implemented. Any Mermaid-specific lab should wait for dedicated renderer/export work in issues #18 and #19.
+
+
+### Mermaid diagrams and practice (#18 / #19, latest)
+
+The **Advanced → Blocks → Diagrams · Mermaid** authoring control inserts GitHub-style `mermaid` fenced source, which remains editable Markdown (and is not normative CommonMark/GFM). Nine templates are bundled: flowchart, sequence, pie, class, state, ERD, Gantt, mindmap and timeline. Diagrams render locally in Live Preview, with independent zoom and safe source fallback. SVG and PNG exports, plus source copy, run entirely in the browser.
+
+Downloaded standalone HTML now embeds **static, revalidated Mermaid SVG-as-image data URIs** only after applying the normal HTML sanitizer. They require no network or Mermaid runtime. Print → Save as PDF shares the same static output; users can print the opened tab with Ctrl+P. Invalid or disallowed diagram source is preserved as visible code with an explicit warning instead of silently omitted. Markdown downloads always preserve the original fenced code.
+
+The optional Extensions & Hacks Lab adds **three Mermaid exercises** (flowchart, sequence and pie), for a total of **16** localized exercises (EN, CS, UK, RO, RU). Each has a starter, working example, instructions, compatibility warning and two checks. Mermaid completion requires a successfully parsed and rendered diagram with expected SVG text labels; it cannot be earned by pasting a screenshot or nesting a working example inside a plain code fence. These labs retain isolated drafts and progress, with no changes to the original eight or seven lesson certificates.
+
+The SVG safety model rejects scripts, external references, foreignObject, interactive links and CSS network resources, but deliberately does not enable arbitrary user-supplied SVG markup in the normal sanitizer. The GitHub platform may render Mermaid; other Markdown processors may show only its source.
