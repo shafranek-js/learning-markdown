@@ -1,4 +1,5 @@
 import {state,docKey} from '../core/state.js';
+import {handleBlockListKeydown} from './table-list-keyboard.js';
 import {area,applyEdit} from './editor.js';
 import {findEditableTables,editTableAt,previewTableCoordinates,getTableCellText,setTableCellText,tableSelectionBounds,getTableCellHTML,setTableCellHTML,getTableCellBlocks,setTableCellBlocks,getTableCellImage,setTableCellImage,getTableCellImageInsertion,insertTableCellImage} from '../core/table-operations.js';
 
@@ -46,11 +47,11 @@ const RICH_TEXT={
 };
 const richWords=()=>RICH_TEXT[state.lang]||RICH_TEXT.en;
 const BLOCK_TEXT={
- en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block'},
- cs:{mode:'Bloky',hint:'Bezpečně upravujte odstavce, seznamy a citace. Vkládaný text je prostý; změny uložte.',p:'Přidat odstavec',ul:'Přidat odrážky',ol:'Přidat číslovaný seznam',quote:'Přidat citaci',pre:'Přidat blok kódu'},
- uk:{mode:'Блоки',hint:'Безпечно редагуйте абзаци, списки та цитати. Вставляється лише текст.',p:'Додати абзац',ul:'Додати маркований список',ol:'Додати нумерований список',quote:'Додати цитату',pre:'Додати блок коду'},
- ro:{mode:'Blocuri',hint:'Editați în siguranță paragrafe, liste și citate. Lipirea inserează doar text.',p:'Adaugă paragraf',ul:'Adaugă listă cu marcatori',ol:'Adaugă listă numerotată',quote:'Adaugă citat',pre:'Adaugă bloc de cod'},
- ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода'}
+ en:{mode:'Blocks',hint:'Edit paragraphs, lists and quotes safely. Paste inserts plain text; Save updates the cell. In a list: Tab indents, Shift+Tab outdents, Enter exits an empty item, and Backspace at the start outdents.',p:'Add paragraph',ul:'Add bullet list',ol:'Add numbered list',quote:'Add quote',pre:'Add code block'},
+ cs:{mode:'Bloky',hint:'Bezpečně upravujte odstavce, seznamy a citace. Vkládaný text je prostý; změny uložte. V seznamu: Tab odsadí, Shift+Tab zruší odsazení, Enter ukončí prázdnou položku a Backspace na začátku zmenší odsazení.',p:'Přidat odstavec',ul:'Přidat odrážky',ol:'Přidat číslovaný seznam',quote:'Přidat citaci',pre:'Přidat blok kódu'},
+ uk:{mode:'Блоки',hint:'Безпечно редагуйте абзаци, списки та цитати. Вставляється лише текст. У списку: Tab збільшує відступ, Shift+Tab зменшує, Enter завершує порожній пункт, Backspace на початку зменшує відступ.',p:'Додати абзац',ul:'Додати маркований список',ol:'Додати нумерований список',quote:'Додати цитату',pre:'Додати блок коду'},
+ ro:{mode:'Blocuri',hint:'Editați în siguranță paragrafe, liste și citate. Lipirea inserează doar text. În liste: Tab indentează, Shift+Tab revine, Enter iese dintr-un element gol, iar Backspace la început reduce indentarea.',p:'Adaugă paragraf',ul:'Adaugă listă cu marcatori',ol:'Adaugă listă numerotată',quote:'Adaugă citat',pre:'Adaugă bloc de cod'},
+ ru:{mode:'Блоки',hint:'Редактируйте абзацы, списки и цитаты. Вставка добавляет только текст; изменения применяются после сохранения. В списке: Tab — увеличить отступ, Shift+Tab — уменьшить, Enter — выйти из пустого пункта, Backspace в начале — уменьшить отступ.',p:'Добавить абзац',ul:'Добавить маркированный список',ol:'Добавить нумерованный список',quote:'Добавить цитату',pre:'Добавить блок кода'}
 };
 const blockWords=()=>BLOCK_TEXT[state.lang]||BLOCK_TEXT.en;
 const IMAGE_TEXT={
@@ -464,6 +465,9 @@ export function initTableEditor(){
   btn.addEventListener('click',()=>wrapRichSelection(tag));
  }
  const editor=$('table-edit-rich-content');
+ editor.addEventListener('keydown',event=>{
+  if(selected?.blockMode)handleBlockListKeydown(editor,event);
+ });
  editor.addEventListener('paste',event=>{
   event.preventDefault();
   pastePlainText(event.clipboardData?.getData('text/plain')||'');
