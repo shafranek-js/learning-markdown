@@ -145,10 +145,8 @@ function select(selection,a,ao,b,bo){
   '<li>Three</li></ul>Tail</li><li>Outside</li></ol>';
  const {editor,selection}=setup(html);
  const nested=editor.querySelectorAll('ol > li > ul > li');
- select(selection,nested[0].firstChild,0,nested[1].firstChild,3);
- assert.deepEqual(convertBlockSelection(editor,'ol',selection),
-  {ok:false,reason:'partial-or-nested-list'});
- assert.equal(editor.innerHTML,html);
+ // Cross-depth ranges stay invalid even though partial contiguous child
+ // ranges are now supported.
  select(selection,nested[0].firstChild,0,
   editor.querySelector(':scope > ol > li:last-child').firstChild,3);
  assert.deepEqual(convertBlockSelection(editor,'ol',selection),
@@ -172,6 +170,62 @@ function select(selection,a,ao,b,bo){
  assert.equal(editor.innerHTML,html);
  assert.deepEqual(convertBlockSelection(editor,'ul',selection),
   {ok:false,reason:'already-formatted'});
+ assert.equal(editor.innerHTML,html);
+}
+// Partial nested range: split an ordered Roman list into three sibling lists,
+// carrying ordinal continuity in a bounded 'start' on its remaining suffix.
+{
+ const html='<ol type="A"><li>Outer<ol type="i" start="5">'+
+  '<li>Alpha</li><li>Bravo <em>rich</em></li><li>Charlie</li>'+
+  '<li>Delta</li><li>Echo</li></ol>Tail</li><li>Neighbor</li></ol>';
+ const {editor,selection}=setup(html),nested=editor.querySelectorAll(':scope > ol > li > ol > li');
+ const original=editor.textContent;
+ select(selection,nested[1].firstChild,0,nested[2].firstChild,7);
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),{ok:true,blocks:1});
+ assert.equal(editor.textContent,original,'the same text must retain document order');
+ const outer=editor.querySelector(':scope > ol');
+ assert.equal(outer.getAttribute('type'),'A');
+ const segments=[...outer.firstElementChild.children].filter(x=>['OL','UL'].includes(x.tagName));
+ assert.deepEqual(segments.map(x=>x.tagName),['OL','UL','OL']);
+ assert.equal(segments[0].getAttribute('type'),'i');
+ assert.equal(segments[0].getAttribute('start'),'5');
+ assert.equal(segments[0].textContent,'Alpha');
+ assert.equal(segments[1].querySelectorAll(':scope > li').length,2);
+ assert.equal(segments[1].querySelector('em').textContent,'rich');
+ assert.equal(segments[2].getAttribute('type'),'i');
+ assert.equal(segments[2].getAttribute('start'),'8');
+ assert.equal(segments[2].textContent,'DeltaEcho');
+ assert.equal(outer.lastElementChild.textContent,'Neighbor');
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),{ok:true,blocks:1},
+  'consecutive conversion should target only the middle list');
+ assert.equal(segments[2].getAttribute('start'),'8');
+ assert.equal(outer.getAttribute('type'),'A');
+ assert.equal(editor.textContent,original);
+}
+// Selecting one nested item produces separated lists without losing siblings.
+{
+ const {editor,selection}=setup('<ul><li>Root<ul><li>First</li>'+
+  '<li><strong>Middle</strong><ul><li>Deeper</li></ul></li>'+
+  '<li>Last</li></ul></li><li>Outside</li></ul>');
+ const children=editor.querySelectorAll(':scope > ul > li > ul > li');
+ const original=editor.textContent;
+ const text=children[1].querySelector('strong').firstChild;
+ select(selection,text,1,text,3);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),{ok:true,blocks:1});
+ const parent=editor.querySelector(':scope > ul > li');
+ assert.deepEqual([...parent.children].map(el=>el.tagName),['UL','OL','UL']);
+ assert.equal(parent.querySelector(':scope > ol > li > ul > li').textContent,'Deeper');
+ assert.equal(editor.textContent,original);
+ assert.equal(editor.querySelector(':scope > ul > li:last-child').textContent,'Outside');
+}
+// Refuse overflowing ordinal suffix rather than silently renumbering.
+{
+ const html='<ol><li>Parent<ol start="99999"><li>One</li><li>Two</li>'+
+  '<li>Three</li></ol></li></ol>';
+ const {editor,selection}=setup(html),li=editor.querySelector('ol > li > ol > li');
+ select(selection,li.firstChild,0,li.firstChild,3);
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),
+  {ok:false,reason:'partial-or-nested-list'});
  assert.equal(editor.innerHTML,html);
 }
 console.log('PASS: #6 selected paragraph/list structural conversion preserves order and rejects ambiguous sources');
