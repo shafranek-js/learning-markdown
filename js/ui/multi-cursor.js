@@ -8,7 +8,7 @@ import {tags as t} from '@lezer/highlight';
 import {state,save,docKey} from '../core/state.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {makeRichSnippet} from '../data/rich-content.js';
-import {markdownListEnterChange} from '../core/source-list-keyboard.js';
+import {markdownListEnterChange,editMarkdownListKey} from '../core/source-list-keyboard.js';
 
 // Source-oriented highlighting: only token colors and deliberately matched link/strike styles.
 // Never style headings as underlined, or strong/emphasis as bold/italic in source view.
@@ -83,7 +83,16 @@ export function collapseToSingleCursor(editor){
 export function multiCursorIndent(editor,outdent=false){
  const state=editor.state,doc=state.doc,ranges=state.selection.ranges;
  if(!outdent&&ranges.length===1&&ranges[0].empty){
-  editor.dispatch({...state.replaceSelection('  '),annotations:isolateHistory.of('full')});return true;
+  const pos=ranges[0].from,source=doc.toString();
+  const listEdit=editMarkdownListKey(source,pos,pos,'Tab');
+  if(listEdit&&listEdit.text.length===source.length+2){
+   // Keep the caret attached to the item text (instead of inserting
+   // spaces inside the word) exactly as in the native Markdown editor.
+   editor.dispatch({changes:{from:doc.lineAt(pos).from,insert:'  '},
+    selection:EditorSelection.cursor(listEdit.start),
+    annotations:isolateHistory.of('full')});
+  }else editor.dispatch({...state.replaceSelection('  '),annotations:isolateHistory.of('full')});
+  return true;
  }
  const numbers=new Set();
  for(const r of ranges){
