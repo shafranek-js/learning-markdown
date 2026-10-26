@@ -144,7 +144,7 @@ On macOS, corresponding shortcuts use Command/Option where available. Some combi
 
 **List editing:** pressing Enter at the end of an existing item continues a bullet or numbered list, and resets the next task checkbox to unchecked. Enter on an empty list item exits it. Both the native source editor and optional CodeMirror Multi-cursor editor support these source-safe rules. In Multi-cursor mode, multiple eligible list cursors are edited atomically, so one Undo reverses the entire operation. Mixed list/paragraph cursors fall back to CodeMirror's default Enter behavior. Tab/Shift+Tab change list indentation without replacing item contents; ordinary CodeMirror text retains its normal indentation controls. Fenced code blocks are not automatically treated as lists.
 
-**Table editing:** select a table cell in Live Preview to open contextual controls. GFM edits remain GFM when possible; merges or non-portable cell styling require safe HTML. Unsupported table layouts are intentionally left unchanged rather than silently flattened.
+**Table editing:** select a table cell in Live Preview to open contextual controls. GFM edits remain GFM when possible; merges or non-portable cell styling require safe HTML. Supported captions, row groups, header `scope`, cell spans, alignment and app-defined styling classes survive safe edits. Tables with unmodeled structural metadata (for example, custom `data-*` attributes, `title`, inline `style`, unknown classes or unsupported alignment) are read-only in the visual editor to avoid losing source attributes. You can still edit their exact Markdown/HTML source directly. Dangerous event-handler attributes are explicitly removed from rendered HTML by the sanitizer.
 
 ## Compatibility and export
 
