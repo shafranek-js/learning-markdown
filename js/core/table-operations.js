@@ -232,6 +232,29 @@ function modelFromHTML(html){
  }
  return model;
 }
+// Locate exact table source ranges without rebuilding surrounding markup.
+// The lexer is deliberately conservative: comments/raw-text elements can hold
+// table-looking text that does not correspond to DOM nodes, so refuse them.
+function tableSourceRanges(raw,expectedTables){
+ if(/<!--|<!\[CDATA\[|<(?:script|style|template|textarea)\b/i.test(raw))return null;
+ const tags=/<\/?table\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi;
+ const stack=[],ranges=[];
+ for(const match of raw.matchAll(tags)){
+  const closing=/^<\s*\//.test(match[0]);
+  if(closing){
+   const opened=stack.pop();
+   if(!opened)return null;
+   ranges[opened].end=match.index+match[0].length;
+  }else{
+   const index=ranges.length;
+   ranges.push({start:match.index,end:null});
+   stack.push(index);
+  }
+ }
+ if(stack.length||ranges.length!==expectedTables||ranges.some(r=>r.end===null))return null;
+ return ranges;
+}
+
 // Resolve the selected leaf table from its original source-backed HTML block.
 function selectedHTMLTable(entry){
  if(!entry||!['html','nested'].includes(entry.type)||sourceTableTopologyReason(entry.raw))return null;
@@ -242,8 +265,17 @@ function selectedHTMLTable(entry){
  if(!target||target.querySelector('table'))return null;
  // Nested tables must remain inside a proper table cell; don't rewrite
  // browser-repaired malformed hierarchies or arbitrary foreign wrappers.
+ let sourceRange=null;
  if(entry.type==='nested'){
   if(!target.parentElement?.closest('td,th'))return null;
+  const ranges=tableSourceRanges(entry.raw,tables.length);
+  sourceRange=ranges?.[entry.innerIndex];
+  if(!sourceRange)return null;
+  // A source range must represent exactly the same leaf the DOM selected.
+  // Refuse browser-repaired or ambiguous source rather than editing a neighbor.
+  const fragment=entry.raw.slice(sourceRange.start,sourceRange.end);
+  const match=new DOMParser().parseFromString(sanitizeHTML(fragment),'text/html').querySelector('table');
+  if(!match||match.outerHTML!==target.outerHTML)return null;
   let ancestor=target.parentElement.closest('table');
   while(ancestor){
    const copy=ancestor.cloneNode(true);
@@ -252,7 +284,7 @@ function selectedHTMLTable(entry){
    ancestor=ancestor.parentElement?.closest('table');
   }
  }
- return {doc,target,root:tables[0],model:modelFromHTML(target.outerHTML)};
+ return {doc,target,root:tables[0],model:modelFromHTML(target.outerHTML),sourceRange};
 }
 // Reason codes are UI-neutral. The Preview explains why this table is
 // read-only instead of silently dropping the user's cell selection.
@@ -272,16 +304,14 @@ export function getTableReadOnlyReason(source,index){
 function replaceSelectedTable(entry,resolved,updated){
  if(!updated)return null;
  if(entry.type!=='nested')return updated;
- const replacement=new DOMParser().parseFromString(updated,'text/html').querySelector('table');
- if(!replacement)return null;
- resolved.target.replaceWith(replacement);
- // Every layer is re-sanitized before crossing the source editor boundary.
- const output=sanitizeHTML(resolved.root.outerHTML);
- const doc=new DOMParser().parseFromString(output,'text/html');
- if(doc.querySelectorAll('table').length!==
-    new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html').querySelectorAll('table').length)
-  return null;
- return output;
+ const range=resolved?.sourceRange;
+ if(!range)return null;
+ // Validate that serialization did not insert new tables or change the leaf
+ // identity. The original prefix/suffix are copied BYTE-FOR-BYTE from source.
+ const fragment=new DOMParser().parseFromString(updated,'text/html');
+ if(fragment.body.children.length!==1||fragment.body.firstElementChild?.tagName!=='TABLE'||
+    fragment.querySelectorAll('table').length!==1)return null;
+ return entry.raw.slice(0,range.start)+updated+entry.raw.slice(range.end);
 }
 const empty=(row,col,header=false)=>({row,col,rs:1,cs:1,tag:header?'th':'td',html:'',cls:''});
 function cellsAt(model,row,col){
