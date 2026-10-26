@@ -40,6 +40,12 @@
 #editor-pane.wrap-text-enabled #markdown-input{
  overflow-x:hidden!important;
 }
+/* The existing #codemirror-mount .cm-content specificity must not override
+   CodeMirror's dynamic EditorView.lineWrapping compartment. */
+#editor-pane.wrap-text-enabled #codemirror-mount .cm-content{
+ white-space:pre-wrap;
+ overflow-wrap:anywhere;
+}
 #editor-pane.wrap-text-enabled .editor-wrap-line{
  display:block;
  min-height:1lh;
