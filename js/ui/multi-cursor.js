@@ -1,4 +1,4 @@
-import {EditorState,EditorSelection} from '@codemirror/state';
+import {EditorState,EditorSelection,Compartment} from '@codemirror/state';
 import {EditorView,keymap,lineNumbers,drawSelection,rectangularSelection,highlightActiveLine,highlightSpecialChars} from '@codemirror/view';
 import {history,historyKeymap,defaultKeymap,undo,redo,undoDepth,redoDepth,isolateHistory,addCursorAbove,addCursorBelow} from '@codemirror/commands';
 import {selectNextOccurrence,selectSelectionMatches} from '@codemirror/search';
@@ -13,6 +13,7 @@ import {makeRichSnippet} from '../data/rich-content.js';
 // migration, not a separate unsaved document.
 let view=null,active=false,input=null,updateUI=()=>{},shortcutAction=()=>{},sessionKey='';
 const sessions=new Map();
+const wrapping=new Compartment();
 const $=id=>document.getElementById(id);
 const words=()=>getMultiCursorLabels(state.lang);
 // Map all selections after inserted prefixes, instead of leaving a caret
@@ -93,6 +94,7 @@ function extensions(){
   rectangularSelection({eventFilter:event=>event.altKey&&event.shiftKey}),
   highlightActiveLine(),syntaxHighlighting(defaultHighlightStyle,{fallback:true}),
   markdown(),
+  wrapping.of(state.wrapText?EditorView.lineWrapping:[]),
   keymap.of([
    {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
    {key:'Mod-Shift-l',run:selectSelectionMatches,preventDefault:true},
@@ -171,6 +173,11 @@ export function initMultiCursor({textarea,refresh}){
 export const isMultiCursorMode=()=>active;
 export const toggleMultiCursor=()=>activate(!active);
 export const setMultiCursorEnabled=(enabled,options)=>activate(enabled,options);
+// Reconfigure display-only wrapping without rebuilding the document or its undo history.
+export function setMultiCursorLineWrapping(enabled){
+ if(view)view.dispatch({effects:wrapping.reconfigure(enabled?EditorView.lineWrapping:[])});
+}
+
 export const registerMultiCursorShortcut=fn=>{shortcutAction=fn;};
 export const multiCursorStatus=()=>({canUndo:active&&undoDepth(view.state)>0,canRedo:active&&redoDepth(view.state)>0,
  pointer:active?undoDepth(view.state)+1:1,total:active?undoDepth(view.state)+redoDepth(view.state)+1:1,
