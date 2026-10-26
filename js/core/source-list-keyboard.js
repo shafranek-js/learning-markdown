@@ -52,16 +52,18 @@ function tabOnList(text,start,end,shiftKey){
  return {text:updated,start:map(start),end:map(end)};
 }
 
-function enterOnList(text,start,end){
- if(start!==end)return null;
- const lineStart=startOfLine(text,start),lineEnd=endOfLine(text,start);
- if(start!==lineEnd||fenceBefore(text,lineStart))return null;
+// Describe a *minimal* document change so both textarea and CodeMirror
+// can apply the same list rules without rewriting unaffected source lines.
+export function markdownListEnterChange(text,pos){
+ if(typeof text!=='string'||!Number.isInteger(pos)||pos<0||pos>text.length)return null;
+ const lineStart=startOfLine(text,pos),lineEnd=endOfLine(text,pos);
+ if(pos!==lineEnd||fenceBefore(text,lineStart))return null;
  const match=text.slice(lineStart,lineEnd).match(LIST);
  if(!match)return null;
  const [,indent,marker,space,task,content]=match;
  if(!content.trim()){
-  // Enter on an empty list item exits that item; don't leave a ghost marker.
-  return {text:text.slice(0,lineStart)+text.slice(lineEnd),start:lineStart,end:lineStart};
+  // Enter on an empty list item exits that item; preserve adjacent lines.
+  return {from:lineStart,to:lineEnd,insert:'',caret:lineStart};
  }
  let next=marker;
  if(/^\d/.test(marker)){
@@ -69,12 +71,16 @@ function enterOnList(text,start,end){
   if(!Number.isSafeInteger(num)||num>=999999999)return null;
   next=String(num+1)+marker.at(-1);
  }
- const insertion='\n'+indent+next+space+(task?'[ ] ':'');
- return {
-  text:text.slice(0,start)+insertion+text.slice(end),
-  start:start+insertion.length,
-  end:start+insertion.length
- };
+ const insert='\n'+indent+next+space+(task?'[ ] ':'');
+ return {from:pos,to:pos,insert,caret:pos+insert.length};
+}
+
+function enterOnList(text,start,end){
+ if(start!==end)return null;
+ const change=markdownListEnterChange(text,start);
+ if(!change)return null;
+ const {from,to,insert,caret}=change;
+ return {text:text.slice(0,from)+insert+text.slice(to),start:caret,end:caret};
 }
 
 export function editMarkdownListKey(text,start,end,key,{shiftKey=false}={}){
