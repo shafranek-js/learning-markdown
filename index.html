@@ -30,12 +30,12 @@
                 <span data-i18n="contentsBtn">Contents</span>
             </button>
 
-            <button id="theory-pane-toggle-btn" type="button" class="hidden md:inline-flex px-2.5 py-1.5 rounded-lg theme-panel-alt hover:opacity-90 border theme-border items-center gap-1.5 text-xs font-semibold transition shrink-0" title="Show/Hide Lesson Guide Panel">
+            <button id="theory-pane-toggle-btn" type="button" aria-controls="theory-panel" aria-pressed="true" aria-expanded="true" class="hidden md:inline-flex px-2.5 py-1.5 rounded-lg theme-panel-alt hover:opacity-90 border theme-border items-center gap-1.5 text-xs font-semibold transition shrink-0" title="Show/Hide Lesson Guide Panel">
                 <span class="w-2 h-2 rounded-full bg-emerald-400" id="guide-indicator-dot"></span>
                 <span data-i18n="guideBtn">Lesson Guide</span>
             </button>
 
-            <div class="app-header-brand min-w-0 border-l theme-border pl-3">
+            <div class="app-header-brand min-w-0 border-l theme-border pl-3" data-course-ui>
                 <div class="flex items-center gap-2">
                     <h1 id="course-main-title" class="font-bold text-xs sm:text-sm md:text-base tracking-tight truncate">
                         Learning Markdown: Formatting Text without the Complexity
@@ -48,7 +48,7 @@
         </div>
 
         <!-- Center: Progress Indicator Pill -->
-        <div class="hidden xl:flex items-center gap-3 theme-panel px-3.5 py-1.5 rounded-xl border theme-border shrink-0">
+        <div class="hidden xl:flex items-center gap-3 theme-panel px-3.5 py-1.5 rounded-xl border theme-border shrink-0" data-course-ui>
             <div class="w-36">
                 <div class="flex justify-between items-center text-[10px] mb-1">
                     <span class="font-semibold theme-muted" id="progress-label">0 / 8 completed</span>
@@ -78,14 +78,14 @@
                 <span class="hidden md:inline" data-i18n="cheatsheetBtn">Cheat Sheet</span>
             </button>
 
-            <button id="advanced-course-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90" aria-label="Open Beyond Markdown course">
+            <button id="advanced-course-btn" type="button" data-course-ui class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90" aria-label="Open Beyond Markdown course">
                 <span id="advanced-course-button-text">Beyond Markdown</span>
             </button>
 
-            <button id="advanced-cert-top-btn" type="button" class="px-2 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs" title="Advanced Certificate" aria-label="Advanced Certificate">🏅</button>
+            <button id="advanced-cert-top-btn" type="button" data-course-ui class="px-2 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs" title="Advanced Certificate" aria-label="Advanced Certificate">🏅</button>
 
             <!-- Certificate Button -->
-            <button id="certificate-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 flex items-center gap-1 transition">
+            <button id="certificate-btn" type="button" data-course-ui class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 flex items-center gap-1 transition">
                 <span>🏆</span>
                 <span class="hidden md:inline" data-i18n="certBtn">Certificate</span>
             </button>
