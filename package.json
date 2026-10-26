@@ -10,7 +10,8 @@
     "build": "vite build --base ./",
     "preview": "vite preview --host 0.0.0.0",
     "postbuild": "node scripts/postbuild.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:release": "playwright test --config playwright.release.config.js"
   },
   "devDependencies": {
     "vite": "^7.1.0",
