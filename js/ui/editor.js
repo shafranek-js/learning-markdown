@@ -1,11 +1,56 @@
 import {state,docKey,save} from '../core/state.js';
 import {record,ensureHistory,step,status} from '../core/history.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
+import {getWrapTextLabels} from './wrap-text-i18n.js';
 export const area=()=>document.getElementById('markdown-input');
 const el=id=>document.getElementById(id);
 let onChange=()=>{};
 let multi=null,multiLoading=null,multiShortcut=()=>{};
 export const multiActive=()=>Boolean(multi?.isMultiCursorMode());
+export function renderWrapTextUI(){
+ const toggle=el('wrap-text-toggle');
+ if(!toggle)return;
+ const words=getWrapTextLabels(state.lang);
+ toggle.textContent=state.wrapText?words.on:words.off;
+ toggle.title=words.help;
+ toggle.setAttribute('aria-label',words.help);
+ toggle.setAttribute('aria-pressed',String(state.wrapText));
+}
+function applyWrapPreference(){
+ const enabled=state.wrapText;
+ el('editor-pane').classList.toggle('wrap-text-enabled',enabled);
+ area().setAttribute('wrap',enabled?'soft':'off');
+ multi?.setMultiCursorLineWrapping(enabled);
+ renderWrapTextUI();
+}
+// Wrapped visual lines need a gutter that reserves height for continuation
+// lines, while the numbers still count only actual Markdown source lines.
+function syncWrappedGutter(){
+ if(!state.wrapText||multiActive())return;
+ const fragments=el('editor-highlight-backdrop').querySelectorAll('.editor-wrap-line');
+ const numbers=el('line-gutter').querySelectorAll('.editor-gutter-row');
+ if(!fragments.length||fragments.length!==numbers.length)return;
+ for(let i=0;i<fragments.length;i++){
+  const height=fragments[i].getBoundingClientRect().height;
+  if(height>0)numbers[i].style.height=height+'px';
+ }
+}
+function renderEditorHighlight(text,lines){
+ const backdrop=el('editor-highlight-backdrop'),gutter=el('line-gutter');
+ const colored=highlightMarkdown(text);
+ if(state.wrapText){
+  backdrop.innerHTML=colored.split('\n').map(line=>
+   '<span class="editor-wrap-line">'+(line||'&#8203;')+'</span>').join('');
+  gutter.innerHTML=lines.map((_,i)=>'<span class="editor-gutter-row">'+(i+1)+'</span>').join('');
+  syncWrappedGutter();
+ }else{
+  backdrop.innerHTML=colored;
+  gutter.textContent=lines.map((_,i)=>i+1).join('\n');
+ }
+ backdrop.scrollTop=area().scrollTop;
+ backdrop.scrollLeft=state.wrapText?0:area().scrollLeft;
+ gutter.scrollTop=area().scrollTop;
+}
 export function renderMultiCursorUI(){
  if(multi){multi.renderMultiCursorLabels();return;}
  const b=el('multi-cursor-toggle');
@@ -50,8 +95,8 @@ export function highlightMarkdown(raw){return raw.split('\n').map((line,index,li
  }).join('\n')+(raw.endsWith('\n')?' ':'');}
 export function refreshEditor({notify=true}={}){
  const a=area(),text=a.value;
- if(!multiActive())el('editor-highlight-backdrop').innerHTML=highlightMarkdown(text);
- const lines=text.split('\n');el('line-gutter').textContent=lines.map((_,i)=>i+1).join('\n');
+ const lines=text.split('\n');
+ if(!multiActive())renderEditorHighlight(text,lines);
  const words=(text.match(/[\p{L}\p{N}_]+/gu)||[]).length;
  const l=text.slice(0,a.selectionStart).split('\n');
  el('editor-stats').textContent=`Lines: ${lines.length} • Words: ${words} • Chars: ${[...text].length}`;
@@ -68,6 +113,19 @@ export function setEditorContent(value,{resetSelection=true}={}){const a=area();
 export function applyEdit(text,start,end,{focus=true}={}){if(multiActive()){multi.multiCursorEdit(text,start,end,{focus});return;}const a=area();record(docKey(),a.value,a.selectionStart,a.selectionEnd,{force:true});a.value=text;if(focus)a.focus();a.setSelectionRange(start,end);record(docKey(),text,start,end,{force:true});refreshEditor();}
 export function undoOrRedo(direction){if(multiActive()){multi.multiCursorUndoOrRedo(direction);return;}const snap=step(docKey(),direction);if(!snap)return;const a=area();a.value=snap.text;a.focus();a.setSelectionRange(snap.start,snap.end);refreshEditor();}
 export function initEditor(listener){onChange=listener;const a=area(),backdrop=el('editor-highlight-backdrop'),gutter=el('line-gutter');let scheduled=false;
+ applyWrapPreference();
+ el('wrap-text-toggle').addEventListener('click',()=>{
+  state.wrapText=!state.wrapText;
+  applyWrapPreference();
+  save();
+  if(state.wrapText)a.scrollLeft=0;
+  refreshEditor({notify:false});
+ });
+ // Resize of a split pane alters wrapping without changing the Markdown text.
+ if(typeof ResizeObserver!=='undefined'){
+  const observer=new ResizeObserver(()=>syncWrappedGutter());
+  observer.observe(el('editor-pane').querySelector('.editor-container'));
+ }
  el('multi-cursor-toggle').addEventListener('click',async()=>{const module=await loadMulti();module?.toggleMultiCursor();if(!multiActive())record(docKey(),area().value,area().selectionStart,area().selectionEnd,{force:true});});
  if(state.multiCursorMode)loadMulti().then(module=>module?.setMultiCursorEnabled(true,{focus:false}));
  a.addEventListener('scroll',()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{backdrop.scrollTop=a.scrollTop;backdrop.scrollLeft=a.scrollLeft;gutter.scrollTop=a.scrollTop;scheduled=false;});});
