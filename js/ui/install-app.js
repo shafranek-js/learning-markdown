@@ -42,7 +42,9 @@ export function initInstallApp(language){
  });
  $('install-app-help-close').addEventListener('click',()=>dialog.close());
  window.addEventListener('beforeinstallprompt',event=>{
-  event.preventDefault();
+  // Allow Chrome to show its native install UI (including address-bar promotion).
+  // Keep the event for an optional user-initiated install from our Contents menu.
+  // preventDefault() would suppress the browser's own install promotion.
   deferredPrompt=event;
   renderInstallAppLanguage(getLanguage());
  });
