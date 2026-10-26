@@ -1,6 +1,8 @@
 import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
+import {formatSourceLineSelection} from '../core/source-line-format.js';
+import {explainProtectedSourceFormatting} from './line-format-feedback.js';
 const FENCE='```';
 export function setHeading(level){if(multiHeading(level))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value;const begin=v.lastIndexOf('\n',s-1)+1;let finish=v.indexOf('\n',e);if(finish<0)finish=v.length;
  const line=v.slice(begin,finish),m=line.match(/^(#{1,6})[ \t]*(.*)$/),content=m?m[2]:line.trim();
@@ -36,7 +38,20 @@ export function insertRichContent(group,id){
 export function insertAdvancedPageBreak(){
  insertSnippet('\n<div class="af-page-break"></div>\n',true);
 }
-export function toolbarAction(action){if(['ul','ol','task','quote'].includes(action)&&multiLineFormat(action))return;switch(action){
+export function toolbarAction(action){
+ if(['ul','ol','task','quote'].includes(action)){
+  if(multiLineFormat(action))return;
+  const a=area(),start=a.selectionStart,end=a.selectionEnd;
+  // No selection preserves the familiar new-list template. A multiline
+  // selection is transformed in place instead of silently being replaced.
+  if(start!==end){
+   const formatted=formatSourceLineSelection(a.value,start,end,action);
+   if(formatted===null){explainProtectedSourceFormatting();return;}
+   if(formatted.text!==a.value)applyEdit(formatted.text,formatted.start,formatted.end);
+   return;
+  }
+ }
+ switch(action){
  case 'h1':case 'h2':case 'h3':case 'h4':case 'h5':case 'h6':setHeading(Number(action[1]));break;
  case 'bold':wrap('**','**','bold text');break;case 'italic':wrap('_','_','italic text');break;
  case 'strike':wrap('~~','~~','strikethrough');break;case 'quote':insertSnippet('> Blockquote text\n');break;
