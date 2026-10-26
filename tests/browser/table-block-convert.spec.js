@@ -176,11 +176,13 @@ test('issue #6 Russian mobile prevents partial nested conversions and explains p
   const range=document.createRange(),selection=window.getSelection();
   li.closest('[contenteditable]').focus();
   range.setStart(li.firstChild,0);
-  range.setEnd(li.nextElementSibling.firstChild,li.nextElementSibling.firstChild.length);
+  const outside=li.closest(':scope > ol > li')?.nextElementSibling||
+    li.closest('[contenteditable]').querySelector(':scope > ol > li:last-child');
+  range.setEnd(outside.firstChild,2);
   selection.removeAllRanges();selection.addRange(range);
  });
  await page.locator('#table-edit-convert-ol').click();
- await expect(page.locator('#table-edit-message')).toContainText('Выделите целые пункты');
+ await expect(page.locator('#table-edit-message')).toContainText('Выделите');
  expect(await rich.innerHTML()).toBe(before);
  await expect(input).toHaveValue(source);
  await rich.locator(':scope > ol > li > ul > li').first().evaluate(li=>{
@@ -197,4 +199,51 @@ test('issue #6 Russian mobile prevents partial nested conversions and explains p
  await expect(rich.locator(':scope > ol > li > ol > li')).toHaveCount(3);
  await expect(rich.locator(':scope > ol[type="i"]')).toHaveCount(1);
  await expect(input).toHaveValue(source);
+});
+
+
+test('issue #6 partial nested roman list converts only middle items and preserves ordinal suffix',async({page})=>{
+ await page.goto('/');
+ const source='Before\n\n<table><tr><td><ol type="A"><li>Parent<ol type="i" start="5">'+
+  '<li>Alpha</li><li>Bravo <em>rich</em></li><li>Charlie</li>'+
+  '<li>Delta</li><li>Echo</li></ol>Tail</li><li>Neighbor</li></ol>'+
+  '</td><td>Adjacent</td></tr></table>\n\nAfter';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ await expect(page.locator('#table-edit-block-choice')).toHaveAttribute('aria-pressed','true');
+ await rich.locator(':scope > ol > li > ol > li').nth(1).evaluate(li=>{
+  const third=li.nextElementSibling,range=document.createRange(),selection=window.getSelection();
+  li.closest('[contenteditable]').focus();
+  range.setStart(li.firstChild,0);range.setEnd(third.firstChild,third.firstChild.length);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-ul').click();
+ const parent=rich.locator(':scope > ol > li').first();
+ await expect(parent.locator(':scope > ol, :scope > ul')).toHaveCount(3);
+ await expect(parent.locator(':scope > ol').first()).toHaveAttribute('start','5');
+ await expect(parent.locator(':scope > ul > li')).toHaveText(['Bravo rich','Charlie']);
+ await expect(parent.locator(':scope > ul em')).toHaveText('rich');
+ await expect(parent.locator(':scope > ol').last()).toHaveAttribute('start','8');
+ await expect(parent.locator(':scope > ol').last()).toHaveAttribute('type','i');
+ await expect(rich.locator(':scope > ol[type="A"] > li').last()).toHaveText('Neighbor');
+ await expect(input).toHaveValue(source);
+ // Re-converting only the selected middle must not retarget the outer list.
+ await page.locator('#table-edit-convert-ol').click();
+ await expect(parent.locator(':scope > ol')).toHaveCount(3);
+ await expect(parent.locator(':scope > ol').last()).toHaveAttribute('start','8');
+ await page.locator('#table-edit-convert-ul').click();
+ await expect(parent.locator(':scope > ul > li')).toHaveCount(2);
+ await page.locator('#table-edit-content-save').click();
+ const saved=await input.inputValue();
+ for(const token of ['type="A"','start="5"','start="8"','<em>rich</em>','Adjacent','Before','After'])
+  expect(saved).toContain(token);
+ await expect(page.locator('#markdown-preview td').first().locator('ol[start="8"] > li'))
+  .toHaveText(['Delta','Echo']);
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(source);
+ await page.locator('#redo-btn').click();
+ await expect(page.locator('#markdown-preview td').first().locator('ol[start="8"] > li'))
+  .toHaveText(['Delta','Echo']);
 });
