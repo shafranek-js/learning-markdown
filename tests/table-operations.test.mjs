@@ -181,7 +181,7 @@ for(const invalidSections of [
  '<table><tbody><tr><td>A</td></tr></tbody><thead><tr><th>B</th></tr></thead></table>',
  '<table><tfoot><tr><td>A</td></tr></tfoot><tbody><tr><td>B</td></tr></tbody></table>',
  '<table><thead><tr><th>A</th></tr></thead><thead><tr><th>B</th></tr></thead></table>',
- '<table><thead><tr><th>A</th></tr></thead><tbody><tr><td rowspan="2">B</td></tr><tr></tr></tbody></table>',
+ '<table><thead><tr><th rowspan="2">A</th></tr></thead><tbody><tr><td>B</td></tr></tbody></table>',
  '<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>B</td></tr></table>'
 ]){
  assert.notEqual(getTableReadOnlyReason(invalidSections,0),null,'invalid semantic topology must stay read-only');
