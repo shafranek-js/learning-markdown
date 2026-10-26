@@ -133,10 +133,60 @@ assert.equal(setTableCellText(brokenCells,0,0,0,'Changed'),null);
 const invalidSpan='<table><tr><td colspan="0">First</td><td>Second</td></tr></table>';
 assert.equal(apply(invalidSpan,'cell-blue',select(0,0)),null,
  'invalid spans must not be quietly normalized to 1');
-const semanticSections='<table><thead><tr><th>Title</th></tr></thead>'+
- '<tbody><tr><td>Value</td></tr></tbody></table>';
-assert.equal(apply(semanticSections,'cell-blue',select(1,0)),null,
- 'do not silently remove thead/tfoot or captions');
+// #6: explicit HTML row groups must keep their boundaries and cell semantics.
+const semanticSections='Before\n\n<table><caption><strong>Yearly report</strong></caption>'+
+ '<thead><tr><th>Item</th><th>Total</th></tr></thead>'+
+ '<tbody><tr><td>Alpha</td><td>10</td></tr><tr><td>Beta</td><td>20</td></tr></tbody>'+
+ '<tfoot><tr><th>Sum</th><td>30</td></tr></tfoot></table>\n\nAfter';
+assert.equal(getTableReadOnlyReason(semanticSections,0),null);
+const sectionHTML=value=>new DOMParser().parseFromString(value,'text/html').querySelector('table');
+const originalGroups=sectionHTML(semanticSections);
+assert.equal(originalGroups.tBodies.length,1);
+const sectionEdited=setTableCellText(semanticSections,0,1,0,'Revised');
+assert(sectionEdited?.text.includes('<caption><strong>Yearly report</strong>'));
+assert(sectionEdited.text.includes('Before\n\n')&&sectionEdited.text.endsWith('\n\nAfter'));
+assert.equal(sectionHTML(sectionEdited.text).querySelector('tbody td').textContent,'Revised');
+assert.equal(sectionHTML(sectionEdited.text).querySelector('tfoot th').textContent,'Sum');
+const sectionRich=setTableCellHTML(semanticSections,0,2,1,'<em>Corrected</em>');
+assert(sectionRich?.text.includes('<tfoot>'));
+assert.equal(sectionHTML(sectionRich.text).querySelector('tbody tr:last-child td:last-child em').textContent,'Corrected');
+const sectionStyle=apply(semanticSections,'cell-blue',select(1,0));
+assert(sectionStyle?.text.includes('<thead>')&&sectionStyle.text.includes('<tfoot>'));
+const sectionInsert=apply(semanticSections,'row-below',select(1,0));
+assert(sectionInsert&&sectionHTML(sectionInsert.text).querySelectorAll('thead tr').length===1);
+assert.equal(sectionHTML(sectionInsert.text).querySelectorAll('tbody tr').length,3);
+assert.equal(sectionHTML(sectionInsert.text).querySelectorAll('tfoot tr').length,1);
+const sectionHeaderInsert=apply(semanticSections,'row-below',select(0,0));
+assert(sectionHeaderInsert);
+assert.equal(sectionHTML(sectionHeaderInsert.text).querySelectorAll('thead tr').length,2);
+assert.equal(sectionHTML(sectionHeaderInsert.text).querySelectorAll('thead tr:nth-child(2) th').length,2);
+const sectionDeleted=apply(semanticSections,'delete-row',select(1,0));
+assert(sectionDeleted);
+assert.equal(sectionHTML(sectionDeleted.text).querySelectorAll('tbody tr').length,1);
+assert.equal(apply(semanticSections,'delete-row',select(0,0)),null,'cannot delete the only header row');
+assert.equal(apply(semanticSections,'delete-row',select(3,0)),null,'cannot remove tfoot metadata');
+const sectionMerge=apply(semanticSections,'merge-down',select(1,0));
+assert(sectionMerge?.text.includes('rowspan="2"'));
+assert(sectionHTML(sectionMerge.text).querySelector('tbody td[rowspan="2"]'));
+assert.equal(apply(semanticSections,'merge-down',select(0,0)),null,'header/body boundary cannot merge');
+assert.equal(apply(semanticSections,'merge-down',select(2,0)),null,'body/footer boundary cannot merge');
+assert.equal(tableSelectionBounds(semanticSections,0,select(0,0,{row:1,col:0})),null);
+const secondBody='<table><tbody><tr><td>A</td></tr></tbody><tbody><tr><td>B</td></tr></tbody></table>';
+assert.equal(getTableReadOnlyReason(secondBody,0),null,'multiple tbody groups are valid');
+assert(apply(secondBody,'cell-mint',select(1,0))?.text.includes('</tbody>\n<tbody>'));
+assert.equal(apply(secondBody,'merge-down',select(0,0)),null,'do not merge across two body groups');
+for(const invalidSections of [
+ '<table><thead class="header"><tr><th>A</th></tr></thead></table>',
+ '<table><thead><tr><th>A</th></tr></thead><tr><td>B</td></tr></table>',
+ '<table><tbody><tr><td>A</td></tr></tbody><thead><tr><th>B</th></tr></thead></table>',
+ '<table><tfoot><tr><td>A</td></tr></tfoot><tbody><tr><td>B</td></tr></tbody></table>',
+ '<table><thead><tr><th>A</th></tr></thead><thead><tr><th>B</th></tr></thead></table>',
+ '<table><thead><tr><th rowspan="2">A</th></tr></thead><tbody><tr><td>B</td></tr></tbody></table>',
+ '<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>B</td></tr></table>'
+]){
+ assert.notEqual(getTableReadOnlyReason(invalidSections,0),null,'invalid semantic topology must stay read-only');
+ assert.equal(apply(invalidSections,'cell-blue',select(0,0)),null);
+}
 const customSection='<table><tbody class="important"><tr><td>Value</td></tr></tbody></table>';
 assert.equal(apply(customSection,'cell-blue',select(0,0)),null,
  'unmodeled section metadata must be preserved by declining visual editing');
@@ -191,7 +241,7 @@ assert.equal(getTableReadOnlyReason(html,0),null,'ordinary HTML tables remain ed
 assert.equal(getTableReadOnlyReason(adjacentTables,0),'multiple-roots');
 assert.equal(getTableReadOnlyReason(brokenCells,0),'malformed');
 assert.equal(getTableReadOnlyReason(invalidSpan,0),'invalid-spans');
-assert.equal(getTableReadOnlyReason(semanticSections,0),'unsupported');
+assert.equal(getTableReadOnlyReason(semanticSections,0),null);
 assert.equal(getTableReadOnlyReason(customSection,0),'unsupported');
 assert.equal(getTableReadOnlyReason(nestedHTML,0),'container');
 assert.equal(getTableReadOnlyReason(nestedHTML,1),null,'nested leaf stays editable');
