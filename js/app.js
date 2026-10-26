@@ -6,7 +6,7 @@ import {LESSON_CORE,LINKEDIN_PROMPT_SAMPLE,lesson} from './data/lessons.js';
 import {advancedLesson,verifyAdvancedLesson,ADVANCED_IDS} from './data/advanced-lessons.js';
 import {verifyLesson} from './core/validator.js';
 import {initEditor,area,setEditorContent,refreshEditor,applyEdit} from './ui/editor.js';
-import {renderMultiCursorUI} from './ui/editor.js';
+import {renderMultiCursorUI,renderWrapTextUI} from './ui/editor.js';
 import {initToolbar,insertSnippet} from './ui/toolbar.js';
 import {initTablePicker,renderTablePickerLanguage} from './ui/table-picker.js';
 import {initTableEditor,renderTableEditorLanguage} from './ui/table-editor.js';
@@ -80,7 +80,7 @@ function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();
  $('theme-selector').value=state.theme;$('lang-selector').value=state.lang;
  $('download-html-btn').title=t(state.lang,'exportHTML');$('print-cert-btn').textContent=t(state.lang,'print');$('student-name-input').placeholder=t(state.lang,'name');
  document.querySelector('[data-mobile-tab="guide"]').textContent=t(state.lang,'guide');
- renderAdvancedCertificate();renderMultiCursorUI();document.querySelector('[data-mobile-tab="editor"]').textContent=t(state.lang,'editor');document.querySelector('[data-mobile-tab="preview"]').textContent=strings.previewView;
+ renderAdvancedCertificate();renderMultiCursorUI();renderWrapTextUI();document.querySelector('[data-mobile-tab="editor"]').textContent=t(state.lang,'editor');document.querySelector('[data-mobile-tab="preview"]').textContent=strings.previewView;
  const tip={
  en:['Undo','Redo','Heading 1','Heading 2','Heading 3','Heading 4','Heading 5','Heading 6','Bold','Italic','Strikethrough','Quote','Bullet list','Numbered list','Task list','Inline code','Code block','Link','Image','Table','Divider'],
  cs:['Zpět','Znovu','Nadpis 1','Nadpis 2','Nadpis 3','Nadpis 4','Nadpis 5','Nadpis 6','Tučné','Kurzíva','Přeškrtnutí','Citace','Odrážky','Číslovaný seznam','Úkoly','Kód v řádku','Blok kódu','Odkaz','Obrázek','Tabulka','Oddělovač'],
