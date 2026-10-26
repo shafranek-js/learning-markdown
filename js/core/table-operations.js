@@ -243,7 +243,8 @@ function tableSourceRanges(raw,expectedTables){
   const closing=/^<\s*\//.test(match[0]);
   if(closing){
    const opened=stack.pop();
-   if(!opened)return null;
+   // Range index 0 is the outermost table, not a missing opening tag.
+   if(opened===undefined)return null;
    ranges[opened].end=match.index+match[0].length;
   }else{
    const index=ranges.length;
