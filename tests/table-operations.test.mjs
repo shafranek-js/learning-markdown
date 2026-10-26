@@ -379,6 +379,51 @@ const deepEdit=setTableCellText(doubleNested,2,0,0,'Inner changed');
 assert(deepEdit?.text.includes('Top'));
 assert(deepEdit.text.includes('Middle'));
 assert.equal(getTableCellText(deepEdit.text,2,0,0),'Inner changed');
+// #57: Changing a nested LEAF must touch only the leaf's original source
+// range. The outer table, neighboring media, comments and formatting remain
+// byte-identical, including attributes that Preview does not expose.
+const leafStart='<table class="af-table-borderless">';
+const outerPrefix='Before\n\n<table class="af-table-outline">\n  <tbody>\n    <tr><td><p title="Source metadata"><strong>Outer</strong></p>\n'+
+ '      <img src="https://example.org/other.png" alt="Other image" width="220">\n      ';
+const leafOriginal=leafStart+'<tr><td>A</td><td>B</td></tr></table>';
+const outerSuffix='\n      <p>After <em>leaf</em></p></td>\n'+
+ '      <td><blockquote><p>Sibling content</p></blockquote></td></tr>\n  </tbody>\n</table>\n\nAfter';
+const exactNestedSource=outerPrefix+leafOriginal+outerSuffix;
+assert.equal(getTableReadOnlyReason(exactNestedSource,1),null);
+const exactNestedEdit=setTableCellText(exactNestedSource,1,0,0,'Changed');
+assert(exactNestedEdit);
+assert(exactNestedEdit.text.startsWith(outerPrefix));
+assert(exactNestedEdit.text.endsWith(outerSuffix));
+assert(exactNestedEdit.text.includes('<td>Changed</td>'));
+assert(exactNestedEdit.text.includes('title="Source metadata"'));
+assert(exactNestedEdit.text.includes('width="220"'));
+assert.equal(getTableCellText(exactNestedEdit.text,1,0,0),'Changed');
+const secondLeaf='<table><tr><td>Second nested leaf</td></tr></table>';
+const siblings='Start\n<table><tr><td>Intro '+leafOriginal+' Between '+
+ secondLeaf+' Closing</td></tr></table>\nEnd';
+assert.deepEqual(findEditableTables(siblings).map(t=>t.type),['html','nested','nested']);
+const siblingEdit=setTableCellText(siblings,2,0,0,'New second leaf');
+assert(siblingEdit);
+const prefixSecond=siblings.slice(0,siblings.indexOf(secondLeaf));
+const suffixSecond=siblings.slice(siblings.indexOf(secondLeaf)+secondLeaf.length);
+assert(siblingEdit.text.startsWith(prefixSecond));
+assert(siblingEdit.text.endsWith(suffixSecond));
+assert(siblingEdit.text.includes(leafOriginal),'previous sibling HTML unchanged');
+const firstSiblingEdit=setTableCellText(siblings,1,0,1,'B changed');
+assert(firstSiblingEdit?.text.includes(secondLeaf),'following leaf unchanged');
+
+// Source ranges embedded in comments/raw-text are ambiguous: never choose
+// an unrelated leaf or normalize the enclosing block.
+for(const ambiguous of [
+ '<table><tr><td><!-- <table><tr><td>fake</td></tr></table> -->'+
+ leafOriginal+'</td></tr></table>',
+ '<table><tr><td><script>const value = "<table>";</script>'+
+ leafOriginal+'</td></tr></table>'
+]){
+ assert.equal(editTableAt(ambiguous,1,'cell-mint',select(0,0)),null);
+ assert.equal(setTableCellText(ambiguous,1,0,0,'Unwanted'),null);
+}
+
 const fencedNested='~~~html\n'+nestedDocument+'\n~~~';
 assert.equal(findEditableTables(fencedNested).length,0);
 
