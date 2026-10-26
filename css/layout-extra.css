@@ -4,6 +4,8 @@ body{min-width:0}
 #editor-pane{flex:0 0 auto;max-width:100%}
 #preview-pane{flex:1 1 0;min-width:0}
 #theory-panel{max-width:620px}
+/* A hidden course control must stay hidden even when responsive flex utilities apply. */
+[data-course-ui][hidden]{display:none!important}
 .mobile-tabs{display:none}
 @media(max-width:767px){
  #workspace-container{display:block;position:relative;min-height:0;flex:1}
