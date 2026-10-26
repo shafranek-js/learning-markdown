@@ -707,4 +707,50 @@ assert(styled.text.includes('align="right"'));
 assert(styled.text.includes('af-cell-mint'));
 assert(styled.text.includes('af-cell-blue'));
 
+// #57: Rich text metadata in existing cells must not disappear when the user
+// styles or edits a DIFFERENT cell. Source editing remains available.
+const contentMetadata=[
+ '<p title="Long description">Original</p>',
+ '<p data-origin="imported">Original</p>',
+ '<span aria-label="Accessible label">Original</span>',
+ '<div role="note">Original</div>',
+ '<p lang="cs">Original</p>',
+ '<p dir="rtl">Original</p>',
+ '<span style="font-weight:bold">Original</span>',
+ '<p tabindex="0">Original</p>',
+ '<p translate="no">Original</p>'
+];
+for(const nested of contentMetadata){
+ const original='Intro\n\n<table><tr><td>'+nested+
+  '</td><td>Neighbor</td></tr></table>\n\nOutro';
+ assert.equal(getTableReadOnlyReason(original,0),'unsupported',nested);
+ assert.equal(getTableCellText(original,0,0,1),null,nested);
+ assert.equal(setTableCellText(original,0,0,1,'Modified'),null,nested);
+ assert.equal(setTableCellHTML(original,0,0,1,'<strong>Modified</strong>'),null,nested);
+ assert.equal(setTableCellBlocks(original,0,0,1,'<p>Modified</p>'),null,nested);
+ assert.equal(editTableAt(original,0,'cell-mint',select(0,1)),null,nested);
+}
+// Nested leaf edits replace only their exact range: unrelated metadata in
+// the OUTER table must not make safe inner editing unavailable.
+const richOuter='<table><tr><td><p title="Keep this parent metadata">Parent</p>'+
+ '<table><tr><td>Inner</td></tr></table></td></tr></table>';
+assert.equal(getTableReadOnlyReason(richOuter,0),'container');
+assert.equal(getTableReadOnlyReason(richOuter,1),null);
+const richOuterEdit=setTableCellText(richOuter,1,0,0,'Changed');
+assert(richOuterEdit?.text.includes('<p title="Keep this parent metadata">Parent</p>'));
+assert.equal(getTableCellText(richOuterEdit.text,1,0,0),'Changed');
+const richInner='<table><tr><td>Parent<table><tr>'+
+ '<td><p aria-label="Keep this">Inner</p></td><td>Safe</td>'+
+ '</tr></table></td></tr></table>';
+assert.equal(getTableReadOnlyReason(richInner,1),'unsupported');
+assert.equal(setTableCellText(richInner,1,0,1,'Would lose ARIA'),null);
+// Ordinary formatted content stays editable, including safe links and lists.
+const richSafe='<table><tr><td><p><strong>Bold</strong> and '+
+ '<a href="https://example.org/info">reference</a></p>'+
+ '<ul><li>Alpha</li><li>Beta</li></ul></td><td>Neighbor</td></tr></table>';
+assert.equal(getTableReadOnlyReason(richSafe,0),null);
+assert(setTableCellBlocks(richSafe,0,0,0,
+ '<p><strong>Updated</strong> <a href="https://example.org/info">reference</a></p>'+
+ '<ul><li>Alpha</li><li>Beta</li></ul>')?.text.includes('<strong>Updated</strong>'));
+
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
