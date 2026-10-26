@@ -256,6 +256,24 @@ function tableSourceRanges(raw,expectedTables){
  return ranges;
 }
 
+// Editing a table reserializes its selected cells. Reject semantic metadata
+// on their nested content which the sanitizer deliberately does not model.
+// Check ORIGINAL elements, not the sanitized DOM where metadata is already gone.
+// For a nested leaf only inspect that leaf, never untouched outer/sibling cells.
+function unmodeledRichMetadata(entry){
+ const original=new DOMParser().parseFromString(entry.raw,'text/html');
+ const table=[...original.querySelectorAll('table')][entry.innerIndex||0];
+ if(!table)return true;
+ for(const cell of table.querySelectorAll('td,th')){
+  for(const element of cell.querySelectorAll('*')){
+   if([...element.attributes].some(attr=>
+     /^(?:title|style|role|lang|dir|tabindex|translate)$/i.test(attr.name)||
+     /^(?:data-|aria-)/i.test(attr.name)))return true;
+  }
+ }
+ return false;
+}
+
 // Resolve the selected leaf table from its original source-backed HTML block.
 function selectedHTMLTable(entry){
  if(!entry||!['html','nested'].includes(entry.type)||sourceTableTopologyReason(entry.raw))return null;
@@ -263,7 +281,7 @@ function selectedHTMLTable(entry){
  const tables=[...doc.querySelectorAll('table')];
  if(tables.length>26)return null;
  const target=tables[entry.innerIndex||0];
- if(!target||target.querySelector('table'))return null;
+ if(!target||target.querySelector('table')||unmodeledRichMetadata(entry))return null;
  // Nested tables must remain inside a proper table cell; don't rewrite
  // browser-repaired malformed hierarchies or arbitrary foreign wrappers.
  let sourceRange=null;
@@ -300,6 +318,7 @@ export function getTableReadOnlyReason(source,index){
  const target=tables[entry.innerIndex||0];
  if(!target)return 'unmapped';
  if(target.querySelector('table'))return 'container';
+ if(unmodeledRichMetadata(entry))return 'unsupported';
  return selectedHTMLTable(entry)?.model?null:'invalid-grid';
 }
 function replaceSelectedTable(entry,resolved,updated){
