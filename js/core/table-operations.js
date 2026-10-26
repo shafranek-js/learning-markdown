@@ -85,11 +85,33 @@ function sourceTableTopologyReason(raw){
      .some(node=>node.nodeType!==1&&(node.nodeType!==3||node.textContent.trim())))return 'multiple-roots';
  // A DOM parser silently supplies missing </td>, </tr>, etc. Check the
  // structural source tags before accepting its repaired table model.
- const stack=[];
+ const stack=[],tableStates=[];
  for(const match of raw.matchAll(/<\s*(\/?)\s*(table|caption|thead|tbody|tfoot|tr|td|th)\b[^>]*>/gi)){
   const tag=match[2].toLowerCase();
-  if(match[1]){if(stack.pop()!==tag)return 'malformed';}
-  else stack.push(tag);
+  if(match[1]){
+   if(stack.pop()!==tag)return 'malformed';
+   if(tag==='table')tableStates.pop();
+  }else{
+   const parent=stack.at(-1);
+   if(tag==='table')tableStates.push({bare:false,group:false});
+   if(['thead','tbody','tfoot'].includes(tag)){
+    if(parent!=='table')return 'malformed';
+    const context=tableStates.at(-1);
+    if(context.bare)return 'unsupported';
+    context.group=true;
+   }
+   if(tag==='caption'&&parent!=='table')return 'malformed';
+   if(tag==='tr'){
+    if(!['table','thead','tbody','tfoot'].includes(parent))return 'malformed';
+    if(parent==='table'){
+     const context=tableStates.at(-1);
+     if(context.group)return 'unsupported';
+     context.bare=true;
+    }
+   }
+   if((tag==='td'||tag==='th')&&parent!=='tr')return 'malformed';
+   stack.push(tag);
+  }
  }
  if(stack.length)return 'malformed';
  // Refuse list numbering metadata the safe HTML serializer cannot preserve.
@@ -101,15 +123,29 @@ function sourceTableTopologyReason(raw){
    return 'unsupported';
  }
  for(const table of doc.body.querySelectorAll('table')){
-  // A single leading attribute-free caption can be round-tripped. Other
-  // section metadata (thead/tfoot/colgroups, row attributes) remains read-only.
+  // Preserve a leading caption and ordered, attribute-free row groups.
+  // DOMParser inserts a single implicit tbody for legacy <tr> tables.
   const children=[...table.children];
   const caption=children[0]?.tagName==='CAPTION'?children.shift():null;
-  if(caption?.attributes.length||children.length!==1||children[0].tagName!=='TBODY'||
-     children[0].attributes.length)return 'unsupported';
-  for(const tr of children[0].children){
-   if(tr.tagName!=='TR'||tr.attributes.length||
-      [...tr.children].some(cell=>cell.tagName!=='TD'&&cell.tagName!=='TH'))return 'unsupported';
+  if(caption?.attributes.length||!children.length)return 'unsupported';
+  let stage=0;
+  for(const group of children){
+   const tag=group.tagName;
+   if(group.attributes.length||!['THEAD','TBODY','TFOOT'].includes(tag))
+    return 'unsupported';
+   if(tag==='THEAD'){
+    if(stage!==0)return 'unsupported';stage=1;
+   }else if(tag==='TBODY'){
+    if(stage===3)return 'unsupported';stage=2;
+   }else{
+    if(stage===3)return 'unsupported';stage=3;
+   }
+   if(!group.children.length)return 'unsupported';
+   for(const tr of group.children){
+    if(tr.tagName!=='TR'||tr.attributes.length||
+       [...tr.children].some(cell=>cell.tagName!=='TD'&&cell.tagName!=='TH'))
+     return 'unsupported';
+   }
   }
   for(const cell of table.querySelectorAll('td,th')){
    for(const name of ['rowspan','colspan']){
@@ -118,6 +154,14 @@ function sourceTableTopologyReason(raw){
     if(!/^[1-9][0-9]?$/.test(value)||Number(value)>20)return 'invalid-spans';
    }
   }
+ }
+ return null;
+}
+function rowGroupAt(model,row){
+ let start=0;
+ for(const group of model.groups){
+  if(row>=start&&row<start+group.rows)return {group,start};
+  start+=group.rows;
  }
  return null;
 }
@@ -145,8 +189,17 @@ function modelFromHTML(html){
  }
  if(!width||width>MAX_COLUMNS)return null;
  if(occupied.some(row=>Array.from({length:width},(_,col)=>row[col]).some(v=>!v)))return null;
- return {rows:trs.length,cols:width,cells,cls:table.getAttribute('class')||'',
+ const groups=[...table.children].filter(el=>['THEAD','TBODY','TFOOT'].includes(el.tagName))
+  .map(el=>({tag:el.tagName.toLowerCase(),rows:el.children.length}));
+ const model={rows:trs.length,cols:width,cells,groups,cls:table.getAttribute('class')||'',
   caption:table.querySelector(':scope > caption')?.innerHTML??null};
+ if(groups.reduce((sum,g)=>sum+g.rows,0)!==trs.length)return null;
+ // Row spans across row-group boundaries cannot be round-tripped safely.
+ for(const cell of cells){
+  const section=rowGroupAt(model,cell.row);
+  if(!section||cell.row+cell.rs>section.start+section.group.rows)return null;
+ }
+ return model;
 }
 // Resolve the selected leaf table from its original source-backed HTML block.
 function selectedHTMLTable(entry){
@@ -234,22 +287,29 @@ export function tableSelectionBounds(source,index,selection){
  const html=table.type==='gfm'?sanitizeHTML(marked.parse(table.raw,{gfm:true})):null;
  const model=table.type==='gfm'?modelFromHTML(html):selectedHTMLTable(table)?.model;
  if(!model)return null;
- return closedSelectionBounds(model,selection.row,selection.col,selection.other||{row:selection.row,col:selection.col});
+ if(table.type==='gfm')model.groups=[{tag:'tbody',rows:model.rows}];
+ const bounds=closedSelectionBounds(model,selection.row,selection.col,selection.other||{row:selection.row,col:selection.col});
+ if(bounds&&rowGroupAt(model,bounds.r0)?.group!==rowGroupAt(model,bounds.r1)?.group)return null;
+ return bounds;
 }
 function serializeHTML(model){
  const parts=['<table'+(model.cls?' class="'+model.cls+'"':'')+'>'];
  if(model.caption!==null&&model.caption!==undefined)
   parts.push('<caption>'+model.caption+'</caption>');
- parts.push('<tbody>');
- for(let r=0;r<model.rows;r++){
-  parts.push('<tr>');
-  for(const c of model.cells.filter(c=>c.row===r).sort((a,b)=>a.col-b.col)){
-   parts.push('<'+c.tag+(c.cs>1?' colspan="'+c.cs+'"':'')+(c.rs>1?' rowspan="'+c.rs+'"':'')
-     +(c.cls?' class="'+c.cls+'"':'')+(c.align?' align="'+c.align+'"':'')+'>'+c.html+'</'+c.tag+'>');
+ let row=0;
+ for(const group of model.groups){
+  parts.push('<'+group.tag+'>');
+  for(let i=0;i<group.rows;i++,row++){
+   parts.push('<tr>');
+   for(const c of model.cells.filter(c=>c.row===row).sort((a,b)=>a.col-b.col)){
+    parts.push('<'+c.tag+(c.cs>1?' colspan="'+c.cs+'"':'')+(c.rs>1?' rowspan="'+c.rs+'"':'')
+      +(c.cls?' class="'+c.cls+'"':'')+(c.align?' align="'+c.align+'"':'')+'>'+c.html+'</'+c.tag+'>');
+   }
+   parts.push('</tr>');
   }
-  parts.push('</tr>');
+  parts.push('</'+group.tag+'>');
  }
- parts.push('</tbody>','</table>');
+ parts.push('</table>');
  return sanitizeHTML(parts.join('\n'));
 }
 function normalize(model){
@@ -270,13 +330,16 @@ function updateHTML(model,operation,row,col,other){
  if(operation==='row-above'||operation==='row-below'){
   if(model.rows>=MAX_ROWS)return null;
   const at=row+(operation==='row-below'?1:0);
+  const section=rowGroupAt(model,row);
+  if(!section)return null;
+  section.group.rows++;
   for(const c of model.cells){
    if(c.row>=at)c.row++;
    else if(c.row+c.rs>at)c.rs++;
   }
   model.rows++;
   for(let column=0;column<model.cols;column++){
-   if(!cellsAt(model,at,column))model.cells.push(empty(at,column,at===0));
+   if(!cellsAt(model,at,column))model.cells.push(empty(at,column,section.group.tag==='thead'||(at===0&&model.groups.length===1)));
   }
  }else if(operation==='column-left'||operation==='column-right'){
   if(model.cols>=MAX_COLUMNS)return null;
@@ -289,6 +352,10 @@ function updateHTML(model,operation,row,col,other){
   for(let r=0;r<model.rows;r++)if(!cellsAt(model,r,at))model.cells.push(empty(r,at));
  }else if(operation==='delete-row'){
   if(model.rows<=1)return null;
+  const section=rowGroupAt(model,row);
+  // Never silently discard an existing semantic row group.
+  if(!section||section.group.rows<=1)return null;
+  section.group.rows--;
   model.cells=model.cells.filter(c=>{
    if(c.row===row){if(c.rs===1)return false;c.rs--;return true;}
    if(c.row<row&&c.row+c.rs>row){c.rs--;return true;}
@@ -318,6 +385,7 @@ function updateHTML(model,operation,row,col,other){
   const bounds=closedSelectionBounds(model,row,col,second);
   if(!bounds)return null;
   const {r0,r1,c0,c1}=bounds;
+  if(rowGroupAt(model,r0)?.group!==rowGroupAt(model,r1)?.group)return null;
   const group=model.cells.filter(c=>c.row<=r1&&c.row+c.rs-1>=r0&&c.col<=c1&&c.col+c.cs-1>=c0);
   // Re-selecting a single pre-merged owner is not a change.
   if(group.length<2)return null;
@@ -354,6 +422,8 @@ export function editTableAt(source,index,operation,selection){
   const target=table.type==='gfm'?null:selectedHTMLTable(table);
   const model=table.type==='gfm'?modelFromHTML(existing):target?.model;
   if(!model)return null;
+  // GFM has no semantic row groups; keep legacy cross-header merges legal.
+  if(table.type==='gfm')model.groups=[{tag:'tbody',rows:model.rows}];
   updated=updateHTML(model,operation,row,col,other);
   if(table.type==='nested')updated=replaceSelectedTable(table,target,updated);
  }
