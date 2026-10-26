@@ -142,7 +142,10 @@ export function initEditor(listener){onChange=listener;const a=area(),backdrop=e
    const edit=editMarkdownListKey(a.value,start,end,e.key,{shiftKey:e.shiftKey});
    if(edit){e.preventDefault();applyEdit(edit.text,edit.start,edit.end);return;}
    if(e.key==='Tab'&&!e.shiftKey){
+    // A mixed multi-line selection cannot be safely treated as a list. Never
+    // replace that entire selection with two spaces (legacy Tab fallback).
     e.preventDefault();
+    if(a.value.slice(start,end).includes('\n'))return;
     applyEdit(a.value.slice(0,start)+'  '+a.value.slice(end),start+2,start+2);
    }
   }
