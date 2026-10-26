@@ -2,6 +2,7 @@ import {marked} from 'marked';
 import {sanitizeHTML} from './sanitize.js';
 import {MAX_COLUMNS,MAX_ROWS} from './table-generator.js';
 import {safeFigureUrl,figureDimension} from './figures.js';
+import {filterAdvancedClasses} from './advanced-presets.js';
 
 // Only standalone top-level GFM/HTML table blocks are source-mapped.
 // A nested LEAF HTML table may be edited through its containing source block;
@@ -123,6 +124,23 @@ function sourceTableTopologyReason(raw){
    return 'unsupported';
  }
  for(const table of doc.body.querySelectorAll('table')){
+  // Structural attributes not represented by the table model must remain in
+  // the original source, rather than disappearing during serialization.
+  // Check the unsanitized DOM so even non-rendered metadata is protected.
+  const modeled=new Map([
+   ['TABLE',new Set(['class'])],
+   ['TD',new Set(['rowspan','colspan','class','align'])],
+   ['TH',new Set(['rowspan','colspan','class','align','scope'])]
+  ]);
+  for(const node of [table,...table.querySelectorAll('td,th')]){
+   const allowed=modeled.get(node.tagName);
+   if([...node.attributes].some(attr=>!allowed.has(attr.name)))return 'unsupported';
+   const classes=node.getAttribute('class');
+   if(classes!==null&&filterAdvancedClasses(classes)!==
+     classes.trim().split(/\s+/).filter(Boolean).join(' '))return 'unsupported';
+   const align=node.getAttribute('align');
+   if(align!==null&&!['left','center','right'].includes(align))return 'unsupported';
+  }
   // Preserve a leading caption and ordered, attribute-free row groups.
   // DOMParser inserts a single implicit tbody for legacy <tr> tables.
   const children=[...table.children];
