@@ -241,7 +241,7 @@ assert.equal(getTableReadOnlyReason(html,0),null,'ordinary HTML tables remain ed
 assert.equal(getTableReadOnlyReason(adjacentTables,0),'multiple-roots');
 assert.equal(getTableReadOnlyReason(brokenCells,0),'malformed');
 assert.equal(getTableReadOnlyReason(invalidSpan,0),'invalid-spans');
-assert.equal(getTableReadOnlyReason(semanticSections,0),'unsupported');
+assert.equal(getTableReadOnlyReason(semanticSections,0),null);
 assert.equal(getTableReadOnlyReason(customSection,0),'unsupported');
 assert.equal(getTableReadOnlyReason(nestedHTML,0),'container');
 assert.equal(getTableReadOnlyReason(nestedHTML,1),null,'nested leaf stays editable');
