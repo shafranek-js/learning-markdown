@@ -92,6 +92,14 @@ function sourceTableTopologyReason(raw){
   else stack.push(tag);
  }
  if(stack.length)return 'malformed';
+ // Refuse list numbering metadata the safe HTML serializer cannot preserve.
+ // Do this on the ORIGINAL source, before sanitization can discard it.
+ if(doc.body.querySelector('ol[reversed],li[value]'))return 'unsupported';
+ for(const list of doc.body.querySelectorAll('ol[start]')){
+  const start=list.getAttribute('start')||'';
+  if(!/^[1-9][0-9]{0,4}$/.test(start)||Number(start)>99999)
+   return 'unsupported';
+ }
  for(const table of doc.body.querySelectorAll('table')){
   // The current serializer writes one tbody and cannot retain thead/tfoot,
   // captions, colgroups, row classes or attributes on section containers.
