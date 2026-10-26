@@ -61,6 +61,11 @@ export function sanitizeHTML(html){
     if(/^[1-9][0-9]?$/.test(raw)&&Number(raw)<=20)el.setAttribute(name,raw);
    }
   }
+  if(tag==='th'){
+   const scope=node.getAttribute('scope');
+   if(['auto','col','row','colgroup','rowgroup'].includes(scope))
+    el.setAttribute('scope',scope);
+  }
   if(tag==='ol'){
    // List continuations created by source-safe partial conversions use a
    // bounded positive start; never pass arbitrary attributes through.
