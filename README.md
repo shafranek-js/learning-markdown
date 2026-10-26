@@ -129,6 +129,9 @@ The default textarea editor and optional CodeMirror editor operate on the same M
 | Undo / redo | `Ctrl+Z` / `Ctrl+Y` or `Ctrl+Shift+Z` |
 | Bold / italic / link | `Ctrl+B` / `Ctrl+I` / `Ctrl+K` |
 | Headings | `Ctrl+1` through `Ctrl+6` |
+| Continue bullet, numbered or task list | Native source editor: `Enter` at the end of an item |
+| Exit an empty list item | Native source editor: `Enter` on an empty item |
+| Indent / outdent list items | Native source editor: `Tab` / `Shift+Tab` (including a selection of list lines) |
 | Add another cursor | **Multi-cursor** mode: `Alt+Click` |
 | Select next occurrence | **Multi-cursor** mode: `Ctrl+D` |
 | Select all matching occurrences | **Multi-cursor** mode: `Ctrl+Shift+L` |
@@ -138,6 +141,8 @@ The default textarea editor and optional CodeMirror editor operate on the same M
 | Collapse to one cursor | **Multi-cursor** mode: `Esc` |
 
 On macOS, corresponding shortcuts use Command/Option where available. Some combinations may be intercepted by the operating system, browser or keyboard layout.
+
+**List editing:** in the native source editor, pressing Enter continues an existing list item, advances numbered markers and starts a fresh unchecked task. Enter on an empty list item exits it. Tab/Shift+Tab change nesting without replacing the item contents. Mixed multi-line selections and list-looking lines inside fenced code are not automatically rewritten. The optional CodeMirror Multi-cursor editor retains its own native keyboard behavior. All source edits remain undoable.
 
 **Table editing:** select a table cell in Live Preview to open contextual controls. GFM edits remain GFM when possible; merges or non-portable cell styling require safe HTML. Unsupported table layouts are intentionally left unchanged rather than silently flattened.
 
