@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 
 const {version}=JSON.parse(await readFile(new URL('../../package.json',import.meta.url),'utf8'));
-const safeVersion=version.replace(/[.*+?^$\\{\\}()|[\\]\\\\]/g,'\\$&');
+const safeVersion=version.replace(/[^a-zA-Z0-9]/g,'\\$&');
 
 test('version and Git build remain visible in the status bar, including mobile and locale changes',async({page})=>{
  await page.goto('/');
