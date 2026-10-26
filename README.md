@@ -129,9 +129,9 @@ The default textarea editor and optional CodeMirror editor operate on the same M
 | Undo / redo | `Ctrl+Z` / `Ctrl+Y` or `Ctrl+Shift+Z` |
 | Bold / italic / link | `Ctrl+B` / `Ctrl+I` / `Ctrl+K` |
 | Headings | `Ctrl+1` through `Ctrl+6` |
-| Continue bullet, numbered or task list | Native source editor: `Enter` at the end of an item |
-| Exit an empty list item | Native source editor: `Enter` on an empty item |
-| Indent / outdent list items | Native source editor: `Tab` / `Shift+Tab` (including a selection of list lines) |
+| Continue bullet, numbered or task list | Both editors: `Enter` at the end of an item (CodeMirror handles multiple list cursors together) |
+| Exit an empty list item | Both editors: `Enter` on an empty item |
+| Indent / outdent list items | `Tab` / `Shift+Tab` (including selections of list lines); CodeMirror also supports general code-style indentation |
 | Add another cursor | **Multi-cursor** mode: `Alt+Click` |
 | Select next occurrence | **Multi-cursor** mode: `Ctrl+D` |
 | Select all matching occurrences | **Multi-cursor** mode: `Ctrl+Shift+L` |
@@ -142,7 +142,7 @@ The default textarea editor and optional CodeMirror editor operate on the same M
 
 On macOS, corresponding shortcuts use Command/Option where available. Some combinations may be intercepted by the operating system, browser or keyboard layout.
 
-**List editing:** in the native source editor, pressing Enter continues an existing list item, advances numbered markers and starts a fresh unchecked task. Enter on an empty list item exits it. Tab/Shift+Tab change nesting without replacing the item contents. Mixed multi-line selections and list-looking lines inside fenced code are not automatically rewritten. The optional CodeMirror Multi-cursor editor retains its own native keyboard behavior. All source edits remain undoable.
+**List editing:** pressing Enter at the end of an existing item continues a bullet or numbered list, and resets the next task checkbox to unchecked. Enter on an empty list item exits it. Both the native source editor and optional CodeMirror Multi-cursor editor support these source-safe rules. In Multi-cursor mode, multiple eligible list cursors are edited atomically, so one Undo reverses the entire operation. Mixed list/paragraph cursors fall back to CodeMirror's default Enter behavior. Tab/Shift+Tab change list indentation without replacing item contents; ordinary CodeMirror text retains its normal indentation controls. Fenced code blocks are not automatically treated as lists.
 
 **Table editing:** select a table cell in Live Preview to open contextual controls. GFM edits remain GFM when possible; merges or non-portable cell styling require safe HTML. Unsupported table layouts are intentionally left unchanged rather than silently flattened.
 
