@@ -2,10 +2,10 @@ import {test,expect} from '@playwright/test';
 
 test('semantic table sections survive visual cell save, body row insertion and Undo/Redo',async({page})=>{
  await page.goto('/');
- const source='Before\\n\\n<table><caption><strong>Yearly report</strong></caption>'+
+ const source='Before\n\n<table><caption><strong>Yearly report</strong></caption>'+
   '<thead><tr><th>Item</th><th>Total</th></tr></thead>'+
   '<tbody><tr><td>Alpha</td><td>10</td></tr><tr><td>Beta</td><td>20</td></tr></tbody>'+
-  '<tfoot><tr><th>Sum</th><td>30</td></tr></tfoot></table>\\n\\nAfter';
+  '<tfoot><tr><th>Sum</th><td>30</td></tr></tfoot></table>\n\nAfter';
  const input=page.locator('#markdown-input');
  await input.fill(source);
  const table=page.locator('#markdown-preview table');
