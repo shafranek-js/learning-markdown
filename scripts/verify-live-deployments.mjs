@@ -23,7 +23,7 @@ async function inspectSite(name,address){
   if(!response?.ok())problems.push('site HTTP '+(response?.status()??'no response'));
   await page.locator('#app-version-status').waitFor({state:'visible',timeout:15000});
   await page.waitForFunction(()=>/^v\d+\.\d+\.\d+\s*·\s*(?:[a-f\d]{7}|local)$/.test(
-   document.querySelector('#app-version-status')?.textContent?.trim()||''),{timeout:10000});
+   document.querySelector('#app-version-status')?.textContent?.trim()||''),null,{timeout:10000});
   versionText=(await page.locator('#app-version-status').innerText()).trim();
   const wanted='v'+version+' · '+short;
   if(versionText!==wanted)problems.push('build mismatch: expected '+wanted+' but received '+versionText);
