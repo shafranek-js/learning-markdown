@@ -2,7 +2,7 @@
 const VERSION='learning-markdown-v1.0.1';
 const ROOT=new URL('./',self.registration.scope);
 const urls=[
- './','./index.html','./manifest.json','./assets/icon.svg',
+ './','./index.html','./manifest.json','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png',
  './vendor/marked.js',
  './css/main.css','./css/utilities.css','./css/themes.css','./css/layout.css','./css/editor.css','./css/preview.css','./css/components.css','./css/layout-extra.css','./css/editor-extra.css',
  './js/app.js','./js/core/state.js','./js/core/history.js','./js/core/router.js','./js/core/validator.js','./js/core/sanitize.js',

@@ -26,6 +26,7 @@ import {paletteLabels} from './core/unicode-palette.js';
 import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js';
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
 import {initAdvancedCertificate,renderAdvancedCertificate,openAdvancedCertificate} from './ui/advanced-certificate.js';
+import {initInstallApp,renderInstallAppLanguage} from './ui/install-app.js';
 const $=id=>document.getElementById(id);
 // Vite substitutes these values at build time, so the label also works offline.
 const APP_VERSION=__APP_VERSION__,APP_REVISION=__APP_REVISION__;
@@ -73,7 +74,7 @@ function drawContents(){const nav=$('lesson-nav-list');nav.replaceChildren();for
  const subtitle=document.createElement('span');subtitle.className='block text-[11px] theme-muted truncate';subtitle.textContent=l.subtitle;
  text.append(title,subtitle);b.append(tag,text);b.addEventListener('click',()=>{selectLesson(i);toggleContents(false);});nav.append(b);
  }}
-function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();document.documentElement.lang=state.lang;$('course-main-title').textContent=strings.courseTitle;
+function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();renderInstallAppLanguage(state.lang);document.documentElement.lang=state.lang;$('course-main-title').textContent=strings.courseTitle;
  $('course-main-subtitle').textContent=strings.courseSubtitle;
  document.querySelectorAll('[data-i18n]').forEach(e=>{const val=strings[e.dataset.i18n];if(typeof val==='string')e.textContent=val;});
  $('theme-selector').value=state.theme;$('lang-selector').value=state.lang;
@@ -185,7 +186,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
