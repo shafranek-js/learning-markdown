@@ -193,7 +193,7 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
  selectLesson(state.currentLessonIndex,{route:false});syncRoute(state);onRouteChange(setFromRoute);
  document.addEventListener('advanced-course-open',()=>{selectLesson(8);toggleContents(false);if(window.matchMedia('(max-width:767px)').matches)setMobileTab('guide');});
  $('theme-selector').addEventListener('change',e=>setTheme(e.target.value));$('dialect-selector').addEventListener('change',e=>setDialect(e.target.value));$('lang-selector').addEventListener('change',e=>setLanguage(e.target.value));
- $('theory-pane-toggle-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1){selectLesson(0);return;}state.guideVisible=!state.guideVisible;showGuide(state.guideVisible);save();});
+ $('theory-pane-toggle-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1){state.guideVisible=true;selectLesson(0);return;}state.guideVisible=!state.guideVisible;showGuide(state.guideVisible);save();});
  $('sandbox-mode-btn').addEventListener('click',()=>{selectLesson(state.currentLessonIndex===-1?0:-1);if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');});
  $('toggle-hint-btn').addEventListener('click',()=>$('hint-box').classList.toggle('hidden'));
  $('insert-solution-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1)return;const txt=getLesson(state.currentLessonIndex).hint;applyEdit(txt,txt.length,txt.length);});
