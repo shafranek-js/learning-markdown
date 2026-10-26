@@ -8,6 +8,7 @@ import {tags as t} from '@lezer/highlight';
 import {state,save,docKey} from '../core/state.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {makeRichSnippet} from '../data/rich-content.js';
+import {markdownListEnterChange} from '../core/source-list-keyboard.js';
 
 // Source-oriented highlighting: only token colors and deliberately matched link/strike styles.
 // Never style headings as underlined, or strong/emphasis as bold/italic in source view.
@@ -102,6 +103,25 @@ export function multiCursorIndent(editor,outdent=false){
  return true;
 }
 
+
+// Use the same source-safe list continuation as the native textarea, but apply
+// it as one multi-range transaction. A mixed list/paragraph selection falls
+// through to CodeMirror's own Enter behavior (no partial list conversion).
+export function multiCursorListEnter(editor){
+ const ranges=editor.state.selection.ranges;
+ if(!ranges.length||ranges.some(r=>!r.empty))return false;
+ const source=editor.state.doc.toString();
+ const changes=ranges.map(r=>markdownListEnterChange(source,r.from));
+ if(changes.some(change=>change===null))return false;
+ let i=0;
+ const transaction=editor.state.changeByRange(()=>{
+  const {from,to,insert,caret}=changes[i++];
+  return {changes:{from,to,insert},range:EditorSelection.cursor(caret)};
+ });
+ editor.dispatch({...transaction,annotations:isolateHistory.of('full')});
+ return true;
+}
+
 function extensions(){
  return [
   lineNumbers(),highlightSpecialChars(),history(),drawSelection(),
@@ -117,6 +137,7 @@ function extensions(){
    {key:'Escape',run:collapseToSingleCursor,preventDefault:true},
    {key:'Tab',run:editor=>multiCursorIndent(editor),preventDefault:true},
    {key:'Shift-Tab',run:editor=>multiCursorIndent(editor,true),preventDefault:true},
+   {key:'Enter',run:multiCursorListEnter},
    {key:'Shift-Alt-i',run:insertCursorsAtLineEnds,preventDefault:true},
    {key:'Mod-Alt-ArrowDown',run:addCursorBelow,preventDefault:true},
    {key:'Mod-Alt-ArrowUp',run:addCursorAbove,preventDefault:true},
