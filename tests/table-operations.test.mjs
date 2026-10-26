@@ -223,6 +223,39 @@ for(const invalidCaption of [
   'unsupported captions must not be rewritten');
  assert.equal(editTableAt(invalidCaption,0,'cell-blue',select(0,0)),null);
 }
+// Accessible table headers keep their explicit scope through safe visual edits.
+const scopedTable='Before\n\n<table><caption>Report</caption>'+
+ '<thead><tr><th scope="col">Product</th><th scope="col">Sales</th></tr></thead>'+
+ '<tbody><tr><th scope="row">A</th><td>3</td></tr>'+
+ '<tr><th scope="rowgroup">B</th><td>4</td></tr></tbody>'+
+ '<tfoot><tr><th scope="auto">Total</th><td>7</td></tr></tfoot></table>\n\nAfter';
+assert.equal(getTableReadOnlyReason(scopedTable,0),null);
+const scopedEdit=setTableCellText(scopedTable,0,1,1,'42');
+assert(scopedEdit);
+const scopedDoc=new DOMParser().parseFromString(scopedEdit.text,'text/html');
+assert.equal(scopedDoc.querySelector('thead th').getAttribute('scope'),'col');
+assert.equal(scopedDoc.querySelector('tbody th').getAttribute('scope'),'row');
+assert.equal(scopedDoc.querySelectorAll('tfoot th[scope="auto"]').length,1);
+assert.equal(scopedDoc.querySelector('tbody td').textContent,'42');
+const scopedMerge=apply(scopedTable,'merge-right',select(0,0));
+assert(scopedMerge?.text.includes('scope="col"'));
+const scopedRow=apply(scopedTable,'row-below',select(1,0));
+assert(scopedRow?.text.includes('scope="rowgroup"'));
+const scopeSanitized=sanitizeHTML('<table><tr><th scope="col" onclick="x()">Heading</th></tr></table>');
+assert(scopeSanitized.includes('scope="col"')&&!scopeSanitized.includes('onclick'));
+for(const invalidHeader of [
+ '<table><tr><th scope="banana">A</th></tr></table>',
+ '<table><tr><td scope="row">A</td></tr></table>',
+ '<table><tr><th abbr="Long header">A</th></tr></table>',
+ '<table><tr><td headers="ref">A</td></tr></table>',
+ '<table><tr><th id="ref">A</th></tr></table>',
+ '<table><tr><th aria-label="A">A</th></tr></table>',
+ '<table><tr><th role="presentation">A</th></tr></table>'
+]){
+ assert.equal(getTableReadOnlyReason(invalidHeader,0),'unsupported');
+ assert.equal(setTableCellText(invalidHeader,0,0,0,'Rewritten'),null,
+  'unsupported header semantics must not be erased');
+}
 // Alignment is allowed by the sanitizer and must survive safe HTML operations,
 // including GFM-to-HTML conversion for advanced cell formatting.
 const htmlAligned='<table><tr><td align="right">One</td><td align="center">Two</td></tr></table>';

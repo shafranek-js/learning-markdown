@@ -148,6 +148,15 @@ function sourceTableTopologyReason(raw){
    }
   }
   for(const cell of table.querySelectorAll('td,th')){
+   // Keep accessible header semantics; don't silently erase unsupported
+   // headers/abbr/ARIA relationships when round-tripping the source.
+   const scope=cell.getAttribute('scope');
+   if((scope!==null&&(cell.tagName!=='TH'||
+       !['auto','col','row','colgroup','rowgroup'].includes(scope)))||
+      cell.hasAttribute('headers')||cell.hasAttribute('abbr')||
+      cell.hasAttribute('id')||
+      [...cell.attributes].some(attr=>attr.name.startsWith('aria-')||attr.name==='role'))
+    return 'unsupported';
    for(const name of ['rowspan','colspan']){
     if(!cell.hasAttribute(name))continue;
     const value=cell.getAttribute(name);
@@ -183,7 +192,8 @@ function modelFromHTML(html){
     occupied[r][c]=true;
    }
    cells.push({row,col,rs,cs,tag:el.tagName.toLowerCase(),html:el.innerHTML,
-    cls:el.getAttribute('class')||'',align:el.getAttribute('align')||''});
+    cls:el.getAttribute('class')||'',align:el.getAttribute('align')||'',
+    scope:el.tagName==='TH'?(el.getAttribute('scope')||''):''});
    col+=cs;width=Math.max(width,col);
   }
  }
@@ -303,7 +313,8 @@ function serializeHTML(model){
    parts.push('<tr>');
    for(const c of model.cells.filter(c=>c.row===row).sort((a,b)=>a.col-b.col)){
     parts.push('<'+c.tag+(c.cs>1?' colspan="'+c.cs+'"':'')+(c.rs>1?' rowspan="'+c.rs+'"':'')
-      +(c.cls?' class="'+c.cls+'"':'')+(c.align?' align="'+c.align+'"':'')+'>'+c.html+'</'+c.tag+'>');
+      +(c.cls?' class="'+c.cls+'"':'')+(c.align?' align="'+c.align+'"':'')+
+      (c.tag==='th'&&c.scope?' scope="'+c.scope+'"':'')+'>'+c.html+'</'+c.tag+'>');
    }
    parts.push('</tr>');
   }
