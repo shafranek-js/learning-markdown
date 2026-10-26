@@ -399,8 +399,8 @@ assert(exactNestedEdit.text.includes('title="Source metadata"'));
 assert(exactNestedEdit.text.includes('width="220"'));
 assert.equal(getTableCellText(exactNestedEdit.text,1,0,0),'Changed');
 const secondLeaf='<table><tr><td>Second nested leaf</td></tr></table>';
-const siblings='Start\n<table><tr><td>Intro '+leafOriginal+' Between '+
- secondLeaf+' Closing</td></tr></table>\nEnd';
+const siblings='Start\n\n<table><tr><td>Intro '+leafOriginal+' Between '+
+ secondLeaf+' Closing</td></tr></table>\n\nEnd';
 assert.deepEqual(findEditableTables(siblings).map(t=>t.type),['html','nested','nested']);
 const siblingEdit=setTableCellText(siblings,2,0,0,'New second leaf');
 assert(siblingEdit);
