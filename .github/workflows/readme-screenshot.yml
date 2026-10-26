@@ -35,5 +35,7 @@ jobs:
             echo "README screenshot unchanged."
           else
             git commit -m "docs: capture current Split View for README"
+            git fetch origin docs/readme-release-guide-20261026
+            git rebase origin/docs/readme-release-guide-20261026
             git push origin HEAD:docs/readme-release-guide-20261026
           fi
