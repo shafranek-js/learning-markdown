@@ -15,7 +15,7 @@ function fenceBefore(text,offset){
  return Boolean(open);
 }
 
-const startOfLine=(text,pos)=>text.lastIndexOf('\n',Math.max(0,pos-1))+1;
+const startOfLine=(text,pos)=>pos===0?0:text.lastIndexOf('\n',pos-1)+1;
 const endOfLine=(text,pos)=>{const end=text.indexOf('\n',pos);return end===-1?text.length:end;};
 
 function tabOnList(text,start,end,shiftKey){
