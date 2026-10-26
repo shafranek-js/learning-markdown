@@ -3,6 +3,12 @@ import {mermaidSnippet} from '../../js/data/mermaid-templates.js';
 import {readFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 
+// Floating compatibility settings close when the user interacts elsewhere.
+const openCompatibility=async page=>{
+ if(!(await page.locator('#compatibility-panel').evaluate(panel=>panel.open)))
+  await page.locator('#compatibility-trigger').click();
+};
+
 test('preview renders H1–H6 and a GFM table',async({page})=>{
  await page.goto('/');
  const input=page.locator('#markdown-input');
@@ -1563,6 +1569,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  const toggle=page.locator('#extension-softbreaks-toggle');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(0);
+ await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await expect(input).toHaveValue(source);
@@ -1585,6 +1592,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await page.locator('#sandbox-mode-btn').click();
  await expect(toggle).toHaveValue('off');
  await input.fill(source);
+ await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await page.locator('#sandbox-mode-btn').click();
@@ -1594,6 +1602,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await expect(page.locator('#extension-softbreaks-label')).toContainText('переносы');
  await expect(page.locator('#extension-matrix-title')).toHaveText('Матрица совместимости');
  await input.fill(source);
+ await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
 });
@@ -1604,6 +1613,7 @@ test('issue #10 warns about nonstandard MD export without modifying Markdown',as
  const input=page.locator('#markdown-input');
  await input.fill(source);
  await page.locator('#compatibility-trigger').click();
+ await openCompatibility(page);
  await page.locator('#extension-softbreaks-toggle').selectOption('on');
  const messages=[];
  page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
@@ -1637,6 +1647,7 @@ test('issue #11 footnotes are optional with repeated references and route-safe b
  const toggle=page.locator('#extension-footnotes-toggle');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(0);
+ await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(1);
  await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
@@ -1667,9 +1678,11 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
  await page.goto('/');
  await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-footnotes-toggle');
+ await openCompatibility(page);
  await toggle.selectOption('on');
  const input=page.locator('#markdown-input');
  await input.fill('');
+ await openCompatibility(page);
  await page.locator('#extension-footnote-demo').click();
  await expect(input).toHaveValue(/A documented claim\[\^source\]/);
  await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
@@ -1678,6 +1691,7 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
  await page.locator('#lang-selector').selectOption('ru');
  await expect(page.locator('#extension-footnotes-label')).toContainText('Сноски');
  await expect(toggle).toHaveValue('off'); // separate language document
+ await openCompatibility(page);
  await toggle.selectOption('on');
  const source='Threat[^s].\n\n[^s]: <script>alert(1)</script> Plain text.';
  await input.fill(source);
@@ -1703,6 +1717,7 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
 test('issue #11 MD export warns for non-GFM footnotes and leaves source intact',async({page})=>{
  await page.goto('/');
  await page.locator('#compatibility-trigger').click();
+ await openCompatibility(page);
  await page.locator('#extension-footnotes-toggle').selectOption('on');
  const source='A[^one].\n\n[^one]: Note.';
  await page.locator('#markdown-input').fill(source);
@@ -1768,6 +1783,7 @@ test('issue #12 opt-in custom heading IDs stay isolated and survive HTML export 
  const toggle=page.locator('#extension-headingids-toggle');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#markdown-preview h1')).not.toHaveAttribute('id','chosen-id');
+ await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview h1')).toHaveAttribute('id','chosen-id');
  await expect(page.locator('#markdown-preview h2').first()).toHaveAttribute('id','chosen-id-2');
@@ -1931,6 +1947,7 @@ test('issue #14 definition lists are opted in and persist per document without a
  await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-definitions-toggle');
  await expect(toggle).toHaveValue('off');
+ await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview dl.md-definition-list')).toHaveCount(1);
  await expect(page.locator('#markdown-preview dl dt')).toHaveCount(3);
@@ -1985,7 +2002,9 @@ test('issue #14 example, standalone HTML and print keep sanitized definition lis
  const input=page.locator('#markdown-input');
  await input.fill('');
  await page.locator('#compatibility-trigger').click();
+ await openCompatibility(page);
  await page.locator('#extension-definitions-toggle').selectOption('on');
+ await openCompatibility(page);
  await page.locator('#extension-definitions-demo').click();
  await expect(page.locator('#markdown-preview dl.md-definition-list')).toHaveCount(1);
  await expect(page.locator('#markdown-preview dl dd')).toHaveCount(3);
@@ -2015,6 +2034,7 @@ test('issue #14 definition syntax never creates executable markup from hostile t
  const source='Safe term\n: <script>window.__definitionXss=1</script> **safe definition**\n\nOrdinary: paragraph';
  await input.fill(source);
  await page.locator('#compatibility-trigger').click();
+ await openCompatibility(page);
  await page.locator('#extension-definitions-toggle').selectOption('on');
  await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
  await expect(page.locator('#markdown-preview dl strong')).toHaveText('safe definition');
@@ -2081,6 +2101,7 @@ test('issue #15 opt-in shortcodes expand only in selected GFM documents',async({
  await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-emoji-toggle');
  await expect(toggle).toHaveValue('off');
+ await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview p').first()).toContainText('😂');
  await expect(page.locator('#markdown-preview p').first()).toContainText('⛺');
@@ -2136,6 +2157,7 @@ test('issue #15 Unicode sample and Markdown/HTML export preserve source and rend
  await expect(input).toHaveValue(/\\\*literal asterisks\\\*/);
  await input.fill('One :joy: © €');
  await page.locator('#compatibility-trigger').click();
+ await openCompatibility(page);
  await page.locator('#extension-emoji-toggle').selectOption('on');
  const messages=[];
  page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
