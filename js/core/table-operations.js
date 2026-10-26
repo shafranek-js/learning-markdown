@@ -134,7 +134,10 @@ function sourceTableTopologyReason(raw){
   ]);
   for(const node of [table,...table.querySelectorAll('td,th')]){
    const allowed=modeled.get(node.tagName);
-   if([...node.attributes].some(attr=>!allowed.has(attr.name)))return 'unsupported';
+   // Unsafe event handlers are intentionally stripped by the sanitizer.
+   // Preserve that existing security behavior; guard all other unknown metadata.
+   if([...node.attributes].some(attr=>!allowed.has(attr.name)&&
+     !/^on[a-z]+$/.test(attr.name)))return 'unsupported';
    const classes=node.getAttribute('class');
    if(classes!==null&&filterAdvancedClasses(classes)!==
      classes.trim().split(/\s+/).filter(Boolean).join(' '))return 'unsupported';
