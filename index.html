@@ -195,9 +195,8 @@
         </div>
     </div>
 
-    <!-- Advanced tools are intentionally segregated from portable Markdown. -->
+    <!-- HTML tools share one contextual ribbon, separate from portable Markdown commands. -->
     <div id="advanced-toolbar" class="advanced-tools-strip hidden theme-panel border-b theme-border px-3 py-1.5 gap-2 items-center overflow-x-auto" role="group" aria-label="Advanced HTML formatting (non-portable)">
-        <span id="advanced-toolbar-warning" class="shrink-0 text-[11px] text-amber-400 font-semibold">HTML · not portable to all Markdown platforms</span>
         <div class="flex items-center gap-1 shrink-0 border-l theme-border pl-2">
             <button type="button" data-action="adv-underline" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs underline" title="Underline using HTML">U</button>
             <button type="button" data-action="adv-sup" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs" title="Superscript using HTML">x²</button>
@@ -206,12 +205,11 @@
             <button type="button" data-action="adv-spoiler" class="toolbar-btn advanced-tool-btn px-2 py-1 rounded-md theme-panel-alt border theme-border text-xs" title="Expandable spoiler using HTML">▸ Details</button>
         </div>
         <div id="advanced-preset-controls" class="flex items-center gap-2 shrink-0 border-l theme-border pl-2" aria-label="Preset formatting controls"></div>
-    </div>
-    <div id="advanced-rich-toolbar" class="advanced-tools-strip hidden theme-panel border-b theme-border px-3 py-1.5 gap-3 items-center overflow-x-auto" role="group" aria-label="Rich tables, callouts, anchors and custom lists">
-        <span id="advanced-rich-heading" class="shrink-0 text-[11px] font-bold theme-muted">Rich HTML</span>
+        <div id="advanced-rich-toolbar" class="advanced-inline-rich hidden flex items-center gap-3 shrink-0 border-l theme-border pl-2" role="group" aria-label="Rich tables, callouts, anchors and custom lists">
         <div id="advanced-rich-controls" class="flex items-center gap-3 shrink-0"></div>
         <button id="figure-dialog-trigger" type="button" class="px-2 py-1 shrink-0 text-[11px] rounded border theme-border theme-panel-alt hover:opacity-90" aria-haspopup="dialog" aria-controls="figure-dialog">Figure / Image</button>
         <button id="definition-html-insert" type="button" class="px-2 py-1 shrink-0 text-[11px] rounded border theme-border theme-panel-alt hover:opacity-90">Definition list (HTML)</button>
+        </div>
     </div>
 
     <nav id="mobile-tabs" class="mobile-tabs" aria-label="Workspace panels"><button data-mobile-tab="guide">Guide</button><button data-mobile-tab="editor">Editor</button><button data-mobile-tab="preview">Preview</button></nav>
