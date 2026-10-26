@@ -508,15 +508,16 @@
 
     <!-- ==================== FULL-WIDTH STATUS FOOTER ==================== -->
     <footer class="h-6 w-full px-3 theme-header border-t theme-border flex items-center justify-between text-[11px] font-mono theme-muted shrink-0 z-20">
-        <div class="flex items-center gap-4">
-            <span id="editor-stats">Lines: 1 • Words: 0 • Chars: 0</span>
+        <div class="flex items-center gap-4 min-w-0 overflow-hidden">
+            <span id="editor-stats" class="truncate">Lines: 1 • Words: 0 • Chars: 0</span>
             <span id="cursor-position" class="hidden sm:inline">Ln 1, Col 1</span>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-4 shrink-0">
             <span id="split-ratio-indicator" class="hidden md:inline">Split: 50% / 50%</span>
-            <span id="history-status">History: 1/1</span>
+            <span id="history-status" class="hidden sm:inline">History: 1/1</span>
             <span id="editor-mode-status" class="hidden sm:inline">Lesson</span>
             <span id="active-dialect-status" style="color: var(--accent)" class="font-semibold" aria-live="polite">GFM</span>
+            <span id="app-version-status" class="shrink-0 whitespace-nowrap border-l theme-border pl-2 sm:pl-3" aria-label="Application version">v…</span>
         </div>
     </footer>
 
