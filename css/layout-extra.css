@@ -36,3 +36,20 @@ body{min-width:0}
  #certificate-modal button,#cert-locked-label{display:none!important}
  #certificate-modal input{border:0!important;background:transparent!important}
 }
+
+
+/* Keep Preview commands usable when Split View is narrowed, regardless of viewport width.
+   Container queries also cover manually resized desktop panes, not just mobile screens. */
+#preview-pane{container-type:inline-size}
+@container (max-width:420px){
+ .preview-header-title-group{
+  position:absolute!important;width:1px;height:1px;padding:0;overflow:hidden;
+  white-space:nowrap;clip-path:inset(50%)
+ }
+ .preview-header-actions{
+  flex:1 1 auto!important;min-width:0;overflow-x:auto;
+  gap:8px;overscroll-behavior-inline:contain;scrollbar-width:none
+ }
+ .preview-header-actions>button{flex:0 0 auto;white-space:nowrap}
+}
+.preview-header-actions::-webkit-scrollbar{display:none}
