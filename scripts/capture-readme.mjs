@@ -45,7 +45,7 @@ try{
   '| `_italic_` | _italic_ |',
   '',
   '[Open the CommonMark reference](https://spec.commonmark.org/)'
- ].join('\\n'));
+ ].join('\n'));
  // The screenshot is taken from a real production build; no HTML is modified.
  await page.locator('#markdown-preview h1').waitFor();
  await page.evaluate(()=>document.fonts.ready);
