@@ -36,11 +36,13 @@ test('release UAT: keyboard table edit round-trips semantic sections and both ex
  await expect(input).toHaveValue(updated);
 
  const mdPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-md-btn').click();
  const mdDownload=await mdPromise;
  expect(await readFile(await mdDownload.path(),'utf8')).toBe(updated);
 
  const htmlPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const htmlDownload=await htmlPromise;
  const html=await readFile(await htmlDownload.path(),'utf8');
@@ -73,6 +75,7 @@ test('release security UAT: malformed attributes stay source-only and unsafe HTM
  expect(await page.evaluate(()=>window.__attack)).toBeUndefined();
 
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const output=await downloadPromise;
  const html=await readFile(await output.path(),'utf8');

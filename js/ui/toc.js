@@ -49,12 +49,9 @@ export function renderTOC(preview){
  }
 }
 export function initTOC({insertMarkdown}){
- const panel=el('toc-panel');
- panel.open=state.tocOpen;
- panel.addEventListener('toggle',()=>{
-  if(state.tocOpen===panel.open)return;
-  state.tocOpen=panel.open;save();
- });
+ // Outline is now a transient popover, closed on each page load.
+ // Only the selected heading depth remains a persistent preference.
+ el('toc-panel').open=false;
  el('toc-depth').addEventListener('change',event=>{
   const next=Number(event.target.value);
   if(!Number.isInteger(next)||next<1||next>6)return;

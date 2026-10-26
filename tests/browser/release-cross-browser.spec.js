@@ -42,6 +42,7 @@ test('release parity: unsafe HTML cannot execute or survive standalone export',a
  await expect(page.locator('#markdown-preview script')).toHaveCount(0);
  expect(await page.evaluate(()=>window.__attack)).toBeUndefined();
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const download=await downloadPromise;
  const html=await readFile(await download.path(),'utf8');

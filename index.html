@@ -182,6 +182,7 @@
                 <option value="commonmark">CommonMark</option>
                 <option value="original">Original · Legacy</option>
             </select>
+            <button id="compatibility-trigger" type="button" aria-expanded="false" aria-controls="compatibility-panel" aria-haspopup="true" class="px-2 py-1 rounded text-[11px] font-semibold theme-panel-alt border theme-border hover:opacity-90 transition shrink-0">Compatibility ▾</button>
             <button id="reset-split-btn" type="button" class="hidden md:inline-flex px-2 py-1 rounded text-[11px] font-mono theme-panel-alt border theme-border hover:opacity-90 transition" title="Reset panel widths (Double-click splitter)">
                 ⇄ 50:50
             </button>
@@ -393,74 +394,26 @@
             <div id="resizer-editor-preview" class="resizer-gutter hidden md:flex" title="Drag left or right to resize Editor and Preview (Double-click for 50/50)"></div>
 
             <!-- PANE B: LIVE EDITORIAL PREVIEW (Paper or Theme Surface) -->
-            <div id="preview-pane" class="flex-1 flex flex-col min-w-[200px] min-h-[240px] md:h-full theme-preview-surface overflow-hidden select-text">
+            <div id="preview-pane" class="relative flex-1 flex flex-col min-w-[200px] min-h-[240px] md:h-full theme-preview-surface overflow-hidden select-text">
                 <!-- Preview Top Header -->
                 <div class="h-8 px-3 theme-header border-b theme-border flex items-center justify-between text-[11px] font-mono shrink-0 select-none" style="color: var(--text-ui)">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                         <span id="preview-pane-title" class="font-semibold" data-i18n="previewHeader">Live Preview (GFM)</span>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button id="print-document-btn" type="button" class="hover:opacity-80 transition" title="Print / PDF">🖨 PDF</button>
-                        <button id="download-html-btn" type="button" class="hover:opacity-80 transition" title="Export HTML">↓ .HTML</button>
-                        <button id="download-md-btn" type="button" class="hover:opacity-80 transition">↓ .MD</button>
+                    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <button id="outline-trigger" type="button" aria-controls="toc-panel" aria-expanded="false" aria-haspopup="true" class="hover:opacity-80 transition">Outline ▾</button>
+                        <button id="export-trigger" type="button" aria-controls="preview-export-menu" aria-expanded="false" aria-haspopup="true" class="hover:opacity-80 transition">Export ▾</button>
                         <button id="copy-md-btn" type="button" class="hover:opacity-80 transition" data-i18n="copyBtn">Copy</button>
                     </div>
                 </div>
+                <div id="preview-export-menu" role="group" aria-label="Export document" class="preview-action-menu theme-panel-alt border theme-border" hidden>
+                    <button id="print-document-btn" type="button" class="preview-menu-item" title="Print / PDF">Print / PDF</button>
+                    <button id="download-html-btn" type="button" class="preview-menu-item" title="Export HTML">HTML (.html)</button>
+                    <button id="download-md-btn" type="button" class="preview-menu-item">Markdown (.md)</button>
+                </div>
 
-                <details id="compatibility-panel" class="shrink-0 border-b theme-border theme-panel-alt text-xs">
-                    <summary class="px-3 py-2 cursor-pointer font-semibold"><span id="compatibility-title">Compatibility &amp; export</span></summary>
-                    <div class="px-3 pb-3 space-y-2">
-                        <p id="compatibility-description" class="theme-muted text-[11px]"></p>
-                        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
-                            <span id="compatibility-core"></span><strong id="compatibility-core-status"></strong>
-                            <span id="compatibility-gfm"></span><strong id="compatibility-gfm-status"></strong>
-                            <span id="compatibility-advanced"></span><strong id="compatibility-advanced-status"></strong>
-                            <span id="compatibility-html"></span><strong id="compatibility-html-status"></strong>
-                        </div>
-                        <div id="optional-extension-settings" class="pt-2 mt-2 border-t theme-border space-y-2">
-                            <p id="optional-extension-title" class="font-semibold"></p>
-                            <label id="extension-softbreaks-label" for="extension-softbreaks-toggle" class="block text-[11px]"></label>
-                            <select id="extension-softbreaks-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
-                                <option value="off">Off</option><option value="on">On</option>
-                            </select>
-                            <p id="extension-softbreaks-note" class="text-[10px] theme-muted"></p>
-                            <label for="extension-footnotes-toggle" id="extension-footnotes-label" class="block text-[11px]"></label>
-                            <select id="extension-footnotes-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
-                                <option value="off">Off</option><option value="on">On</option>
-                            </select>
-                            <p id="extension-footnotes-note" class="text-[10px] theme-muted"></p>
-                            <label id="extension-headingids-label" for="extension-headingids-toggle" class="block text-[11px]"></label>
-                            <select id="extension-headingids-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
-                                <option value="off">Off</option><option value="on">On</option>
-                            </select>
-                            <p id="extension-headingids-note" class="text-[10px] theme-muted"></p>
-                            <label id="extension-definitions-label" for="extension-definitions-toggle" class="block text-[11px]"></label>
-                            <select id="extension-definitions-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
-                                <option value="off">Off</option><option value="on">On</option>
-                            </select>
-                            <p id="extension-definitions-note" class="text-[10px] theme-muted"></p>
-                            <label id="extension-emoji-label" for="extension-emoji-toggle" class="block text-[11px]"></label>
-                            <select id="extension-emoji-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
-                                <option value="off">Off</option><option value="on">On</option>
-                            </select>
-                            <p id="extension-emoji-note" class="text-[10px] theme-muted"></p>
-                            <button id="extension-definitions-demo" type="button" class="rounded px-2 py-1 theme-panel border theme-border hover:opacity-80 text-[11px]"></button>
-                            <p id="extension-definitions-practice" class="text-[10px] theme-muted" role="status" aria-live="polite"></p>
-                            <button id="extension-footnote-demo" type="button" class="rounded px-2 py-1 theme-panel border theme-border hover:opacity-80 text-[11px]"></button>
-                            <p id="extension-footnote-practice" class="text-[10px] theme-muted" role="status" aria-live="polite"></p>
-                            <div class="overflow-x-auto"><table id="extension-matrix" class="w-full text-[10px] text-left" aria-label="Portability matrix">
-                                <caption id="extension-matrix-title" class="text-left font-semibold pb-1"></caption>
-                                <thead><tr><th scope="col" id="ext-col-feature"></th><th scope="col" id="ext-col-core"></th><th scope="col" id="ext-col-gfm"></th><th scope="col" id="ext-col-github"></th><th scope="col" id="ext-col-app"></th></tr></thead>
-                                <tbody id="extension-matrix-body"></tbody>
-                            </table></div>
-                        </div>
-                        <p id="compatibility-footnote" class="text-[10px] theme-muted"></p>
-                        <p id="compatibility-external" class="text-[10px] theme-muted"></p>
-                    </div>
-                </details>
-
-                <details id="toc-panel" class="shrink-0 border-b theme-border theme-panel-alt text-xs">
+                <details id="toc-panel" class="utility-popover outline-popover theme-panel-alt border theme-border text-xs" role="region" aria-label="Document outline">
                     <summary class="px-3 py-2 cursor-pointer font-semibold flex items-center gap-2">
                         <span id="toc-title">Document outline</span>
                         <span id="toc-count" class="theme-muted text-[10px]" aria-live="polite"></span>
@@ -520,6 +473,62 @@
             <span id="app-version-status" class="shrink-0 whitespace-nowrap border-l theme-border pl-2 sm:pl-3" aria-label="Application version">v…</span>
         </div>
     </footer>
+
+
+    <!-- Source-safe compatibility settings remain available from the Markdown dialect selector.
+         The fixed popover lives at body level to avoid toolbar overflow clipping. -->
+                <details id="compatibility-panel" class="utility-popover compatibility-popover theme-panel-alt border theme-border text-xs" role="region" aria-label="Compatibility and Markdown extensions">
+                    <summary class="px-3 py-2 cursor-pointer font-semibold"><span id="compatibility-title">Compatibility &amp; export</span></summary>
+                    <div class="px-3 pb-3 space-y-2">
+                        <p id="compatibility-description" class="theme-muted text-[11px]"></p>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                            <span id="compatibility-core"></span><strong id="compatibility-core-status"></strong>
+                            <span id="compatibility-gfm"></span><strong id="compatibility-gfm-status"></strong>
+                            <span id="compatibility-advanced"></span><strong id="compatibility-advanced-status"></strong>
+                            <span id="compatibility-html"></span><strong id="compatibility-html-status"></strong>
+                        </div>
+                        <div id="optional-extension-settings" class="pt-2 mt-2 border-t theme-border space-y-2">
+                            <p id="optional-extension-title" class="font-semibold"></p>
+                            <label id="extension-softbreaks-label" for="extension-softbreaks-toggle" class="block text-[11px]"></label>
+                            <select id="extension-softbreaks-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
+                                <option value="off">Off</option><option value="on">On</option>
+                            </select>
+                            <p id="extension-softbreaks-note" class="text-[10px] theme-muted"></p>
+                            <label for="extension-footnotes-toggle" id="extension-footnotes-label" class="block text-[11px]"></label>
+                            <select id="extension-footnotes-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
+                                <option value="off">Off</option><option value="on">On</option>
+                            </select>
+                            <p id="extension-footnotes-note" class="text-[10px] theme-muted"></p>
+                            <label id="extension-headingids-label" for="extension-headingids-toggle" class="block text-[11px]"></label>
+                            <select id="extension-headingids-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
+                                <option value="off">Off</option><option value="on">On</option>
+                            </select>
+                            <p id="extension-headingids-note" class="text-[10px] theme-muted"></p>
+                            <label id="extension-definitions-label" for="extension-definitions-toggle" class="block text-[11px]"></label>
+                            <select id="extension-definitions-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
+                                <option value="off">Off</option><option value="on">On</option>
+                            </select>
+                            <p id="extension-definitions-note" class="text-[10px] theme-muted"></p>
+                            <label id="extension-emoji-label" for="extension-emoji-toggle" class="block text-[11px]"></label>
+                            <select id="extension-emoji-toggle" class="w-full theme-panel theme-border border rounded px-2 py-1 text-[11px]">
+                                <option value="off">Off</option><option value="on">On</option>
+                            </select>
+                            <p id="extension-emoji-note" class="text-[10px] theme-muted"></p>
+                            <button id="extension-definitions-demo" type="button" class="rounded px-2 py-1 theme-panel border theme-border hover:opacity-80 text-[11px]"></button>
+                            <p id="extension-definitions-practice" class="text-[10px] theme-muted" role="status" aria-live="polite"></p>
+                            <button id="extension-footnote-demo" type="button" class="rounded px-2 py-1 theme-panel border theme-border hover:opacity-80 text-[11px]"></button>
+                            <p id="extension-footnote-practice" class="text-[10px] theme-muted" role="status" aria-live="polite"></p>
+                            <div class="overflow-x-auto"><table id="extension-matrix" class="w-full text-[10px] text-left" aria-label="Portability matrix">
+                                <caption id="extension-matrix-title" class="text-left font-semibold pb-1"></caption>
+                                <thead><tr><th scope="col" id="ext-col-feature"></th><th scope="col" id="ext-col-core"></th><th scope="col" id="ext-col-gfm"></th><th scope="col" id="ext-col-github"></th><th scope="col" id="ext-col-app"></th></tr></thead>
+                                <tbody id="extension-matrix-body"></tbody>
+                            </table></div>
+                        </div>
+                        <p id="compatibility-footnote" class="text-[10px] theme-muted"></p>
+                        <p id="compatibility-external" class="text-[10px] theme-muted"></p>
+                    </div>
+                </details>
+
 
     <!-- Optional Extensions & Hacks learning track (#17). Isolated from the main editor. -->
     <div id="extensions-lab-modal" style="z-index:60" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-2 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="extensions-lab-title">
