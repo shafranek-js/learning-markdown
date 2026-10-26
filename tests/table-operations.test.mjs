@@ -625,4 +625,42 @@ assert.equal(insertTableCellImage(pipeImageSource,0,1,0,{...insertOptions,width:
  'GFM image syntax cannot express a pixel width');
 assert.equal(getTableCellImageInsertion(fenced,0,0,0),null);
 
+// #57: A serializer that does not model attributes must never discard them
+// during an unrelated visual edit. The original source remains authoritative.
+const sourceMetadataCases=[
+ '<table data-report="quarterly"><tr><td>A</td><td>B</td></tr></table>',
+ '<table title="Detailed results"><tr><td>A</td><td>B</td></tr></table>',
+ '<table border="1"><tr><td>A</td><td>B</td></tr></table>',
+ '<table class="custom-layout"><tr><td>A</td><td>B</td></tr></table>',
+ '<table style="width:100%"><tr><td>A</td><td>B</td></tr></table>',
+ '<table><tr><td title="Not represented">A</td><td>B</td></tr></table>',
+ '<table><tr><th data-key="item">A</th><td>B</td></tr></table>',
+ '<table><tr><td class="af-cell-mint custom-label">A</td><td>B</td></tr></table>',
+ '<table><tr><td align="justify">A</td><td>B</td></tr></table>',
+ '<table><tr><td onclick="alert(1)">A</td><td>B</td></tr></table>'
+];
+for(const raw of sourceMetadataCases){
+ const src='Before\n\n'+raw+'\n\nAfter';
+ assert.equal(getTableReadOnlyReason(src,0),'unsupported',raw);
+ for(const edit of [
+  editTableAt(src,0,'cell-mint',select(0,1)),
+  editTableAt(src,0,'column-right',select(0,0)),
+  setTableCellText(src,0,0,1,'Changed'),
+  setTableCellHTML(src,0,0,1,'<em>Changed</em>')
+ ])assert.equal(edit,null,'unmodeled metadata must survive untouched');
+}
+// Metadata rejection is precise: ordinary supported table layout, heading
+// scopes and allowed styling classes are still fully editable.
+const modeledAttributes='<table class="af-table-outline"><thead>'+
+ '<tr><th scope="col">Label</th><th scope="col">Score</th></tr></thead>'+
+ '<tbody><tr><td class="af-cell-mint" align="right" rowspan="2">A</td><td>1</td></tr>'+
+ '<tr><td>2</td></tr></tbody></table>';
+assert.equal(getTableReadOnlyReason(modeledAttributes,0),null);
+const styled=editTableAt(modeledAttributes,0,'cell-blue',select(1,1));
+assert(styled?.text.includes('scope="col"'));
+assert(styled.text.includes('rowspan="2"'));
+assert(styled.text.includes('align="right"'));
+assert(styled.text.includes('af-cell-mint'));
+assert(styled.text.includes('af-cell-blue'));
+
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
