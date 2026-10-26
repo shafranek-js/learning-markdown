@@ -62,9 +62,14 @@ function applyCategoryVisibility(){
  $('mermaid-insert-controls')?.classList.toggle('hidden',!all&&current!=='blocks');
  for(const group of RICH_GROUPS){
   const label=$('rich-'+group)?.closest('label');
-  if(label)label.classList.toggle('hidden',!all&&current!==group);
+  if(label){
+   label.classList.toggle('hidden',!all&&current!==group);
+   // The active tab already identifies the group; retain the accessible select label.
+   label.querySelector('span')?.classList.toggle('hidden',!all&&current===group);
+  }
  }
- $('advanced-rich-heading').textContent=(richLabels(state.lang).groups[RICH_GROUPS.indexOf(current)]||richLabels(state.lang).heading);
+ $('figure-dialog-trigger')?.classList.toggle('hidden',!all&&current!=='blocks');
+ $('definition-html-insert')?.classList.toggle('hidden',!all&&current!=='lists');
  $('advanced-category-nav')?.querySelectorAll('[data-advanced-category]').forEach(button=>{
   const active=button.dataset.advancedCategory===current;
   button.setAttribute('aria-pressed',String(active));
@@ -78,7 +83,7 @@ function renderAdvancedCategoryControls(){
   nav=document.createElement('div');nav.id='advanced-category-nav';
   nav.className='advanced-category-nav shrink-0';
   nav.setAttribute('role','group');
-  $('advanced-toolbar-warning').after(nav);
+  $('advanced-toolbar').prepend(nav);
  }
  nav.replaceChildren();
  const texts=CATEGORY_LABELS[state.lang]||CATEGORY_LABELS.en;
@@ -133,7 +138,6 @@ function renderPresetControls(){
 
 function renderRichControls(){
  const locale=richLabels(state.lang),root=$('advanced-rich-controls');root.replaceChildren();
- $('advanced-rich-heading').textContent=locale.heading;
  for(let i=0;i<RICH_GROUPS.length;i++){
   const group=RICH_GROUPS[i],options=RICH_CONTENT[group],label=document.createElement('label');
   label.className='flex items-center gap-1.5 shrink-0 text-[11px] theme-muted font-semibold';
@@ -225,7 +229,6 @@ function applyAdvancedVisibility(){
 export function renderAdvancedUI(){
  const words=advancedLabels(state.lang);
  applyAdvancedVisibility();
- $('advanced-toolbar-warning').textContent=words.warning;
  $('definition-html-insert').textContent=definitionText(state.lang).html;
  $('definition-html-insert').title=definitionText(state.lang).htmlWarning;
  renderPresetControls();
