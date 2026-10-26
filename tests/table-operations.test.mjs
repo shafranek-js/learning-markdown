@@ -276,6 +276,25 @@ assert.equal(getTableReadOnlyReason(nestedListLevels,0),null);
 assert(getTableCellBlocks(nestedListLevels,0,0,0)?.includes('Inner two'),
  'nested lists must remain available to the Blocks editor');
 
+// List numbering can be continued without unsafe or unbounded attributes.
+const safeStarts='<table><tr><td><ol type="i" start="5"><li>Five</li><li>Six</li></ol></td></tr></table>';
+assert.equal(getTableReadOnlyReason(safeStarts,0),null);
+assert(getTableCellBlocks(safeStarts,0,0,0)?.includes('start="5"'));
+const preservedStart=setTableCellBlocks(safeStarts,0,0,0,
+ '<ol type="i" start="8"><li>Eight</li></ol>');
+assert(preservedStart?.text.includes('start="8"'));
+assert(getTableCellBlocks(preservedStart.text,0,0,0)?.includes('start="8"'));
+assert.equal(sanitizeHTML('<ol type="i" start="8" onclick="alert(1)"><li>X</li></ol>')
+ .includes('start="8"'),true);
+for(const raw of ['start="0"','start="-1"','start="100000"','start="1px"','reversed']){
+ const source='<table><tr><td><ol '+raw+'><li>A</li></ol></td></tr></table>';
+ assert.equal(getTableReadOnlyReason(source,0),'unsupported',raw);
+ assert.equal(getTableCellBlocks(source,0,0,0),null);
+}
+const explicitValue='<table><tr><td><ol><li value="8">A</li><li>B</li></ol></td></tr></table>';
+assert.equal(getTableReadOnlyReason(explicitValue,0),'unsupported');
+assert.equal(getTableCellBlocks(explicitValue,0,0,0),null);
+
 // #6: Mixed block content is editable ONLY via the explicit Blocks mode.
 const blockCellSource='# Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
  '<p>Introduction <strong>important</strong> <a href="https://example.org/manual">manual</a>.</p>'+

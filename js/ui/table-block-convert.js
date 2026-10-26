@@ -46,16 +46,44 @@ function convertNestedList(editor,target,selection,range){
       (node.nodeType!==3||node.textContent.trim())))
   return {ok:false,reason:'partial-or-nested-list'};
  if(target==='p')return {ok:false,reason:'nested-to-paragraph'};
- if(!selection.isCollapsed&&items.some(item=>!range.intersectsNode(item)))
-  return {ok:false,reason:'partial-or-nested-list'};
  if(list.tagName.toLowerCase()===target)
   return {ok:false,reason:'already-formatted'};
- const changed=editor.ownerDocument.createElement(target);
- while(list.firstChild)changed.append(list.firstChild);
- list.replaceWith(changed);
- // Keep selection anchored *inside* the converted nested list. Selecting
- // the list element itself would make a second conversion target its parent LI.
- const replacement=editor.ownerDocument.createRange();
+ const aIndex=items.indexOf(a),bIndex=items.indexOf(b);
+ if(aIndex<0||bIndex<0)return {ok:false,reason:'partial-or-nested-list'};
+ // A caret retains the previous whole-list conversion behavior.
+ // A noncollapsed selection converts the inclusive contiguous LI range.
+ const first=selection.isCollapsed?0:Math.min(aIndex,bIndex);
+ const last=selection.isCollapsed?items.length-1:Math.max(aIndex,bIndex);
+ const doc=editor.ownerDocument;
+ const changed=doc.createElement(target);
+ const partial=first>0||last<items.length-1;
+ if(!partial){
+  while(list.firstChild)changed.append(list.firstChild);
+  list.replaceWith(changed);
+ }else{
+  // For ordered lists, preserve the suffix's ordinal after splitting.
+  // start is explicitly allowlisted and bounded by the HTML sanitizer.
+  const initial=list.tagName==='OL'?Number(list.getAttribute('start')||1):1;
+  const suffixStart=initial+last+1;
+  if(list.tagName==='OL'&&last<items.length-1&&
+     (!Number.isInteger(suffixStart)||suffixStart>99999))
+   return {ok:false,reason:'partial-or-nested-list'};
+  const before=first>0?list.cloneNode(false):null;
+  const after=last<items.length-1?list.cloneNode(false):null;
+  if(after?.tagName==='OL')after.setAttribute('start',String(suffixStart));
+  items.forEach((item,index)=>{
+   if(index<first)before.append(item);
+   else if(index<=last)changed.append(item);
+   else after.append(item);
+  });
+  const fragment=doc.createDocumentFragment();
+  if(before)fragment.append(before);
+  fragment.append(changed);
+  if(after)fragment.append(after);
+  list.replaceWith(fragment);
+ }
+ // Keep the selection in its original depth for subsequent conversions.
+ const replacement=doc.createRange();
  replacement.setStart(changed.firstElementChild,0);
  replacement.setEnd(changed.lastElementChild,changed.lastElementChild.childNodes.length);
  selection.removeAllRanges();selection.addRange(replacement);
