@@ -6,9 +6,16 @@ export function applyRatio(){const editor=$('editor-pane'),container=$('ide-spli
  editor.style.width=`${(state.editorRatio*100).toFixed(2)}%`;
  $('split-ratio-indicator').textContent=`Split: ${Math.round(state.editorRatio*100)}% / ${100-Math.round(state.editorRatio*100)}%`;
 }
-export function showGuide(visible){const panel=$('theory-panel'),splitter=$('resizer-guide-editor');
- panel.classList.toggle('hidden',!visible);splitter.classList.toggle('hidden',!visible);splitter.classList.toggle('md:flex',visible);
+export function showGuide(visible){
+ const panel=$('theory-panel'),splitter=$('resizer-guide-editor'),toggle=$('theory-pane-toggle-btn');
+ panel.classList.toggle('hidden',!visible);
+ splitter.classList.toggle('hidden',!visible);
+ splitter.classList.toggle('md:flex',visible);
  $('guide-indicator-dot').className='w-2 h-2 rounded-full '+(visible?'bg-emerald-400':'bg-slate-500');
+ toggle.setAttribute('aria-pressed',String(visible));
+ toggle.setAttribute('aria-expanded',String(visible));
+ // The editor is a workspace when the guide is closed; course actions stay accessible via Contents.
+ document.querySelectorAll('[data-course-ui]').forEach(element=>{element.hidden=!visible;});
 }
 export function setLayoutMode(next){mode=next;state.layoutMode=next;
  const isPreview=next==='preview',isHTML=next==='html',editor=$('editor-pane'),preview=$('preview-pane'),splitter=$('resizer-editor-preview');
