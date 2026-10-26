@@ -24,7 +24,7 @@ try{
  await page.goto(base,{waitUntil:'networkidle'});
  await page.locator('#theme-selector').selectOption('dracula');
  await page.locator('#sandbox-mode-btn').click();
- // The built-in sample is public course data, not an author/user draft.
+ // Replace the default course draft with anonymous, reproducible demonstration text.
  await page.locator('#markdown-input').fill([
   '# Markdown, made practical',
   '',
