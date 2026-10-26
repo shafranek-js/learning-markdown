@@ -1,4 +1,4 @@
-import {EditorState,EditorSelection,Compartment} from '@codemirror/state';
+import {EditorState,EditorSelection,Compartment,Prec} from '@codemirror/state';
 import {EditorView,keymap,lineNumbers,drawSelection,rectangularSelection,highlightActiveLine,highlightSpecialChars} from '@codemirror/view';
 import {history,historyKeymap,defaultKeymap,undo,redo,undoDepth,redoDepth,isolateHistory,addCursorAbove,addCursorBelow} from '@codemirror/commands';
 import {selectNextOccurrence,selectSelectionMatches} from '@codemirror/search';
@@ -140,13 +140,16 @@ function extensions(){
   highlightActiveLine(),syntaxHighlighting(markdownSourceHighlightStyle),
   markdown(),
   wrapping.of(state.wrapText?EditorView.lineWrapping:[]),
+  // lang-markdown registers its Enter shortcut at Prec.high. Our narrower
+  // list-parity handler must run first; returning false leaves Markdown's
+  // own continuation and quote rules available as a fallback.
+  Prec.highest(keymap.of([{key:'Enter',run:multiCursorListEnter}])),
   keymap.of([
    {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
    {key:'Mod-Shift-l',run:selectSelectionMatches,preventDefault:true},
    {key:'Escape',run:collapseToSingleCursor,preventDefault:true},
    {key:'Tab',run:editor=>multiCursorIndent(editor),preventDefault:true},
    {key:'Shift-Tab',run:editor=>multiCursorIndent(editor,true),preventDefault:true},
-   {key:'Enter',run:multiCursorListEnter},
    {key:'Shift-Alt-i',run:insertCursorsAtLineEnds,preventDefault:true},
    {key:'Mod-Alt-ArrowDown',run:addCursorBelow,preventDefault:true},
    {key:'Mod-Alt-ArrowUp',run:addCursorAbove,preventDefault:true},
