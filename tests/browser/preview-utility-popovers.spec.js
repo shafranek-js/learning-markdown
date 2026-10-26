@@ -72,3 +72,40 @@ test('Small-screen Preview utility controls remain accessible without changing c
  await page.locator('#lang-selector').selectOption('ru');
  await expect(page.locator('#export-trigger')).toContainText('Экспорт');
 });
+
+
+test('very narrow Preview preserves all localized actions inside the pane',async({page})=>{
+ await page.setViewportSize({width:320,height:760});
+ await page.goto('/');
+ await page.locator('#mobile-tabs [data-mobile-tab="preview"]').click();
+ for(const lang of ['en','cs','uk','ro','ru']){
+  await page.locator('#lang-selector').selectOption(lang);
+  const actionRow=page.locator('.preview-header-actions');
+  const box=await actionRow.evaluate(element=>{
+   const actions=element.getBoundingClientRect();
+   const pane=document.querySelector('#preview-pane').getBoundingClientRect();
+   const title=document.querySelector('.preview-header-title-group');
+   return {actionsLeft:actions.left,actionsRight:actions.right,paneLeft:pane.left,paneRight:pane.right,
+    titleText:title.textContent.trim(),titleHidden:window.getComputedStyle(title).position==='absolute'};
+  });
+  expect(box.titleText.length).toBeGreaterThan(0);
+  expect(box.titleHidden).toBe(true);
+  expect(box.actionsLeft).toBeGreaterThanOrEqual(box.paneLeft-1);
+  expect(box.actionsRight).toBeLessThanOrEqual(box.paneRight+1);
+  for(const id of ['#outline-trigger','#export-trigger','#copy-md-btn']){
+   const button=page.locator(id);
+   await button.scrollIntoViewIfNeeded();
+   const visible=await button.evaluate(element=>{
+    const button=element.getBoundingClientRect();
+    const actions=document.querySelector('.preview-header-actions').getBoundingClientRect();
+    return button.left>=actions.left-1&&button.right<=actions.right+1;
+   });
+   expect(visible,lang+' '+id+' clipped').toBe(true);
+  }
+ }
+ await page.locator('#outline-trigger').click();
+ await expect(page.locator('#toc-panel')).toBeVisible();
+ await page.keyboard.press('Escape');
+ await page.locator('#export-trigger').click();
+ await expect(page.locator('#preview-export-menu')).toBeVisible();
+});
