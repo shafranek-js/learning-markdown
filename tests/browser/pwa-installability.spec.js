@@ -6,6 +6,8 @@ test('PWA manifest, images and browser installability diagnostics',async({page,b
  const manifestLink=page.locator('link[rel="manifest"]');
  await expect(manifestLink).toHaveCount(1);
  const manifestUrl=new URL(await manifestLink.getAttribute('href'),page.url()).href;
+ // A relocated Vite manifest causes /assets/assets/icon.svg in Chrome.
+ expect(manifestUrl).toBe(new URL('./manifest.json',page.url()).href);
  const manifestResponse=await page.request.get(manifestUrl);
  expect(manifestResponse.ok(),'PWA manifest must be served by the site').toBeTruthy();
  const manifest=await manifestResponse.json();
@@ -21,6 +23,14 @@ test('PWA manifest, images and browser installability diagnostics',async({page,b
   expect(response.ok(),url+' must be reachable').toBeTruthy();
   expect(response.headers()['content-type']).toContain('image/png');
   expect((await response.body()).length).toBeGreaterThan(100);
+ }
+ // Check every manifest image, including the SVG that originally triggered Chrome's error.
+ for(const icon of manifest.icons){
+  const iconUrl=new URL(icon.src,manifestUrl).href;
+  expect(new URL(iconUrl).pathname).not.toContain('/assets/assets/');
+  const response=await page.request.get(iconUrl);
+  expect(response.ok(),iconUrl+' must be reachable').toBeTruthy();
+  expect(response.headers()['content-type']).toContain(icon.type);
  }
  const sw=await page.request.get(new URL('./sw.js',page.url()).href);
  expect(sw.ok(),'Service worker must be published beside the app').toBeTruthy();
