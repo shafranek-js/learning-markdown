@@ -140,6 +140,39 @@ assert.equal(apply(semanticSections,'cell-blue',select(1,0)),null,
 const customSection='<table><tbody class="important"><tr><td>Value</td></tr></tbody></table>';
 assert.equal(apply(customSection,'cell-blue',select(0,0)),null,
  'unmodeled section metadata must be preserved by declining visual editing');
+// A simple semantic caption survives all source-backed table changes.
+const captioned='Before\n\n<table class="af-table-outline"><caption>'+
+ '<strong>Quarterly results</strong> <a href="https://example.org/report">source</a>'+
+ '</caption><tr><td>Alpha</td><td>Beta</td></tr>'+
+ '<tr><td>Gamma</td><td>Delta</td></tr></table>\n\nAfter';
+assert.equal(getTableReadOnlyReason(captioned,0),null);
+assert(sanitizeHTML('<table><caption><strong>Title</strong><script>alert(1)</script></caption>'+
+ '<tr><td>OK</td></tr></table>').includes('<caption><strong>Title</strong></caption>'));
+const captionMerge=editTableAt(captioned,0,'merge-right',select(0,0));
+assert(captionMerge?.text.includes('<caption><strong>Quarterly results</strong>'));
+assert(captionMerge.text.includes('href="https://example.org/report"'));
+assert(captionMerge.text.includes('colspan="2"'));
+assert(captionMerge.text.startsWith('Before\n\n')&&captionMerge.text.endsWith('\n\nAfter'));
+const captionEdited=setTableCellText(captioned,0,0,0,'Changed');
+assert(captionEdited?.text.includes('<caption><strong>Quarterly results</strong>'));
+assert(captionEdited.text.includes('source</a>'));
+assert.equal(getTableCellText(captionEdited.text,0,0,0),'Changed');
+const captionRich=setTableCellHTML(captioned,0,1,1,'<em>Revised</em>');
+assert(captionRich?.text.includes('<caption><strong>Quarterly results</strong>'));
+assert(captionRich.text.includes('<em>Revised</em>'));
+const captionAdd=editTableAt(captioned,0,'row-below',select(1,0));
+assert(captionAdd?.text.includes('<caption><strong>Quarterly results</strong>'));
+assert.equal(new DOMParser().parseFromString(captionAdd.text,'text/html').querySelectorAll('table tr').length,3);
+for(const invalidCaption of [
+ '<table><caption class="custom">Title</caption><tr><td>A</td></tr></table>',
+ '<table><caption>One</caption><caption>Two</caption><tr><td>A</td></tr></table>',
+ '<table><tr><td>A</td></tr><caption>Late</caption></table>',
+ '<table><caption>Unclosed<tr><td>A</td></tr></table>'
+ ]){
+ assert.notEqual(getTableReadOnlyReason(invalidCaption,0),null,
+  'unsupported captions must not be rewritten');
+ assert.equal(editTableAt(invalidCaption,0,'cell-blue',select(0,0)),null);
+}
 // Alignment is allowed by the sanitizer and must survive safe HTML operations,
 // including GFM-to-HTML conversion for advanced cell formatting.
 const htmlAligned='<table><tr><td align="right">One</td><td align="center">Two</td></tr></table>';

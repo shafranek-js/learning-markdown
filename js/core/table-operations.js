@@ -86,7 +86,7 @@ function sourceTableTopologyReason(raw){
  // A DOM parser silently supplies missing </td>, </tr>, etc. Check the
  // structural source tags before accepting its repaired table model.
  const stack=[];
- for(const match of raw.matchAll(/<\s*(\/?)\s*(table|thead|tbody|tfoot|tr|td|th)\b[^>]*>/gi)){
+ for(const match of raw.matchAll(/<\s*(\/?)\s*(table|caption|thead|tbody|tfoot|tr|td|th)\b[^>]*>/gi)){
   const tag=match[2].toLowerCase();
   if(match[1]){if(stack.pop()!==tag)return 'malformed';}
   else stack.push(tag);
@@ -101,11 +101,13 @@ function sourceTableTopologyReason(raw){
    return 'unsupported';
  }
  for(const table of doc.body.querySelectorAll('table')){
-  // The current serializer writes one tbody and cannot retain thead/tfoot,
-  // captions, colgroups, row classes or attributes on section containers.
-  if(table.children.length!==1||table.firstElementChild.tagName!=='TBODY'||
-     table.firstElementChild.attributes.length)return 'unsupported';
-  for(const tr of table.firstElementChild.children){
+  // A single leading attribute-free caption can be round-tripped. Other
+  // section metadata (thead/tfoot/colgroups, row attributes) remains read-only.
+  const children=[...table.children];
+  const caption=children[0]?.tagName==='CAPTION'?children.shift():null;
+  if(caption?.attributes.length||children.length!==1||children[0].tagName!=='TBODY'||
+     children[0].attributes.length)return 'unsupported';
+  for(const tr of children[0].children){
    if(tr.tagName!=='TR'||tr.attributes.length||
       [...tr.children].some(cell=>cell.tagName!=='TD'&&cell.tagName!=='TH'))return 'unsupported';
   }
@@ -143,7 +145,8 @@ function modelFromHTML(html){
  }
  if(!width||width>MAX_COLUMNS)return null;
  if(occupied.some(row=>Array.from({length:width},(_,col)=>row[col]).some(v=>!v)))return null;
- return {rows:trs.length,cols:width,cells,cls:table.getAttribute('class')||''};
+ return {rows:trs.length,cols:width,cells,cls:table.getAttribute('class')||'',
+  caption:table.querySelector(':scope > caption')?.innerHTML??null};
 }
 // Resolve the selected leaf table from its original source-backed HTML block.
 function selectedHTMLTable(entry){
@@ -234,7 +237,10 @@ export function tableSelectionBounds(source,index,selection){
  return closedSelectionBounds(model,selection.row,selection.col,selection.other||{row:selection.row,col:selection.col});
 }
 function serializeHTML(model){
- const parts=['<table'+(model.cls?' class="'+model.cls+'"':'')+'>','<tbody>'];
+ const parts=['<table'+(model.cls?' class="'+model.cls+'"':'')+'>'];
+ if(model.caption!==null&&model.caption!==undefined)
+  parts.push('<caption>'+model.caption+'</caption>');
+ parts.push('<tbody>');
  for(let r=0;r<model.rows;r++){
   parts.push('<tr>');
   for(const c of model.cells.filter(c=>c.row===r).sort((a,b)=>a.col-b.col)){
