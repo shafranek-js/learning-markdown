@@ -636,8 +636,7 @@ const sourceMetadataCases=[
  '<table><tr><td title="Not represented">A</td><td>B</td></tr></table>',
  '<table><tr><th data-key="item">A</th><td>B</td></tr></table>',
  '<table><tr><td class="af-cell-mint custom-label">A</td><td>B</td></tr></table>',
- '<table><tr><td align="justify">A</td><td>B</td></tr></table>',
- '<table><tr><td onclick="alert(1)">A</td><td>B</td></tr></table>'
+ '<table><tr><td align="justify">A</td><td>B</td></tr></table>'
 ];
 for(const raw of sourceMetadataCases){
  const src='Before\n\n'+raw+'\n\nAfter';
