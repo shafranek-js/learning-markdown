@@ -36,6 +36,7 @@ const unnest=key(nested.text,nested.start,'Tab',true);
 assert.deepEqual(unnest,{text:'- One',start:2,end:2});
 assert.equal(key('- One',2,'Tab',true),null,'no negative indentation');
 assert.equal(key('A normal line',2,'Tab'),null,'fallback is handled by editor');
+assert.equal(key('\n- Next line',0,'Tab'),null,'caret at blank first line must not edit next item');
 assert.equal(key('  - One',1,'Tab',true).text,'- One','outdent up to two spaces');
 
 // Multi-line list operations preserve selected source and adjusted selection.
