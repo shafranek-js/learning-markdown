@@ -76,3 +76,41 @@ test('Multi-cursor Enter does not treat fenced list-looking text as a real list'
  await page.keyboard.press('Enter');
  await expect(input).toHaveValue('~~~markdown\n- code\n');
 });
+
+
+test('CodeMirror single-caret Tab indents Markdown list at line start and preserves typing position',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('- One');
+ await page.locator('#multi-cursor-toggle').click();
+ const cm=page.locator('#codemirror-mount .cm-content');
+ await cm.click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('ArrowRight');
+ await page.keyboard.press('ArrowRight');
+ await page.keyboard.press('ArrowRight');
+ await page.keyboard.press('Tab');
+ await expect(input).toHaveValue('  - One');
+ await page.keyboard.insertText('!');
+ await expect(input).toHaveValue('  - O!ne');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('  - One');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('- One');
+});
+
+test('CodeMirror Tab in ordinary prose still inserts two spaces at the caret',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('Plain');
+ await page.locator('#multi-cursor-toggle').click();
+ const cm=page.locator('#codemirror-mount .cm-content');
+ await cm.click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('ArrowRight');
+ await page.keyboard.press('ArrowRight');
+ await page.keyboard.press('Tab');
+ await expect(input).toHaveValue('Pl  ain');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('Plain');
+});
