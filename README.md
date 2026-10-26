@@ -33,6 +33,21 @@ The legacy `vendor/marked.js` source remains in the repository **only as a pinne
 3. Open **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 4. The included `.github/workflows/deploy.yml` will build and publish the `dist/` output. The project uses relative paths (`./`) for Pages subpaths.
 
+## Install as a desktop or mobile app
+
+The hosted HTTPS site is installable as a Progressive Web App in compatible browsers.
+In Chrome, open **Contents → Install app** and accept the native installation
+prompt when offered. Otherwise use **Chrome menu → Cast, save and share →
+Install page as app** (the command name varies across browser versions). In
+Microsoft Edge, use **Apps → Install this site as an app**. On iOS, use the
+browser Share menu and **Add to Home Screen**.
+
+The application opens in its own window when installed. It uses 192 px and 512 px
+PNG icons, a standalone web manifest, and the existing service worker for offline
+access after a successful initial online visit. Drafts and course progress remain
+stored locally in that browser profile, not synchronized across devices. Availability
+of the native install dialog depends on browser and platform support.
+
 ## Course and editor
 
 - **01_01:** Headings & hierarchy — H1, H2, H3.

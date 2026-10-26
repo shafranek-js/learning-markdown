@@ -3,10 +3,26 @@ import {EditorView,keymap,lineNumbers,drawSelection,rectangularSelection,highlig
 import {history,historyKeymap,defaultKeymap,undo,redo,undoDepth,redoDepth,isolateHistory,addCursorAbove,addCursorBelow} from '@codemirror/commands';
 import {selectNextOccurrence,selectSelectionMatches} from '@codemirror/search';
 import {markdown} from '@codemirror/lang-markdown';
-import {syntaxHighlighting,defaultHighlightStyle} from '@codemirror/language';
+import {HighlightStyle,syntaxHighlighting} from '@codemirror/language';
+import {tags as t} from '@lezer/highlight';
 import {state,save,docKey} from '../core/state.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {makeRichSnippet} from '../data/rich-content.js';
+
+// Source-oriented highlighting: only token colors and deliberately matched link/strike styles.
+// Never style headings as underlined, or strong/emphasis as bold/italic in source view.
+// The other editor uses regular-weight overlay tokens to preserve caret alignment.
+export const markdownSourceHighlightStyle=HighlightStyle.define([
+ {tag:[t.heading,t.heading1,t.heading2,t.heading3,t.heading4,t.heading5,t.heading6],color:'var(--syn-heading)'},
+ {tag:t.strong,color:'var(--syn-bold)'},
+ {tag:t.emphasis,color:'var(--syn-italic)'},
+ {tag:t.strikethrough,textDecoration:'line-through',opacity:'0.75'},
+ {tag:t.link,color:'var(--syn-link)',textDecoration:'underline'},
+ {tag:t.url,color:'var(--syn-link)'},
+ {tag:t.monospace,color:'var(--syn-code)'},
+ {tag:t.quote,color:'var(--syn-quote)'},
+ {tag:t.meta,color:'var(--syn-list)'}
+]);
 
 // Optional CodeMirror engine. The existing textarea stays as a live shadow
 // document for the course, table tools and exports; this is a reversible
@@ -91,7 +107,7 @@ function extensions(){
   EditorState.allowMultipleSelections.of(true),
   EditorView.clickAddsSelectionRange.of(event=>event.altKey&&!event.shiftKey),
   rectangularSelection({eventFilter:event=>event.altKey&&event.shiftKey}),
-  highlightActiveLine(),syntaxHighlighting(defaultHighlightStyle,{fallback:true}),
+  highlightActiveLine(),syntaxHighlighting(markdownSourceHighlightStyle),
   markdown(),
   keymap.of([
    {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
