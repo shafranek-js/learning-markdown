@@ -50,20 +50,22 @@ test('mixed prose and fenced code refuses entire selected-line transformation in
  const input=page.locator('#markdown-input');
  await input.fill(source);
  await input.evaluate(el=>{el.focus();el.setSelectionRange(0,el.value.length);});
- let messagePromise=page.waitForEvent('dialog');
+ let messagePromise=page.waitForEvent('dialog').then(dialog=>{
+  expect(dialog.message()).toContain('fenced code block');
+  return dialog.accept();
+ });
  await page.locator('.toolbar-btn[data-action="task"]').click();
- let dialog=await messagePromise;
- expect(dialog.message()).toContain('fenced code block');
- await dialog.accept();
+ await messagePromise;
  await expect(input).toHaveValue(source);
  await page.locator('#multi-cursor-toggle').click();
  const editor=page.locator('#codemirror-mount .cm-content');
  await editor.click();
  await page.keyboard.press('Control+a');
- messagePromise=page.waitForEvent('dialog');
+ messagePromise=page.waitForEvent('dialog').then(dialog=>{
+  expect(dialog.message()).toContain('fenced code block');
+  return dialog.accept();
+ });
  await page.locator('.toolbar-btn[data-action="quote"]').click();
- dialog=await messagePromise;
- expect(dialog.message()).toContain('fenced code block');
- await dialog.accept();
+ await messagePromise;
  await expect(input).toHaveValue(source);
 });
