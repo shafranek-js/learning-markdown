@@ -55,12 +55,16 @@ test('Multi-cursor Enter exits empty list items without rewriting neighboring so
  await expect(input).toHaveValue(original);
 });
 
-test('Multi-cursor Enter refuses partial list conversions in mixed selections',async({page})=>{
+test('Multi-cursor Enter delegates mixed list and prose cursors to native CodeMirror',async({page})=>{
  await page.goto('/');
  const input=await activateWithCursorsAtLineEnds(page,'- List item\nPlain paragraph',2);
  await page.keyboard.press('Enter');
  const result=await input.inputValue();
- expect(result).not.toContain('- List item\n- ');
+ // The fallback is CodeMirror's own Markdown continuation rather than
+ // applying our custom list-only transaction to only some cursors.
+ expect(result).toContain('- List item');
+ expect(result).toContain('Plain paragraph');
+ expect(result).not.toBe('- List item\nPlain paragraph');
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue('- List item\nPlain paragraph');
 });
