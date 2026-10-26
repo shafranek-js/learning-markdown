@@ -2,6 +2,7 @@ import {state,docKey,save} from '../core/state.js';
 import {record,ensureHistory,step,status} from '../core/history.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {getWrapTextLabels} from './wrap-text-i18n.js';
+import {editMarkdownListKey} from '../core/source-list-keyboard.js';
 export const area=()=>document.getElementById('markdown-input');
 const el=id=>document.getElementById(id);
 let onChange=()=>{};
@@ -134,6 +135,16 @@ export function initEditor(listener){onChange=listener;const a=area(),backdrop=e
  a.addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;
   if(mod&&!e.altKey&&e.code==='KeyZ'){e.preventDefault();undoOrRedo(e.shiftKey?1:-1);return;}
   if(mod&&!e.altKey&&e.code==='KeyY'){e.preventDefault();undoOrRedo(1);return;}
-  if(e.key==='Tab'){e.preventDefault();const start=a.selectionStart,end=a.selectionEnd;applyEdit(a.value.slice(0,start)+'  '+a.value.slice(end),start+2,start+2);}
+  // Never intercept native IME composition or browser Ctrl/Alt shortcuts.
+  if(mod||e.altKey||e.isComposing||e.keyCode===229||multiActive())return;
+  if(e.key==='Tab'||e.key==='Enter'){
+   const start=a.selectionStart,end=a.selectionEnd;
+   const edit=editMarkdownListKey(a.value,start,end,e.key,{shiftKey:e.shiftKey});
+   if(edit){e.preventDefault();applyEdit(edit.text,edit.start,edit.end);return;}
+   if(e.key==='Tab'&&!e.shiftKey){
+    e.preventDefault();
+    applyEdit(a.value.slice(0,start)+'  '+a.value.slice(end),start+2,start+2);
+   }
+  }
  });
 }
