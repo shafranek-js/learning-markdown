@@ -14,12 +14,12 @@ test('PWA manifest, images and browser installability diagnostics',async({page,b
  expect(manifest.display).toBe('standalone');
  expect(manifest.start_url).toBeTruthy();
  for(const size of [192,512]){
-  const icon=manifest.icons.find(item=>item.type==='image/png'&&item.sizes.split(/\\s+/).includes(size+'x'+size));
+  const icon=manifest.icons.find(item=>item.type==='image/png'&&item.sizes.split(' ').includes(size+'x'+size));
   expect(icon,'Required '+size+'px PNG icon').toBeTruthy();
   const url=new URL(icon.src,manifestUrl).href;
   const response=await page.request.get(url);
   expect(response.ok(),url+' must be reachable').toBeTruthy();
-  expect(response.headers()['content-type']).toMatch(/^image\\/png/i);
+  expect(response.headers()['content-type']).toContain('image/png');
   expect((await response.body()).length).toBeGreaterThan(100);
  }
  const sw=await page.request.get(new URL('./sw.js',page.url()).href);
