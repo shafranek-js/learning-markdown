@@ -361,7 +361,8 @@
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">/ HTML (Markdown)</span>
                         <span id="unsaved-pill" class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-400 text-slate-950" data-i18n="liveEditorBadge">live buffer</span>
                     </div>
-                    <div class="flex items-center gap-2.5 theme-muted">
+                    <div class="editor-header-actions flex items-center gap-2.5 theme-muted">
+                        <button id="wrap-text-toggle" type="button" class="px-2 py-1 rounded border theme-border theme-panel-alt hover:opacity-90 text-[10px] font-semibold" aria-pressed="true" title="Wrap long lines">Wrap: On</button>
                         <button id="multi-cursor-toggle" type="button" class="px-2 py-1 rounded border theme-border theme-panel-alt hover:opacity-90 text-[10px] font-semibold" aria-pressed="false" title="Multi-cursor editor">Multi-cursor</button>
                         <span id="multi-cursor-count" class="text-[10px] font-mono" role="status" aria-live="polite" aria-atomic="true" hidden></span>
                         <div class="flex items-center gap-1">
@@ -378,7 +379,7 @@
                     <pre id="editor-highlight-backdrop" class="editor-shared-metrics" aria-hidden="true"></pre>
                     <textarea
                         id="markdown-input"
-                        wrap="off"
+                        wrap="soft"
                         aria-label="Markdown editor"
                         class="editor-shared-metrics"
                         placeholder="# Write your Markdown here..."
