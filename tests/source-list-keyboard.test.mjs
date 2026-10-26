@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {editMarkdownListKey as edit} from '../js/core/source-list-keyboard.js';
+import {editMarkdownListKey as edit,markdownListEnterChange} from '../js/core/source-list-keyboard.js';
 
 const key=(text,start,name,shiftKey=false,end=start)=>edit(text,start,end,name,{shiftKey});
 const enter=text=>key(text,text.length,'Enter');
@@ -52,5 +52,15 @@ assert.equal(key('- One\n\n- Two',0,'Tab',false,12),null,
 
 assert.equal(edit('- One',0,0,'Enter',{shiftKey:true}),null);
 assert.equal(edit('- One',5,3,'Tab'),null,'invalid selection');
+
+// CodeMirror uses these minimal edits to preserve every independent selection.
+// No full-document replacement should be required for list continuation.
+assert.deepEqual(markdownListEnterChange('- One',5),{from:5,to:5,insert:'\n- ',caret:8});
+assert.deepEqual(markdownListEnterChange('9. Item',7),{from:7,to:7,insert:'\n10. ',caret:12});
+assert.deepEqual(markdownListEnterChange('- [x] Done',10),{from:10,to:10,insert:'\n- [ ] ',caret:17});
+assert.deepEqual(markdownListEnterChange('Heading\n- ',10),{from:8,to:10,insert:'',caret:8});
+assert.equal(markdownListEnterChange('Unordered text',14),null);
+assert.equal(markdownListEnterChange('~~~markdown\n- code',18),null);
+assert.equal(markdownListEnterChange('- One',-1),null);
 
 console.log('PASS: native Markdown list keyboard operations, selection mapping, safe fallbacks and fenced code.');
