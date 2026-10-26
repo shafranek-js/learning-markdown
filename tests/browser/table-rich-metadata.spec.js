@@ -34,8 +34,9 @@ test('nested leaf is editable although untouched parent cell has metadata',async
  await expect(page.locator('#table-edit-bar')).not.toHaveAttribute('data-readonly','true');
  await page.locator('#table-edit-content-input').fill('Updated inner');
  await page.locator('#table-edit-content-save').click();
- await expect(input).toContainText('title="Preserved parent"');
- await expect(input).toContainText('Updated inner');
+ const changed=await input.inputValue();
+ expect(changed).toContain('title="Preserved parent"');
+ expect(changed).toContain('Updated inner');
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue(original);
 });
