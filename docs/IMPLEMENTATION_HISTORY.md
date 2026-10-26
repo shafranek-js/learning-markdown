@@ -154,7 +154,7 @@ must distinguish best-effort rendering via `marked` from exact spec conformance.
 
 ### Official upstream conformance report
 
-An independent [GitHub Actions workflow](.github/workflows/conformance.yml) downloads two **pinned** official spec fixture sets: CommonMark 0.31.2 (652 cases) and GFM 0.29 from pinned cmark-gfm revision (648 cases). It compares the bundled parser against every official example, writes per-section summary plus individual differences, and uploads a JSON and Markdown artifact. The audit is informational, does not block publishing, and is **not certification**. It compares exact HTML before safety sanitization; harmless serializer differences may be reported as failures.
+An independent [GitHub Actions workflow](../.github/workflows/conformance.yml) downloads two **pinned** official spec fixture sets: CommonMark 0.31.2 (652 cases) and GFM 0.29 from pinned cmark-gfm revision (648 cases). It compares the bundled parser against every official example, writes per-section summary plus individual differences, and uploads a JSON and Markdown artifact. The audit is informational, does not block publishing, and is **not certification**. It compares exact HTML before safety sanitization; harmless serializer differences may be reported as failures.
 
 ### Browser-level UX checks
 
