@@ -40,7 +40,10 @@ function placeCompatibility(){
  const left=Math.max(10,Math.min(box.right-width,window.innerWidth-width-10));
  panel.style.left=left+'px';
  // Available space below the toolbar is normally larger than above it.
- panel.style.top=Math.min(box.bottom+8,window.innerHeight-80)+'px';
+ const previewHeader=document.querySelector('#preview-pane > div:first-child');
+ const headerBottom=previewHeader?.getBoundingClientRect().bottom||0;
+ // Keep the Preview controls clickable even while Compatibility is open.
+ panel.style.top=Math.min(Math.max(box.bottom+8,headerBottom+8),window.innerHeight-80)+'px';
  panel.style.width=width+'px';
 }
 export function initUtilityMenus(){
@@ -78,9 +81,11 @@ export function initUtilityMenus(){
   closeUtilityMenus();
  };
  window.addEventListener('resize',dismiss);
- // Close if the toolbar is scrolled so the fixed popover does not drift.
- document.addEventListener('scroll',event=>{
-  if(isOpen('compatibility-trigger')&&!$('compatibility-panel').contains(event.target))dismiss();
+ // Keep the fixed popover aligned when a horizontally scrolling toolbar moves.
+ // Do not dismiss on unrelated programmatic scrolling or focus: this could
+ // immediately close a just-opened menu before keyboard users can reach it.
+ document.addEventListener('scroll',()=>{
+  if(isOpen('compatibility-trigger'))placeCompatibility();
  },true);
 }
 export function renderUtilityMenuLanguage(){
