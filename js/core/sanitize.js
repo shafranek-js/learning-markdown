@@ -62,6 +62,11 @@ export function sanitizeHTML(html){
    }
   }
   if(tag==='ol'){
+   // List continuations created by source-safe partial conversions use a
+   // bounded positive start; never pass arbitrary attributes through.
+   const start=node.getAttribute('start');
+   if(start&&/^[1-9][0-9]{0,4}$/.test(start)&&Number(start)<=99999)
+    el.setAttribute('start',start);
    const type=node.getAttribute('type');
    const styles={'1':'af-list-decimal','a':'af-list-lower-alpha','A':'af-list-upper-alpha',
     'i':'af-list-lower-roman','I':'af-list-upper-roman'};
