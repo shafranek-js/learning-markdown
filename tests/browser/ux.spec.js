@@ -220,6 +220,7 @@ test('HTML export keeps safe preset CSS and print page breaks but strips unsafe 
  await expect(span).not.toHaveAttribute('onclick',/./);
  await expect(page.locator('#markdown-preview div.af-page-break')).toHaveCount(1);
  const promise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const dl=await promise;
  const {readFile}=await import('node:fs/promises');
@@ -340,6 +341,7 @@ test('export retains rich styles, merged cells, callouts, list types and interna
  await page.locator('#markdown-input').fill('<table class="af-table-outline"><tr><td colspan="2" class="af-cell-sand">Merged</td></tr></table>\n\n<div class="af-callout-info">Info</div>\n\n<ol type="i"><li>One</li></ol>\n\n<div id="anchor-a">Target</div>\n\n[Jump](#anchor-a)');
  await expect(page.locator('#markdown-preview .af-cell-sand')).toHaveCount(1);
  const wait=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const dl=await wait;
  const {readFile}=await import('node:fs/promises');
@@ -474,7 +476,7 @@ test('Resetting core course preserves advanced completion and advanced drafts',a
 
 test('Portability panel diagnoses Markdown differences without treating code as active HTML',async({page})=>{
  await page.goto('/');
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  const input=page.locator('#markdown-input');
  await input.fill('# Safe heading\n\n**Portable text**');
  await expect(page.locator('#compatibility-advanced-status')).toHaveText('Not detected');
@@ -492,9 +494,11 @@ test('Markdown download warns about portability but keeps source bytes unchanged
  const source='<div class="af-align-center">Centered</div>';
  await input.fill(source);
  page.once('dialog',dialog=>dialog.dismiss());
+ await page.locator('#export-trigger').click();
  await page.locator('#download-md-btn').click();
  page.once('dialog',dialog=>{expect(dialog.message()).toContain('HTML/CSS');dialog.accept();});
  const pending=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-md-btn').click();
  const artifact=await pending;
  const {readFile}=await import('node:fs/promises');
@@ -502,6 +506,7 @@ test('Markdown download warns about portability but keeps source bytes unchanged
  expect(file).toBe(source);
  await input.fill('# Ordinary document');
  const second=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-md-btn').click();
  await second;
 });
@@ -510,6 +515,7 @@ test('Standalone exported HTML uses strict CSP and preserves print-only page bre
  await page.goto('/');
  await page.locator('#markdown-input').fill('<h1>Printable document</h1>\n\n<div class="af-page-break"></div>\n\n<div class="af-align-center">Page two</div>\n\n<script>alert(1)</script>');
  const pending=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const result=await pending;
  const {readFile}=await import('node:fs/promises');
@@ -531,6 +537,7 @@ test('Print / PDF opens a printable HTML copy rather than printing the applicati
  await page.goto('/');
  await page.locator('#markdown-input').fill('<u>Print-only document</u>\n\n<div class="af-page-break"></div>');
  const nextPage=context.waitForEvent('page');
+ await page.locator('#export-trigger').click();
  await page.locator('#print-document-btn').click();
  const printable=await nextPage;
  await printable.waitForLoadState('domcontentloaded');
@@ -600,6 +607,7 @@ test('exported checkboxes retain checked and disabled attributes while remaining
  await expect(boxes).toHaveCount(2);
  await expect(boxes.first()).toBeDisabled();
  const promise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await promise;
  const {readFile}=await import('node:fs/promises');
@@ -730,6 +738,7 @@ test('HTML table formatting preserves cells, sanitizer and downloaded HTML',asyn
  await page.locator('#table-edit-style').selectOption('borderless');
  await expect(page.locator('#markdown-preview table.af-table-borderless')).toHaveCount(1);
  const promise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const download=await promise;
  const {readFile}=await import('node:fs/promises');
@@ -771,6 +780,7 @@ test('editing an existing GFM table cell remains GFM, supports Undo/Redo and exp
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview tbody td').first()).toHaveText('Changed | value <script>');
  const pending=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await pending;
  const {readFile}=await import('node:fs/promises');
@@ -840,6 +850,7 @@ test('custom ordered-list types are case-sensitive in Preview and downloaded HTM
   expect(await lists.nth(i).evaluate(el=>getComputedStyle(el).listStyleType)).toBe(styles[i]);
  }
  const pending=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await pending;
  const {readFile}=await import('node:fs/promises');
@@ -1432,6 +1443,7 @@ test('issue #8 GFM alignment survives live Preview, standalone HTML and print',a
   }
  }
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const download=await downloadPromise;
  const {readFile}=await import('node:fs/promises');
@@ -1507,6 +1519,7 @@ test('issue #9 six fenced languages are highlighted and safely exported',async({
  await input.fill(source);
  await expect(page.locator('#markdown-preview pre').first()).toHaveAttribute('title',/Офлайн-подсветка/);
  const promise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const dl=await promise;
  const {readFile}=await import('node:fs/promises');
@@ -1546,7 +1559,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  const source='First line\nSecond line';
  const input=page.locator('#markdown-input');
  await input.fill(source);
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-softbreaks-toggle');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(0);
@@ -1557,7 +1570,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await page.reload();
  await expect(toggle).toHaveValue('on');
  // The <details> panel intentionally collapses after a page reload.
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  await expect(toggle).toBeVisible();
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await page.locator('#dialect-selector').selectOption('commonmark');
@@ -1590,11 +1603,12 @@ test('issue #10 warns about nonstandard MD export without modifying Markdown',as
  const source='Hello\nWorld';
  const input=page.locator('#markdown-input');
  await input.fill(source);
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  await page.locator('#extension-softbreaks-toggle').selectOption('on');
  const messages=[];
  page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-md-btn').click();
  const file=await downloadPromise;
  expect(messages).toHaveLength(1);
@@ -1602,6 +1616,7 @@ test('issue #10 warns about nonstandard MD export without modifying Markdown',as
  const {readFile}=await import('node:fs/promises');
  expect(await readFile(await file.path(),'utf8')).toBe(source);
  const htmlPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const htmlFile=await htmlPromise;
  const html=await readFile(await htmlFile.path(),'utf8');
@@ -1618,7 +1633,7 @@ test('issue #11 footnotes are optional with repeated references and route-safe b
  const source='One fact[^study], repeated[^study].\n\n[^study]: **Reliable** source.\n\n    More details.';
  await input.fill(source);
  const panel=page.locator('#compatibility-panel');
- await panel.locator('summary').click();
+ await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-footnotes-toggle');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#markdown-preview .md-footnotes')).toHaveCount(0);
@@ -1650,7 +1665,7 @@ test('issue #11 footnotes are optional with repeated references and route-safe b
 
 test('issue #11 footnote exercise and safe standalone HTML / print export',async({page})=>{
  await page.goto('/');
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-footnotes-toggle');
  await toggle.selectOption('on');
  const input=page.locator('#markdown-input');
@@ -1669,6 +1684,7 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
  await expect(page.locator('#markdown-preview script')).toHaveCount(0);
  await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(1);
  const download=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await download;
  const {readFile}=await import('node:fs/promises');
@@ -1686,13 +1702,14 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
 
 test('issue #11 MD export warns for non-GFM footnotes and leaves source intact',async({page})=>{
  await page.goto('/');
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  await page.locator('#extension-footnotes-toggle').selectOption('on');
  const source='A[^one].\n\n[^one]: Note.';
  await page.locator('#markdown-input').fill(source);
  const messages=[];
  page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
  const downloading=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-md-btn').click();
  const file=await downloading;
  const {readFile}=await import('node:fs/promises');
@@ -1712,7 +1729,7 @@ test('issue #12 safe heading IDs and live TOC across three Markdown dialects',as
   await page.locator('#dialect-selector').selectOption(mode);
   expect(await page.locator('#markdown-preview :is(h1,h2,h3,h4,h5,h6)').evaluateAll(els=>els.map(el=>el.id))).toEqual(expected);
  }
- await page.locator('#toc-panel summary').click();
+ await page.locator('#outline-trigger').click();
  await expect(page.locator('#toc-list a')).toHaveCount(6);
  await page.locator('#toc-depth').selectOption('2');
  await expect(page.locator('#toc-list a')).toHaveCount(3);
@@ -1727,7 +1744,7 @@ test('issue #12 safe heading IDs and live TOC across three Markdown dialects',as
 test('issue #12 TOC keyboard navigation preserves lesson hash even with Unicode headings',async({page})=>{
  await page.goto('/');
  await page.locator('#markdown-input').fill('# Start\n\n## Next\n\n## Next\n\n### 中文标题');
- await page.locator('#toc-panel summary').click();
+ await page.locator('#outline-trigger').click();
  const hash=await page.evaluate(()=>location.hash);
  await page.locator('#toc-list a[href="#next-2"]').click();
  expect(await page.evaluate(()=>location.hash)).toBe(hash);
@@ -1736,6 +1753,8 @@ test('issue #12 TOC keyboard navigation preserves lesson hash even with Unicode 
  expect(await page.evaluate(()=>location.hash)).toBe(hash);
  await expect(page.locator('#toc-list a')).toHaveCount(4);
  await page.reload();
+ await expect(page.locator('#toc-panel')).not.toHaveAttribute('open','');
+ await page.locator('#outline-trigger').click();
  await expect(page.locator('#toc-panel')).toHaveAttribute('open','');
  await expect(page.locator('#toc-depth')).toHaveValue('6');
 });
@@ -1745,7 +1764,7 @@ test('issue #12 opt-in custom heading IDs stay isolated and survive HTML export 
  const input=page.locator('#markdown-input');
  const source='# Title {#chosen-id}\n\n## Another {#chosen-id}\n\n## Защита {#безопасно}';
  await input.fill(source);
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-headingids-toggle');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#markdown-preview h1')).not.toHaveAttribute('id','chosen-id');
@@ -1761,6 +1780,7 @@ test('issue #12 opt-in custom heading IDs stay isolated and survive HTML export 
  await expect(toggle).toBeEnabled();
  await expect(toggle).toHaveValue('on');
  const downloaded=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await downloaded;
  const {readFile}=await import('node:fs/promises');
@@ -1778,7 +1798,7 @@ test('issue #12 mobile and 150-heading outline remains usable',async({page})=>{
  const source=Array.from({length:150},(_,i)=>'## Chapter '+(i+1)).join('\n\n');
  await page.locator('#markdown-input').fill(source);
  await page.locator('[data-mobile-tab="preview"]').click();
- await page.locator('#toc-panel summary').click();
+ await page.locator('#outline-trigger').click();
  await expect(page.locator('#toc-list a')).toHaveCount(150);
  const ids=await page.locator('#markdown-preview h2').evaluateAll(els=>els.map(el=>el.id));
  expect(new Set(ids).size).toBe(150);
@@ -1857,6 +1877,7 @@ test('issue #13 figures survive standalone HTML and print, and portable Markdown
  await page.locator('#figure-insert').click();
  const source=await page.locator('#markdown-input').inputValue();
  const download=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await download;
  const {readFile}=await import('node:fs/promises');
@@ -1907,7 +1928,7 @@ test('issue #14 definition lists are opted in and persist per document without a
  const source='Term A\nTerm B\n: First **definition**\n: Second *definition*\n  with continuation.\nAnother term\n: Final definition.';
  await input.fill(source);
  await expect(page.locator('#markdown-preview dl')).toHaveCount(0);
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-definitions-toggle');
  await expect(toggle).toHaveValue('off');
  await toggle.selectOption('on');
@@ -1963,7 +1984,7 @@ test('issue #14 example, standalone HTML and print keep sanitized definition lis
  await page.goto('/');
  const input=page.locator('#markdown-input');
  await input.fill('');
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  await page.locator('#extension-definitions-toggle').selectOption('on');
  await page.locator('#extension-definitions-demo').click();
  await expect(page.locator('#markdown-preview dl.md-definition-list')).toHaveCount(1);
@@ -1971,6 +1992,7 @@ test('issue #14 example, standalone HTML and print keep sanitized definition lis
  await expect(page.locator('#extension-definitions-practice')).toContainText('Complete');
  const source=await input.inputValue();
  const download=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await download;
  const {readFile}=await import('node:fs/promises');
@@ -1992,7 +2014,7 @@ test('issue #14 definition syntax never creates executable markup from hostile t
  const input=page.locator('#markdown-input');
  const source='Safe term\n: <script>window.__definitionXss=1</script> **safe definition**\n\nOrdinary: paragraph';
  await input.fill(source);
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  await page.locator('#extension-definitions-toggle').selectOption('on');
  await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
  await expect(page.locator('#markdown-preview dl strong')).toHaveText('safe definition');
@@ -2056,7 +2078,7 @@ test('issue #15 opt-in shortcodes expand only in selected GFM documents',async({
  const source='Hello :joy: :tent: :unknown:.\n\n'+String.fromCharCode(96)+':joy:'+String.fromCharCode(96)+'\n\n~~~text\n:tent:\n~~~';
  await input.fill(source);
  await expect(page.locator('#markdown-preview p').first()).toContainText(':joy:');
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  const toggle=page.locator('#extension-emoji-toggle');
  await expect(toggle).toHaveValue('off');
  await toggle.selectOption('on');
@@ -2113,11 +2135,12 @@ test('issue #15 Unicode sample and Markdown/HTML export preserve source and rend
  await expect(input).toHaveValue(/&copy; &euro; &rarr;/);
  await expect(input).toHaveValue(/\\\*literal asterisks\\\*/);
  await input.fill('One :joy: © €');
- await page.locator('#compatibility-panel summary').click();
+ await page.locator('#compatibility-trigger').click();
  await page.locator('#extension-emoji-toggle').selectOption('on');
  const messages=[];
  page.once('dialog',async dialog=>{messages.push(dialog.message());await dialog.accept();});
  const download=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-md-btn').click();
  const file=await download;
  const {readFile}=await import('node:fs/promises');
@@ -2125,6 +2148,7 @@ test('issue #15 Unicode sample and Markdown/HTML export preserve source and rend
  expect(messages).toHaveLength(1);
  expect(messages[0]).toContain('shortcode');
  const htmlDownload=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const htmlFile=await htmlDownload;
  const html=await readFile(await htmlFile.path(),'utf8');
@@ -2181,6 +2205,7 @@ test('issue #16 author notes stay in Markdown but not in safe HTML export; video
  await expect(page.locator('#markdown-preview a[href="https://example.com/watch"] img')).toHaveCount(1);
  await expect(page.locator('#markdown-preview iframe')).toHaveCount(0);
  const pending=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await pending;
  const {readFile}=await import('node:fs/promises');
@@ -2691,6 +2716,7 @@ test('issue #19 standalone HTML embeds multiple Mermaid diagrams as safe offline
  await editor.fill(source);
  // Export immediately: do not depend on Live Preview debounce.
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const download=await downloadPromise;
  // Chromium treats Playwright's extensionless temporary download as text/plain.
@@ -2729,6 +2755,7 @@ test('issue #19 print tab contains static diagrams and makes a valid PDF',async(
  const source=mermaidSnippet('pie')+'\n'+mermaidSnippet('flowchart');
  await page.locator('#markdown-input').fill(source);
  const popupPromise=page.waitForEvent('popup');
+ await page.locator('#export-trigger').click();
  await page.locator('#print-document-btn').click();
  const popup=await popupPromise;
  await expect(popup.locator('figure.md-mermaid-export img')).toHaveCount(2,{timeout:25000});
@@ -2749,6 +2776,7 @@ test('issue #19 failed Mermaid render keeps source visible and warns on HTML exp
  let warning='';
  page.on('dialog',dialog=>{warning=dialog.message();dialog.accept();});
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const download=await downloadPromise;
  const html=await readFile(await download.path(),'utf8');
@@ -2766,6 +2794,7 @@ test('issue #19 standalone HTML drops hostile inline SVG/image payloads',async({
   '<img src="data:image/svg+xml,%3Csvg%20onload%3D%22alert(1)%22%3E" onerror="window.__svgAttack=3">';
  await page.locator('#markdown-input').fill(source);
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const dl=await downloadPromise;
  const exportedPath=testInfo.outputPath('safe-mermaid-export.html');
@@ -2878,6 +2907,7 @@ test('issue #6: merging a rectangle crossing a colspan expands its visual select
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview td[rowspan="3"][colspan="2"]')).toHaveCount(1);
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const saved=await downloadPromise;
  const html=await readFile(await saved.path(),'utf8');
@@ -2959,6 +2989,7 @@ test('issue #6: rich cell editing preserves emphasis, links, spans and undo hist
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview td[colspan="2"]')).toContainText('addition');
  const filePromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await filePromise;
  const html=await readFile(await file.path(),'utf8');
@@ -3053,6 +3084,7 @@ test('issue #6 nested leaf table edits remain scoped and undoable',async({page})
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview table table td').first()).toHaveText('Nested revised');
  const downloading=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await downloading;
  const html=await readFile(await file.path(),'utf8');
@@ -3135,6 +3167,7 @@ test('issue #6 Blocks mode preserves paragraphs, nested lists, quote, code and e
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview > table td[rowspan="2"]')).toContainText('Updated Alpha');
  const dl=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const downloaded=await dl;
  const html=await readFile(await downloaded.path(),'utf8');
@@ -3239,6 +3272,7 @@ test('issue #6 image properties preserve mixed cell content, Undo and standalone
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview img')).toHaveAttribute('width','620');
  const downloaded=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await downloaded;
  const html=await readFile(await file.path(),'utf8');
@@ -3341,6 +3375,7 @@ test('issue #6 insert HTML cell image without changing surrounding rich blocks, 
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview td[rowspan="2"] img')).toHaveAttribute('width','380');
  const downloadPromise=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const downloaded=await downloadPromise;
  const html=await readFile(await downloaded.path(),'utf8');
@@ -3461,6 +3496,7 @@ test('issue #6 Blocks list Tab/Shift+Tab preserve inline formatting, source and 
  await page.locator('#redo-btn').click();
  await expect(page.locator('#markdown-preview td ul > li > ul > li')).toContainText('Beta italic');
  const downloading=page.waitForEvent('download');
+ await page.locator('#export-trigger').click();
  await page.locator('#download-html-btn').click();
  const file=await downloading;
  const html=await readFile(await file.path(),'utf8');
