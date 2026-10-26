@@ -10,7 +10,7 @@ Learning Markdown is a free-to-use, interactive Markdown course and writing stud
 
 Your document drafts and learning progress stay in your browser. No account, server-side project or AI API key is required.
 
-**[Open Learning Markdown](https://shafranek-js.github.io/learning-markdown/)** · [Browse the source](https://github.com/shafranek-js/learning-markdown) · [Report an issue](https://github.com/shafranek-js/learning-markdown/issues)
+**[Open Learning Markdown](https://shafranek-js.github.io/learning-markdown/)** · [Cloudflare Pages](https://learning-markdown.pages.dev/) · [Browse the source](https://github.com/shafranek-js/learning-markdown) · [Report an issue](https://github.com/shafranek-js/learning-markdown/issues)
 
 ![Learning Markdown in Split View: Markdown source with Wrap text on the left and live formatted Preview on the right](docs/images/readme-studio.png)
 
@@ -23,6 +23,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 
 - [What you can do](#what-you-can-do)
 - [A quick tour](#a-quick-tour)
+- [Lesson Guide and editor workspace](#lesson-guide-and-editor-workspace)
 - [Learn Markdown](#learn-markdown)
 - [Editing and shortcuts](#editing-and-shortcuts)
 - [Compatibility and export](#compatibility-and-export)
@@ -42,7 +43,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 
 - Edit source alongside a live Preview in a resizable Split View, or switch to Preview/HTML layouts.
 - Choose **GFM (GitHub Flavored Markdown)**, **CommonMark-compatible**, or **Original / Legacy** parsing. Switching profiles never rewrites your source.
-- Use a compact toolbar for headings, emphasis, quotations, lists, code, links, images, symbols and tables.
+- Use a compact toolbar for headings, emphasis, quotations, lists, code, links, images, symbols and tables. Optional **HTML / Advanced** tools open in one horizontally scrollable contextual ribbon, grouped under **All / Text / Paragraph / Tables / Blocks / Lists**.
 - Turn **Wrap text** on or off; soft wrapping is on by default and does not insert newlines into the document.
 - Switch between the basic source editor and **CodeMirror 6 Multi-cursor** mode for simultaneous edits.
 
@@ -51,6 +52,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 - Complete **eight core lessons** with interactive checks and a separate optional **seven-lesson Beyond Markdown** track.
 - Practice with insertable examples, an optional Deep Practice section and the Extensions & Hacks Lab.
 - Use the **AI Prompt Sandbox** for free-form prompts and documents; this is a writing workspace, not a connected AI chatbot.
+- Show **Lesson Guide** while learning, or hide it to reclaim editing space and remove lesson-only header controls; your choice is saved for the next visit.
 - Read the Markdown guide and Cheat Sheet when you need syntax reminders.
 
 **Go beyond the basics**
@@ -71,7 +73,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 
 1. Open the [live app](https://shafranek-js.github.io/learning-markdown/).
 2. Select **AI Prompt Sandbox** for an empty-ended writing exercise, or **Contents** for guided lessons.
-3. Write Markdown on the left and inspect **Live Preview** on the right. Drag the divider to change their widths.
+3. Write Markdown on the left and inspect **Live Preview** on the right. Drag the divider to change their widths. Toggle **Lesson Guide** to focus on the editor when you don't need the course panel.
 4. Use **Wrap text** for long lines, or **Multi-cursor** to insert/edit at several positions at once.
 5. Choose **Export** above Preview to download Markdown or HTML, or print to PDF.
 
@@ -91,6 +93,22 @@ See the [CommonMark specification](https://spec.commonmark.org/).
 ~~~
 
 renders as a formatted heading, quotation, checklist and link without changing the editable source.
+
+## Lesson Guide and editor workspace
+
+The **Lesson Guide** button switches between a learning-focused layout and a less cluttered writing workspace. It doesn't delete lessons, reset progress or alter your Markdown document.
+
+| Header content | Lesson Guide on | Lesson Guide off |
+|---|---|---|
+| Course title, subtitle and progress indicator | Shown (where screen width permits) | Hidden |
+| **Beyond Markdown** and the two certificate buttons | Shown | Hidden |
+| **Contents**, **Lesson Guide**, **AI Prompt Sandbox** and **Cheat Sheet** | Available | Available |
+| Theme, language, Markdown toolbar, editor, Preview and export tools | Available | Available |
+
+- Closing the guide also closes the guide panel and its resize handle; the editor/Preview can use the freed space. Reopen it with **Lesson Guide**.
+- Your guide visibility preference survives a page reload. Course navigation, saved drafts and progress remain intact.
+- **AI Prompt Sandbox** is a dedicated free-form writing view. It hides the lesson-specific header and guide; the **Lesson Guide** button returns to the course.
+- The **Contents** drawer remains the place to navigate lessons, track progress and access course actions, even while the guide is hidden.
 
 ## Learn Markdown
 
@@ -139,9 +157,13 @@ If you need a document to look identical on GitHub, another Markdown platform an
 
 ## Install and use offline
 
-Open the published HTTPS application at least once while online. In supported Chromium browsers, choose **Contents → Install app** when the native installation option appears, or use your browser's installation menu. Edge also supports installing a website as an app. On iOS, use the browser Share menu and **Add to Home Screen**.
+Open the published HTTPS application at least once while online: [GitHub Pages](https://shafranek-js.github.io/learning-markdown/) or [Cloudflare Pages](https://learning-markdown.pages.dev/). In Chrome, use the **Install** icon in the address bar when it is offered, or the browser menu's **Install page as app** option. The **Contents → Install app** control can open the browser's installation prompt if available; otherwise it shows platform-specific instructions. Edge also supports installing a website as an app. On iOS, use the browser Share menu and **Add to Home Screen**.
 
-A web manifest, local app icons and a service worker make the site installable. After a successful online visit, cached app resources support offline sessions. **First-time installation, new versions and externally hosted images still require internet.**
+The native Chrome install icon and banner are controlled by the browser, not by the page. The app does not suppress Chrome's native install promotion, but the browser might not display it on every visit or if the app is already installed.
+
+A web manifest, local app icons and a service worker make the site eligible for installation. The production build keeps `manifest.json` at the application root so its icon paths resolve correctly on both GitHub Pages (a repository subpath) and Cloudflare Pages. After a successful online visit, cached app resources support offline sessions. **First-time installation, new versions and externally hosted images still require internet.**
+
+If Chrome reports an icon download error, open **DevTools → Application → Manifest** and check that the icon URL does **not** contain a duplicated `/assets/assets/` path. A deployment or service-worker cache may still be serving an older build; compare the version and short Git revision in the application's footer.
 
 Documents, progress and preferences are stored per browser profile using `localStorage`. They do **not** automatically sync across browsers or devices. Keep downloaded copies of important Markdown files.
 
@@ -164,7 +186,7 @@ flowchart LR
 - **Source is authoritative.** Preview and visual table operations feed changes back to the editable Markdown document; the source isn't replaced by a hidden rich-text document.
 - **Rendering boundaries matter.** Bundled Marked handles the chosen syntax profile, optional extensions are explicit, and generated HTML is passed through the app's sanitizer. Mermaid rendering has separate safety checks.
 - **Persistence is local.** Browser storage retains drafts, progress and preferences. Editor undo histories are session-scoped rather than guaranteed to survive a reload.
-- **Offline build.** The postbuild script fingerprints the application cache and includes locally bundled production resources.
+- **Offline build.** The postbuild script fingerprints the application cache, includes locally bundled production resources and fixes the published manifest link to the app root so icon paths work on both supported hosts.
 
 ## Repository layout
 
@@ -180,7 +202,7 @@ learning-markdown/
 │   └── ui/                    Editors, preview, toolbars and dialogs
 ├── assets/                    SVG and PNG PWA icons
 ├── manifest.json, sw.js       Install and offline configuration
-├── scripts/postbuild.mjs      Build-time cache manifest processing
+├── scripts/postbuild.mjs      Cache fingerprinting and PWA manifest path verification
 ├── tests/                     Node and Playwright regression suites
 ├── docs/                      Historical implementation notes
 └── .github/workflows/         Deploy, UI, regression and conformance CI
