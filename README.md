@@ -220,6 +220,8 @@ The output lives in `dist/`. Serve that directory with a static HTTP server or d
 | `npm run test:e2e` | Run the Playwright browser UX suite |
 | `npm run test:e2e:release` | Run the release-oriented Chromium/Firefox/WebKit smoke suite |
 
+The README interface screenshot is a real browser capture, not generated artwork. After building and installing Chromium, refresh it with `node scripts/capture-readme.mjs` (writes `docs/images/readme-studio.png`).
+
 Install the relevant Playwright browsers before running end-to-end tests locally:
 
 ~~~bash
