@@ -246,6 +246,12 @@ Vite uses relative asset paths for repository-subdirectory hosting. The applicat
 
 The project may also be hosted on other static providers, but deployment status and revision parity must be checked **separately** for each host.
 
+### Live deployment verification
+
+The [Live host parity workflow](.github/workflows/live-host-parity.yml) runs after a successful GitHub Pages deployment and can also be started manually. Using a **fresh Chromium browser with service workers blocked**, it checks the published [GitHub Pages](https://shafranek-js.github.io/learning-markdown/) and [Cloudflare Pages](https://learning-markdown.pages.dev/) builds against the **same exact Git revision**. It also checks the live Markdown editor/Preview, default-on Wrap text, and that the PWA's PNG icons are served with the correct MIME type. Cloudflare may take longer to publish than GitHub Pages, so the check retries before reporting a deployment mismatch.
+
+A successful individual hosting deployment is not proof that the **other host** has the same build; only the parity check verifies both addresses.
+
 ## Known limitations
 
 - **Advanced HTML is not universally portable.** GitHub and other Markdown hosts may sanitize custom classes, layouts and supported HTML structures differently.
