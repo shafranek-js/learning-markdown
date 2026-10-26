@@ -26,6 +26,16 @@ import {initResizers,showGuide,setLayoutMode,setMobileTab} from './ui/resizer.js
 import {initModals,toggleContents,updateCertificate,renderCheats} from './ui/modals.js';
 import {initAdvancedCertificate,renderAdvancedCertificate,openAdvancedCertificate} from './ui/advanced-certificate.js';
 const $=id=>document.getElementById(id);
+// Vite substitutes these values at build time, so the label also works offline.
+const APP_VERSION=__APP_VERSION__,APP_REVISION=__APP_REVISION__;
+const VERSION_LABELS={en:'Version',cs:'Verze',uk:'Версія',ro:'Versiune',ru:'Версия'};
+function renderBuildVersion(){
+ const element=$('app-version-status');
+ const revision=APP_REVISION==='local'?'local':APP_REVISION.slice(0,7);
+ element.textContent=`v${APP_VERSION} · ${revision}`;
+ element.title=`${VERSION_LABELS[state.lang]||VERSION_LABELS.en} ${APP_VERSION} · ${APP_REVISION}`;
+ element.setAttribute('aria-label',element.title);
+}
 let currentChecks=[];
 const DIALECT_UI={
  en:{label:'Standard',title:'Markdown parsing dialect',warning:'This lesson uses GFM-only syntax. Select GFM to complete these checks.'},
@@ -62,7 +72,7 @@ function drawContents(){const nav=$('lesson-nav-list');nav.replaceChildren();for
  const subtitle=document.createElement('span');subtitle.className='block text-[11px] theme-muted truncate';subtitle.textContent=l.subtitle;
  text.append(title,subtitle);b.append(tag,text);b.addEventListener('click',()=>{selectLesson(i);toggleContents(false);});nav.append(b);
  }}
-function renderLocalization(){const strings=ui(state.lang);document.documentElement.lang=state.lang;$('course-main-title').textContent=strings.courseTitle;
+function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();document.documentElement.lang=state.lang;$('course-main-title').textContent=strings.courseTitle;
  $('course-main-subtitle').textContent=strings.courseSubtitle;
  document.querySelectorAll('[data-i18n]').forEach(e=>{const val=strings[e.dataset.i18n];if(typeof val==='string')e.textContent=val;});
  $('theme-selector').value=state.theme;$('lang-selector').value=state.lang;
