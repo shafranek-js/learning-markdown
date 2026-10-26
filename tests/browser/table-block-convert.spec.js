@@ -84,7 +84,7 @@ test('issue #6 Russian mobile refuses partially selected list conversion without
  });
  await expect(page.locator('#table-edit-convert-p')).toHaveText('В абзацы');
  await page.locator('#table-edit-convert-p').click();
- await expect(page.locator('#table-edit-message')).toContainText('Выделите целые пункты списка');
+ await expect(page.locator('#table-edit-message')).toContainText('Выделите пункты одного вложенного списка');
  expect(await rich.innerHTML()).toBe(before);
  await expect(input).toHaveValue(source);
  await expect(page.locator('#table-edit-bar')).toBeInViewport();
