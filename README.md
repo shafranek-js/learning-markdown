@@ -12,6 +12,11 @@ Your document drafts and learning progress stay in your browser. No account, ser
 
 **[Open Learning Markdown](https://shafranek-js.github.io/learning-markdown/)** · [Browse the source](https://github.com/shafranek-js/learning-markdown) · [Report an issue](https://github.com/shafranek-js/learning-markdown/issues)
 
+![Learning Markdown in Split View: Markdown source with Wrap text on the left and live formatted Preview on the right](docs/images/readme-studio.png)
+
+*The actual browser interface: source editor, Live Preview, Markdown formatting tools and the Wrap text control. Captured automatically from the production build with an example document.*
+
+
 > **Project status:** actively developed, installable PWA. The application displays its package version and short Git revision in the footer so you can identify the running build. Refer to [Known limitations](#known-limitations) before relying on advanced HTML outside this app.
 
 ## Contents
