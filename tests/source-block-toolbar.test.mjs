@@ -17,7 +17,7 @@ const apply=(s,changes)=>changes.reduceRight((text,e)=>
  const src='Before Alpha After',start=src.indexOf('Alpha');
  const result=formatSourceBlockToolbarSelection(src,start,start+5,'spoiler');
  assert.equal(result.text,
-  'Before \n<details>\n<summary>More information</summary>\n\nAlpha\n</details>\n After');
+  'Before \n\n<details>\n<summary>More information</summary>\n\nAlpha\n</details>\n\n After');
  assert.equal(result.text.slice(result.start,result.end),'Alpha');
  assert.equal(result.text.slice(0,7),'Before ');
 }
