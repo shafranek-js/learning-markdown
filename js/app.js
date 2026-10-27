@@ -23,6 +23,7 @@ import {initFileMenu,renderFileMenuLanguage} from './ui/file-menu.js';
 import {initEditMenu,renderEditMenuLanguage} from './ui/edit-menu.js';
 import {initHelpMenu,renderHelpMenuLanguage} from './ui/help-menu.js';
 import {initSettingsMenu,renderSettingsLanguage} from './ui/settings-menu.js';
+import {initPromptLibrary,renderPromptLibraryLanguage} from './ui/prompt-library.js';
 import {standaloneHTML} from './core/export-html.js';
 import {renderMermaidExportImages} from './ui/mermaid-preview.js';
 import {renderPortability,portabilityStatus,portabilityLabels,initExtensionSettings} from './ui/compatibility.js';
@@ -100,7 +101,7 @@ function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();
  ro:['Deschide cuprinsul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
  ru:['Открыть содержание курса','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
  ['contents-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
- renderCheats();renderExtensionsLabLanguage();renderDialectUI();renderUtilityMenuLanguage();renderViewMenuLanguage();renderFileMenuLanguage();renderEditMenuLanguage();renderHelpMenuLanguage();renderSettingsLanguage();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
+ renderCheats();renderExtensionsLabLanguage();renderDialectUI();renderUtilityMenuLanguage();renderViewMenuLanguage();renderFileMenuLanguage();renderEditMenuLanguage();renderHelpMenuLanguage();renderSettingsLanguage();renderPromptLibraryLanguage();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
 }
 function selectLesson(index,{route=true,scroll=true}={}){
  if(index<-1||index>=LESSON_CORE.length+ADVANCED_IDS.length)return;state.currentLessonIndex=index;
@@ -221,9 +222,21 @@ function openCourseContents(){
  if(window.matchMedia('(max-width:767px)').matches)setMobileTab('guide');
  toggleContents(true);
 }
+// Templates only work on the Sandbox document. A replacement is never implicit.
+function usePromptInSandbox(markdown,mode,warning){
+ if(typeof markdown!=='string'||!['append','replace'].includes(mode))return false;
+ const existing=state.currentLessonIndex===-1?area().value:(state.savedDrafts['sandbox_'+state.lang]??LINKEDIN_PROMPT_SAMPLE);
+ if(mode==='replace'&&existing.trim()&&existing!==markdown&&!window.confirm(warning))return false;
+ if(state.currentLessonIndex!==-1)selectLesson(-1);
+ const current=area().value;
+ const next=mode==='append'&&current.trim()?current.replace(/\\s*$/,'')+'\\n\\n'+markdown:markdown;
+ if(next!==current)applyEdit(next,next.length,next.length,{focus:false});
+ if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');
+ return true;
+}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu({onGuideToggle:toggleGuide});initFileMenu({replaceSandbox:replaceSandboxDocument,saveMarkdown:saveCurrentMarkdown});initEditMenu();initHelpMenu({onOpenCourseContents:openCourseContents});initSettingsMenu();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu({onGuideToggle:toggleGuide});initFileMenu({replaceSandbox:replaceSandboxDocument,saveMarkdown:saveCurrentMarkdown});initEditMenu();initHelpMenu({onOpenCourseContents:openCourseContents});initSettingsMenu();initPromptLibrary({usePrompt:usePromptInSandbox});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
