@@ -26,7 +26,7 @@ assert.throws(()=>createPersonalTemplate({...personal,category:'Invalid'}));
 assert.throws(()=>createPersonalTemplate({...personal,body:'{{x}} '.repeat(4000)}));
 assert.throws(()=>createPersonalTemplate({...personal,body:Array.from({length:13},(_,i)=>'{{v'+i+'}}').join(' ')}));
 
-const sqlMatches=searchPromptTemplates(BUILTIN_PROMPTS,{query:'SQL joins',category:'Coding'});
+const sqlMatches=searchPromptTemplates(BUILTIN_PROMPTS,{query:'SQL join',category:'Coding'});
 assert.ok(sqlMatches.some(x=>x.id==='coding-sql-review'));
 assert.equal(searchPromptTemplates(BUILTIN_PROMPTS,{category:'Research'}).length,4);
 assert.equal(searchPromptTemplates(BUILTIN_PROMPTS,{category:'Design & UX'}).length,4);
