@@ -7,6 +7,9 @@ import {sourceSelectionTouchesFencedCode} from '../js/core/source-line-format.js
  const wrapped=formatSourceInlineSelection(src,start,end,'**','**','bold text');
  assert.deepEqual(wrapped,{text:'Before **plain** After',start:start+2,end:end+2});
  assert.equal(wrapped.text.slice(wrapped.start,wrapped.end),'plain');
+ const repeated=formatSourceInlineSelection(wrapped.text,wrapped.start,wrapped.end,'**','**','bold text');
+ assert.equal(repeated.text,src);
+ assert.equal(repeated.text.slice(repeated.start,repeated.end),'plain');
  const unwrapped=formatSourceInlineSelection(wrapped.text,start,start+'**plain**'.length,'**','**','bold text');
  assert.equal(unwrapped.text,src);
  assert.equal(unwrapped.text.slice(unwrapped.start,unwrapped.end),'plain');
