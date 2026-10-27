@@ -191,6 +191,8 @@
                 <span class="hidden sm:inline" data-i18n="sandboxBtn">AI Prompt Sandbox</span>
             </button>
 
+            <button id="prompt-library-trigger" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90" aria-haspopup="dialog" aria-controls="prompt-library-dialog">Prompt Library</button>
+
             <!-- Cheat Sheet Button -->
             <button id="cheatsheet-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
                 <svg class="w-3.5 h-3.5" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -628,6 +630,84 @@
                     </div>
                 </details>
 
+
+    <!-- Offline Prompt Library / Builder; no AI provider integration. -->
+    <section id="prompt-library-dialog" class="prompt-library-overlay" role="dialog" aria-modal="true" aria-labelledby="prompt-library-title" hidden>
+        <div class="prompt-library-surface">
+            <header class="prompt-library-header">
+                <div>
+                    <h2 id="prompt-library-title">Prompt Library</h2>
+                    <p id="prompt-library-subtitle"></p>
+                </div>
+                <button id="prompt-library-close" type="button" aria-label="Close Prompt Library">Close</button>
+            </header>
+            <div class="prompt-library-main">
+                <aside class="prompt-library-sidebar">
+                    <label for="prompt-library-search" id="prompt-library-search-label">Search templates</label>
+                    <input id="prompt-library-search" type="search" autocomplete="off">
+                    <label for="prompt-library-category" id="prompt-library-category-label">Category</label>
+                    <select id="prompt-library-category"></select>
+                    <div class="prompt-library-tabs" role="group" aria-label="Template collection">
+                        <button type="button" id="prompt-library-all" data-collection="all" aria-pressed="true">All</button>
+                        <button type="button" id="prompt-library-favorites" data-collection="favorites" aria-pressed="false">Favorites</button>
+                        <button type="button" id="prompt-library-mine" data-collection="mine" aria-pressed="false">My Templates</button>
+                    </div>
+                    <button id="prompt-library-new" type="button" class="prompt-library-primary">New template</button>
+                    <div id="prompt-library-list" class="prompt-library-results" role="listbox" aria-label="Available templates"></div>
+                    <p id="prompt-library-count" role="status" aria-live="polite"></p>
+                </aside>
+                <div class="prompt-library-detail">
+                    <div id="prompt-library-view">
+                        <div class="prompt-library-detail-head">
+                            <div>
+                                <span id="prompt-library-type"></span>
+                                <h3 id="prompt-library-selected-title"></h3>
+                                <p id="prompt-library-description"></p>
+                            </div>
+                            <button type="button" id="prompt-library-star" aria-pressed="false">Favorite</button>
+                        </div>
+                        <p id="prompt-library-tip"></p>
+                        <div class="prompt-library-manage" id="prompt-library-manage" hidden>
+                            <button type="button" id="prompt-library-edit">Edit my template</button>
+                            <button type="button" id="prompt-library-delete">Delete my template</button>
+                        </div>
+                        <div id="prompt-library-variables"></div>
+                        <label for="prompt-library-output" id="prompt-library-output-label">Prepared Markdown prompt</label>
+                        <div class="prompt-library-output-grid">
+                            <textarea id="prompt-library-output" readonly spellcheck="false" rows="13"></textarea>
+                            <section class="prompt-library-rendered-pane" aria-labelledby="prompt-library-preview-label">
+                                <h4 id="prompt-library-preview-label">Rendered Markdown preview</h4>
+                                <div id="prompt-library-rendered" class="md-preview"></div>
+                            </section>
+                        </div>
+                        <p id="prompt-library-safety"></p>
+                        <div class="prompt-library-actions">
+                            <button type="button" id="prompt-library-append" class="prompt-library-primary">Add to Sandbox</button>
+                            <button type="button" id="prompt-library-replace">Replace Sandbox</button>
+                            <button type="button" id="prompt-library-copy">Copy</button>
+                            <button type="button" id="prompt-library-download">Download .md</button>
+                        </div>
+                    </div>
+                    <form id="prompt-library-editor" hidden>
+                        <h3 id="prompt-library-edit-title">My template</h3>
+                        <label for="prompt-own-title" id="prompt-own-title-label">Title</label>
+                        <input id="prompt-own-title" maxlength="100" required>
+                        <label for="prompt-own-category" id="prompt-own-category-label">Category</label>
+                        <select id="prompt-own-category"></select>
+                        <label for="prompt-own-description" id="prompt-own-description-label">Description</label>
+                        <input id="prompt-own-description" maxlength="400">
+                        <label for="prompt-own-body" id="prompt-own-body-label">Markdown template (use {{variable}})</label>
+                        <textarea id="prompt-own-body" required maxlength="20000" rows="12" spellcheck="false"></textarea>
+                        <p id="prompt-own-error" role="alert"></p>
+                        <div class="prompt-library-actions">
+                            <button type="submit" class="prompt-library-primary" id="prompt-own-save">Save template</button>
+                            <button type="button" id="prompt-own-cancel">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Optional Extensions & Hacks learning track (#17). Isolated from the main editor. -->
     <div id="extensions-lab-modal" style="z-index:60" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-2 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="extensions-lab-title">
