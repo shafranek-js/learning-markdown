@@ -131,3 +131,25 @@ test('narrow Russian editor preserves selected text inside Details',async({page}
  await expect(input).toHaveValue(/\<details\>[\s\S]*Скрытый текст[\s\S]*\<\/details\>/);
  expect(await input.evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd))).toBe('Скрытый текст');
 });
+
+
+test('switching between source engines does not throw CodeMirror measure errors',async({page})=>{
+ await page.goto('/');
+ const errors=[];
+ page.on('pageerror',error=>errors.push(error.message));
+ page.on('console',message=>{
+  if(message.type()==='error'&&/read is not a function/i.test(message.text()))
+   errors.push(message.text());
+ });
+ const input=page.locator('#markdown-input');
+ await input.fill(Array.from({length:140},(_,i)=>'Long line '+(i+1)).join('\n'));
+ await input.evaluate(el=>{el.scrollTop=650;});
+ for(let cycle=0;cycle<3;cycle++){
+  await page.locator('#multi-cursor-toggle').click();
+  await expect(page.locator('#codemirror-mount .cm-content')).toBeVisible();
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await page.locator('#multi-cursor-toggle').click();
+  await expect(input).toBeVisible();
+ }
+ expect(errors).toEqual([]);
+});
