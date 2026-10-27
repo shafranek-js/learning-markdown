@@ -44,6 +44,9 @@ test('native Details wraps selected lines, keeps source selection and Undo/Redo'
 });
 
 test('both editors preserve legacy examples for empty caret HR and Details',async({page})=>{
+ // Each page navigation starts in native mode; user preferences otherwise
+ // persist inside this test's browser context and can hide the textarea.
+ await page.addInitScript(()=>localStorage.clear());
  const input=page.locator('#markdown-input');
  for(const multi of [false,true]){
   for(const kind of ['hr','adv-spoiler']){
@@ -66,6 +69,7 @@ test('both editors preserve legacy examples for empty caret HR and Details',asyn
 });
 
 test('CodeMirror multi-cursor HR and Details are atomic and reversible',async({page})=>{
+ await page.addInitScript(()=>localStorage.clear());
  const input=page.locator('#markdown-input');
  for(const kind of ['hr','adv-spoiler']){
   await page.goto('/');
