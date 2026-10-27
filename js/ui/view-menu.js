@@ -65,7 +65,13 @@ function openMenu({last=false}={}){
 }
 function action(name){
  if(name==='wrap')$('wrap-text-toggle').click();
- else if(name==='guide')$('theory-pane-toggle-btn').click();
+ else if(name==='guide'){
+  $('theory-pane-toggle-btn').click();
+  // When View is the only Guide control, toggling it on mobile must also
+  // display the requested pane (and return to the editor when hiding it).
+  if(window.matchMedia('(max-width:767px)').matches)
+   setMobileTab(state.guideVisible&&state.currentLessonIndex!==-1?'guide':'editor');
+ }
  else if(['split','preview','html'].includes(name)){
   $('layout-'+name+'-btn').click();
   if(window.matchMedia('(max-width:767px)').matches)
