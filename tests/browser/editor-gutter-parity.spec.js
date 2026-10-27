@@ -23,12 +23,18 @@ const geometry=async page=>page.evaluate(()=>{
    left:backdropRect.left+parseFloat(style.paddingLeft),
    top:backdropRect.top+parseFloat(style.paddingTop)
   };
-  const number=document.querySelector('#line-gutter .editor-gutter-row');
-  return {
-   gutter:rect(document.querySelector('#line-gutter')),
-   number:ink(number),
-   line:firstLine
-  };
+  const gutter=document.querySelector('#line-gutter');
+  const number=gutter.querySelector('.editor-gutter-row');
+  let numberInk;
+  if(number)numberInk=ink(number);
+  else{
+   // Unwrapped mode renders line numbers as a newline-separated text node.
+   const firstDigit=document.createRange();
+   firstDigit.setStart(gutter.firstChild,0);
+   firstDigit.setEnd(gutter.firstChild,1);
+   numberInk=rect(firstDigit);
+  }
+  return {gutter:rect(gutter),number:numberInk,line:firstLine};
  }
  const numbers=[...document.querySelectorAll('#codemirror-mount .cm-lineNumbers .cm-gutterElement')];
  const number=numbers.find(node=>
@@ -55,7 +61,7 @@ const sameGeometry=(off,on)=>{
 
 test('editor source and line numbers do not jump when Multi-cursor is toggled',async({page})=>{
  await page.goto('/');
- await page.evaluate(()=>document.fonts.ready);
+ await page.evaluate(async()=>{await document.fonts.ready;});
  const input=page.locator('#markdown-input');
  const source=['# Header','- Item one','- Item two','Ordinary **bold** words','Last line'].join('\n');
  await input.fill(source);
@@ -76,7 +82,7 @@ test('editor source and line numbers do not jump when Multi-cursor is toggled',a
 
 test('line-number gutter remains fixed across 3-digit line counts, wrapping and font resizing',async({page})=>{
  await page.goto('/');
- await page.evaluate(()=>document.fonts.ready);
+ await page.evaluate(async()=>{await document.fonts.ready;});
  const input=page.locator('#markdown-input');
  const toggle=page.locator('#multi-cursor-toggle');
  const source=Array.from({length:115},(_,i)=>'Line '+(i+1)).join('\n');
