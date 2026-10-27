@@ -20,6 +20,7 @@ import {initTOC,TOC_TEXT} from './ui/toc.js';
 import {initUtilityMenus,renderUtilityMenuLanguage} from './ui/utility-menus.js';
 import {initViewMenu,renderViewMenuLanguage} from './ui/view-menu.js';
 import {initFileMenu,renderFileMenuLanguage} from './ui/file-menu.js';
+import {initDocumentTabs,ensureSandboxTabs,activeSandboxTab,activeSandboxText,createSandboxTab,renameSandboxTab,renderDocumentTabs} from './ui/document-tabs.js';
 import {initEditMenu,renderEditMenuLanguage} from './ui/edit-menu.js';
 import {initHelpMenu,renderHelpMenuLanguage} from './ui/help-menu.js';
 import {initSettingsMenu,renderSettingsLanguage} from './ui/settings-menu.js';
@@ -104,7 +105,9 @@ function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();
  renderCheats();renderExtensionsLabLanguage();renderDialectUI();renderUtilityMenuLanguage();renderViewMenuLanguage();renderFileMenuLanguage();renderEditMenuLanguage();renderHelpMenuLanguage();renderSettingsLanguage();renderPromptLibraryLanguage();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
 }
 function selectLesson(index,{route=true,scroll=true}={}){
- if(index<-1||index>=LESSON_CORE.length+ADVANCED_IDS.length)return;state.currentLessonIndex=index;
+ if(index<-1||index>=LESSON_CORE.length+ADVANCED_IDS.length)return;
+ if(index===-1){ensureSandboxTabs();state.sandboxFileName=activeSandboxTab().name;}
+ state.currentLessonIndex=index;
  if(isAdvanced(index))state.advancedToolsOpen=true;
  save();if(route)syncRoute(state,{push:true});
  if(index===-1){$('active-tab-title').textContent='00_00 AI Prompt Sandbox';$('editor-mode-status').textContent='Sandbox';showGuide(false);}
@@ -130,7 +133,7 @@ function selectLesson(index,{route=true,scroll=true}={}){
   showGuide(state.guideVisible);
  }
  const saved=state.savedDrafts[docKey()],content=saved!==undefined?saved:index===-1?LINKEDIN_PROMPT_SAMPLE:getLesson(index).initial;
- setEditorContent(content);drawContents();progress();
+ setEditorContent(content);renderDocumentTabs();drawContents();progress();
  if(scroll){$('theory-panel').querySelector('.overflow-y-auto')?.scrollTo(0,0);}
 }
 function evaluate(text){updatePreview(text);renderPortability(text);
@@ -194,18 +197,8 @@ function saveCurrentMarkdown(filenameOverride=null){
  if(portabilityStatus()?.customHeadingIdsActive&&!confirm((TOC_TEXT[state.lang]||TOC_TEXT.en).customWarning))return false;
  if(portabilityStatus()?.definitionListsActive&&!confirm(definitionText(state.lang).warning))return false;
  if(portabilityStatus()?.emojiShortcodesActive&&!confirm(paletteLabels(state.lang).warning))return false;
- const defaultName=state.currentLessonIndex===-1?state.sandboxFileName:$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md';
+ const defaultName=state.currentLessonIndex===-1?activeSandboxTab().name:$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md';
  download(area().value,filenameOverride||defaultName,'text/markdown;charset=utf-8');
- return true;
-}
-// Course lessons and their drafts remain untouched by New/Open: both target Sandbox.
-function replaceSandboxDocument(text,filename,warning){
- const existing=state.savedDrafts['sandbox_'+state.lang]||'';
- if(existing!==text&&existing.length&&!confirm(warning))return false;
- if(state.currentLessonIndex!==-1)selectLesson(-1);
- setEditorContent(text);
- state.sandboxFileName=filename;
- save();
  return true;
 }
 function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang!==state.lang){state.lang=r.lang;rerender=true;}if(r.theme&&r.theme!==state.theme){state.theme=r.theme;document.documentElement.dataset.theme=state.theme;rerender=true;}
@@ -225,7 +218,7 @@ function openCourseContents(){
 // Templates only work on the Sandbox document. A replacement is never implicit.
 function usePromptInSandbox(markdown,mode,warning){
  if(typeof markdown!=='string'||!['append','replace'].includes(mode))return false;
- const existing=state.currentLessonIndex===-1?area().value:(state.savedDrafts['sandbox_'+state.lang]??LINKEDIN_PROMPT_SAMPLE);
+ const existing=state.currentLessonIndex===-1?area().value:activeSandboxText(state.lang,LINKEDIN_PROMPT_SAMPLE);
  if(mode==='replace'&&existing.trim()&&existing!==markdown&&!window.confirm(warning))return false;
  if(state.currentLessonIndex!==-1)selectLesson(-1);
  const current=area().value;
@@ -236,7 +229,7 @@ function usePromptInSandbox(markdown,mode,warning){
 }
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu({onGuideToggle:toggleGuide});initFileMenu({replaceSandbox:replaceSandboxDocument,saveMarkdown:saveCurrentMarkdown});initEditMenu();initHelpMenu({onOpenCourseContents:openCourseContents});initSettingsMenu();initPromptLibrary({usePrompt:usePromptInSandbox});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu({onGuideToggle:toggleGuide});initDocumentTabs({onActivate:()=>selectLesson(-1,{route:state.currentLessonIndex!==-1,scroll:false})});initFileMenu({createDocument:createSandboxTab,renameDocument:renameSandboxTab,saveMarkdown:saveCurrentMarkdown});initEditMenu();initHelpMenu({onOpenCourseContents:openCourseContents});initSettingsMenu();initPromptLibrary({usePrompt:usePromptInSandbox});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
