@@ -779,6 +779,23 @@ for(const content of droppedOriginalContent){
  assert.equal(setTableCellHTML(original,0,0,1,'<strong>Change</strong>'),null,content);
  assert.equal(setTableCellBlocks(original,0,0,1,'<p>Change</p>'),null,content);
 }
+// Source preservation is scoped: unsupported custom content in an outer
+// parent remains byte-identical when a safe nested LEAF is edited.
+const outerCustomPrefix='<table><tr><td><custom-note>Keep me</custom-note>';
+const innerSafe='<table><tr><td>Editable leaf</td></tr></table>';
+const outerCustomSuffix='<span>Following the leaf</span></td></tr></table>';
+const outerCustom=outerCustomPrefix+innerSafe+outerCustomSuffix;
+assert.equal(getTableReadOnlyReason(outerCustom,0),'container');
+assert.equal(getTableReadOnlyReason(outerCustom,1),null);
+const customLeafEdit=setTableCellText(outerCustom,1,0,0,'Changed leaf');
+assert(customLeafEdit?.text.startsWith(outerCustomPrefix));
+assert(customLeafEdit.text.endsWith(outerCustomSuffix));
+assert(customLeafEdit.text.includes('<td>Changed leaf</td>'));
+const innerUnknown='<table><tr><td><custom-note>Must stay</custom-note></td></tr></table>';
+const nestedUnknown='<table><tr><td>Outer '+innerUnknown+'</td></tr></table>';
+assert.notEqual(getTableReadOnlyReason(nestedUnknown,1),null);
+assert.equal(setTableCellText(nestedUnknown,1,0,0,'Unsafe rewrite'),null);
+
 // Guarding one source block must not disable unrelated standalone tables.
 const onlyFirstGuarded='<table><tr><td><!-- Keep source -->First</td></tr></table>\n\n'+
  '<table><tr><td>Other</td></tr></table>';
