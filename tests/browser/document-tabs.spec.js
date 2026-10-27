@@ -151,7 +151,7 @@ test('Document-scoped soft breaks are migrated, isolated and persisted across ta
  await page.addInitScript(()=>{
   if(!sessionStorage.getItem('softbreak-tabs-seeded')){
    localStorage.setItem('md_course_state_v1',JSON.stringify({
-    lang:'en',currentLessonIndex:-1,savedDrafts:{sandbox_en:'First line\\nSecond line'},
+    lang:'en',currentLessonIndex:-1,savedDrafts:{sandbox_en:'First line\nSecond line'},
     extensionSettingsByDocument:{sandbox_en:{softbreaks:true}}
    }));
    sessionStorage.setItem('softbreak-tabs-seeded','1');
