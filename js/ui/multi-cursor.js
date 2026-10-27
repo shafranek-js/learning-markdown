@@ -32,7 +32,7 @@ export const markdownSourceHighlightStyle=HighlightStyle.define([
 // Optional CodeMirror engine. The existing textarea stays as a live shadow
 // document for the course, table tools and exports; this is a reversible
 // migration, not a separate unsaved document.
-let view=null,active=false,input=null,updateUI=()=>{},shortcutAction=()=>{},sessionKey='';
+let view=null,active=false,input=null,updateUI=()=>{},shortcutAction=()=>{},toggleTabFocus=()=>{},sessionKey='';
 const sessions=new Map();
 const wrapping=new Compartment();
 const $=id=>document.getElementById(id);
@@ -132,17 +132,23 @@ function extensions(){
   rectangularSelection({eventFilter:event=>event.altKey&&event.shiftKey}),
   highlightActiveLine(),syntaxHighlighting(markdownSourceHighlightStyle),
   markdown(),
+  EditorView.contentAttributes.of({'aria-label':'Markdown multi-cursor editor','aria-describedby':'editor-tab-help'}),
   wrapping.of(state.wrapText?EditorView.lineWrapping:[]),
   // lang-markdown registers its Enter shortcut at Prec.high. Our narrower
   // list-parity handler must run first; returning false leaves Markdown's
   // own continuation and quote rules available as a fallback.
-  Prec.highest(keymap.of([{key:'Enter',run:multiCursorListEnter}])),
+  Prec.highest(keymap.of([
+   {key:'Enter',run:multiCursorListEnter},
+   {key:'Ctrl-m',run:()=>{toggleTabFocus();return true;},preventDefault:true},
+   // Returning false gives the browser its ordinary forward/backward Tab
+   // traversal; never let an indent binding trap a keyboard-only user.
+   {key:'Tab',run:editor=>state.tabFocusMode?false:multiCursorIndent(editor)},
+   {key:'Shift-Tab',run:editor=>state.tabFocusMode?false:multiCursorIndent(editor,true)}
+  ])),
   keymap.of([
    {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
    {key:'Mod-Shift-l',run:selectSelectionMatches,preventDefault:true},
    {key:'Escape',run:collapseToSingleCursor,preventDefault:true},
-   {key:'Tab',run:editor=>multiCursorIndent(editor),preventDefault:true},
-   {key:'Shift-Tab',run:editor=>multiCursorIndent(editor,true),preventDefault:true},
    {key:'Shift-Alt-i',run:insertCursorsAtLineEnds,preventDefault:true},
    {key:'Mod-Alt-ArrowDown',run:addCursorBelow,preventDefault:true},
    {key:'Mod-Alt-ArrowUp',run:addCursorAbove,preventDefault:true},
@@ -208,8 +214,8 @@ function activate(enabled,{focus=true}={}){
  updateUI(false);
  if(focus)(active?view:input).focus();
 }
-export function initMultiCursor({textarea,refresh}){
- input=textarea;updateUI=refresh;
+export function initMultiCursor({textarea,refresh,toggleTabFocus:toggle}){
+ input=textarea;updateUI=refresh;toggleTabFocus=toggle;
  renderMultiCursorLabels();
 }
 export const isMultiCursorMode=()=>active;

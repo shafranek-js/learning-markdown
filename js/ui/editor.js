@@ -2,6 +2,7 @@ import {state,docKey,save} from '../core/state.js';
 import {record,ensureHistory,step,status} from '../core/history.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {getWrapTextLabels} from './wrap-text-i18n.js';
+import {tabFocusLabels} from './tab-focus-i18n.js';
 import {editMarkdownListKey} from '../core/source-list-keyboard.js';
 import {indentSourceSelection} from '../core/source-indent.js';
 export const area=()=>document.getElementById('markdown-input');
@@ -18,12 +19,29 @@ export function renderWrapTextUI(){
  toggle.setAttribute('aria-label',words.help);
  toggle.setAttribute('aria-pressed',String(state.wrapText));
 }
+export function renderTabFocusUI(){
+ const toggle=el('tab-focus-toggle'),help=el('editor-tab-help');
+ const words=tabFocusLabels(state.lang),focused=state.tabFocusMode;
+ if(toggle){
+  toggle.textContent=focused?words.focus:words.edit;
+  toggle.title=focused?words.focusHelp:words.editHelp;
+  toggle.setAttribute('aria-label',focused?words.focusHelp:words.editHelp);
+  toggle.setAttribute('aria-pressed',String(focused));
+ }
+ if(help)help.textContent=focused?words.focusHelp:words.editHelp;
+}
+export function toggleTabFocusMode(){
+ state.tabFocusMode=!state.tabFocusMode;
+ save();
+ renderTabFocusUI();
+}
 function applyWrapPreference(){
  const enabled=state.wrapText;
  el('editor-pane').classList.toggle('wrap-text-enabled',enabled);
  area().setAttribute('wrap',enabled?'soft':'off');
  multi?.setMultiCursorLineWrapping(enabled);
  renderWrapTextUI();
+ renderTabFocusUI();
 }
 // Wrapped visual lines need a gutter that reserves height for continuation
 // lines, while the numbers still count only actual Markdown source lines.
@@ -72,7 +90,7 @@ export function registerEditorShortcut(handler){multiShortcut=handler;if(multi)m
 async function loadMulti(){
  if(multi)return multi;
  if(!multiLoading)multiLoading=import('./multi-cursor.js').then(mod=>{
-  multi=mod;mod.initMultiCursor({textarea:area(),refresh:notify=>refreshEditor({notify})});
+  multi=mod;mod.initMultiCursor({textarea:area(),refresh:notify=>refreshEditor({notify}),toggleTabFocus:toggleTabFocusMode});
   mod.registerMultiCursorShortcut(multiShortcut);return mod;
  }).catch(error=>{multiLoading=null;console.error('Multi-cursor editor unavailable',error);return null;});
  return multiLoading;
@@ -116,6 +134,7 @@ export function applyEdit(text,start,end,{focus=true}={}){if(multiActive()){mult
 export function undoOrRedo(direction){if(multiActive()){multi.multiCursorUndoOrRedo(direction);return;}const snap=step(docKey(),direction);if(!snap)return;const a=area();a.value=snap.text;a.focus();a.setSelectionRange(snap.start,snap.end);refreshEditor();}
 export function initEditor(listener){onChange=listener;const a=area(),backdrop=el('editor-highlight-backdrop'),gutter=el('line-gutter');let scheduled=false;
  applyWrapPreference();
+ el('tab-focus-toggle').addEventListener('click',toggleTabFocusMode);
  el('wrap-text-toggle').addEventListener('click',()=>{
   state.wrapText=!state.wrapText;
   applyWrapPreference();
@@ -133,11 +152,18 @@ export function initEditor(listener){onChange=listener;const a=area(),backdrop=e
  a.addEventListener('scroll',()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{backdrop.scrollTop=a.scrollTop;backdrop.scrollLeft=a.scrollLeft;gutter.scrollTop=a.scrollTop;scheduled=false;});});
  a.addEventListener('input',e=>{record(docKey(),a.value,a.selectionStart,a.selectionEnd,{boundary:e.inputType==='insertLineBreak'||e.inputType==='insertParagraph'||/[ \n]$/.test(a.value)});refreshEditor();});
  for(const event of ['click','keyup','select'])a.addEventListener(event,()=>refreshEditor({notify:false}));
- a.addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;
+ a.addEventListener('keydown',e=>{
+  // Ctrl+M toggles a keyboard-accessible route out of the source editor.
+  if(e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.shiftKey&&e.code==='KeyM'&&
+     !e.isComposing&&e.keyCode!==229){
+   e.preventDefault();toggleTabFocusMode();return;
+  }
+  const mod=e.ctrlKey||e.metaKey;
   if(mod&&!e.altKey&&e.code==='KeyZ'){e.preventDefault();undoOrRedo(e.shiftKey?1:-1);return;}
   if(mod&&!e.altKey&&e.code==='KeyY'){e.preventDefault();undoOrRedo(1);return;}
   // Never intercept native IME composition or browser Ctrl/Alt shortcuts.
   if(mod||e.altKey||e.isComposing||e.keyCode===229||multiActive())return;
+  if(state.tabFocusMode&&e.key==='Tab')return;
   if(e.key==='Tab'||e.key==='Enter'){
    const start=a.selectionStart,end=a.selectionEnd;
    // Any nonempty selection is indented as whole source lines, including

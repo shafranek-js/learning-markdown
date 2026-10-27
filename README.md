@@ -132,6 +132,7 @@ The default textarea editor and optional CodeMirror editor operate on the same M
 | Continue bullet, numbered or task list | Both editors: `Enter` at the end of an item (CodeMirror handles multiple list cursors together) |
 | Exit an empty list item | Both editors: `Enter` on an empty item |
 | Indent / outdent list items | `Tab` / `Shift+Tab` (including selections of list lines); CodeMirror also supports general code-style indentation |
+| Let Tab leave either editor | `Ctrl+M` toggles **Tab: Indent** / **Tab: Focus**; also use the compact footer button |
 | Add another cursor | **Multi-cursor** mode: `Alt+Click` |
 | Select next occurrence | **Multi-cursor** mode: `Ctrl+D` |
 | Select all matching occurrences | **Multi-cursor** mode: `Ctrl+Shift+L` |
@@ -147,6 +148,8 @@ On macOS, corresponding shortcuts use Command/Option where available. Some combi
 **Heading toolbar:** select multiple source lines in either editor and apply H1–H6 to convert each nonblank line while keeping blank separators intact. Applying the same level to an existing heading removes its marker; changing the level preserves its content. One Undo reverts the operation. If the selection includes fenced or indented code, it is rejected without partial edits. An empty line creates an editable heading example.
 
 **Inline toolbar:** Bold supports both `**bold**` and `__bold__`, while Italic supports `_italic_` and `*italic*`. The corresponding button removes either valid marker style when the whole wrapper or its interior is selected, without disturbing strong-underscore formatting or identifiers such as `file_name`. Strikethrough (`~~`) and inline code also toggle off; otherwise these actions wrap the selection or insert editable placeholder text. In either editor, inline and Advanced wrappers refuse a selection touching a fenced code block instead of modifying code. CodeMirror applies all cursors in one undoable transaction and rejects mixed safe/unsafe selections atomically.
+
+**Accessible Tab focus navigation:** by default `Tab` edits indentation. Press **Ctrl+M** while the source editor or CodeMirror is focused (or activate the footer **Tab: Indent / Tab: Focus** button) to switch to **Tab: Focus**. Now `Tab` and `Shift+Tab` move keyboard focus normally instead of changing Markdown. Press Ctrl+M again to restore indentation. The mode is shared by both editor engines, saves with preferences, does not change text/Undo history, and is announced in all five UI languages. On macOS the shortcut is still **Control+M**, not Command+M (which may minimize the window).
 
 **Selected-line indentation:** in either editor, select one or more lines and press `Tab` to add two leading spaces per logical line, or `Shift+Tab` to remove up to two spaces (or one leading tab). This works for mixed prose, list and blank lines, preserves the Markdown text and selection, and can be reversed in one Undo step. Selecting only part of a line indents that whole line instead of replacing the selected words. With a single caret, `Shift+Tab` also outdents the current line when it begins with spaces or a tab (including ordinary prose and source code), and otherwise retains standard backward browser focus navigation in the textarea. The existing list-specific Tab behavior remains unchanged; IME composition is not intercepted.
 
