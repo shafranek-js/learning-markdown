@@ -52,4 +52,59 @@ import {sourceSelectionTouchesFencedCode} from '../js/core/source-line-format.js
 }
 assert.equal(formatSourceInlineSelection('Text',3,2,'**','**','bold'),null);
 assert.equal(sourceInlineWrapChanges('Text',[{from:0,to:0}],'','','bold'),null);
+
+// Both equivalent CommonMark delimiters are recognized, whether the entire
+// wrapper or just the inner word is selected.
+for(const [kind,markup,word] of [
+ ['**','__Bold__','Bold'],
+ ['_','*Italic*','Italic'],
+ ['**','**Bold**','Bold'],
+ ['_','_Italic_','Italic']
+]){
+ const action=kind==='**'?'bold':'italic';
+ for(const start of [0,markup.indexOf(word)]){
+  const end=start===0?markup.length:start+word.length;
+  const changed=formatSourceInlineSelection(markup,start,end,kind,kind,action);
+  assert.equal(changed.text,word,markup+' selected at '+start);
+  assert.equal(changed.text.slice(changed.start,changed.end),word);
+ }
+}
+// Strong underscores are not a removable single-underscore italic wrapper.
+{
+ const full=formatSourceInlineSelection('__Bold__',0,8,'_','_','italic');
+ assert.equal(full.text,'___Bold___');
+ const interior=formatSourceInlineSelection('__Bold__',2,6,'_','_','italic');
+ assert.equal(interior.text,'__*Bold*__');
+ const repeated=formatSourceInlineSelection(interior.text,interior.start,interior.end,'_','_','italic');
+ assert.equal(repeated.text,'__Bold__');
+}
+// Intraword underscores are not emphasis and must not be removed by Italic.
+{
+ const identifier='some_file_name';
+ const start=identifier.indexOf('file');
+ const updated=formatSourceInlineSelection(identifier,start,start+4,'_','_','italic');
+ assert.equal(updated.text,'some_*file*_name');
+ assert.equal(updated.text.slice(updated.start,updated.end),'file');
+ const roundtrip=formatSourceInlineSelection(updated.text,updated.start,updated.end,'_','_','italic');
+ assert.equal(roundtrip.text,identifier);
+}
+{
+ const escaped='\\*Escaped*';
+ const selected=formatSourceInlineSelection(escaped,1,escaped.length,'_','_','italic');
+ assert.equal(selected.text,'\\_*Escaped*_');
+}
+// Do not strip whitespace-padded punctuation which is not a valid marker pair.
+{
+ const padded=formatSourceInlineSelection('* padded *',0,10,'_','_','italic');
+ assert.equal(padded.text,'_* padded *_');
+}
+// Multi-cursor operations can contain different, equivalent Markdown styles.
+{
+ const text='__A__ *B*';
+ const ranges=[{from:0,to:5},{from:6,to:9}];
+ const changes=sourceInlineWrapChanges(text,ranges,'**','**','bold');
+ assert.equal(changes[0].insert,'A');
+ assert.equal(changes[1].insert,'***B***');
+}
+
 console.log('Inline Markdown toolbar formatting: passed');
