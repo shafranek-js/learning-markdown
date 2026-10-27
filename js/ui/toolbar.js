@@ -29,15 +29,11 @@ function wrap(prefix,suffix=prefix,placeholder='text'){
 export function applyAdvancedPreset(group,value){
  const cssClass=presetClass(group,value);
  if(!cssClass)return false;
- const a=area(),start=a.selectionStart,end=a.selectionEnd,text=a.value,selected=text.slice(start,end);
  const isBlock=['align','indent','spacing'].includes(group);
  if(multiPreset(cssClass,isBlock))return true;
- const sample=isBlock?'Formatted paragraph':'formatted text';
- const content=selected||sample;
  const before=isBlock?'\n\n<div class="'+cssClass+'">':'<span class="'+cssClass+'">';
  const after=isBlock?'</div>\n\n':'</span>';
- const next=text.slice(0,start)+before+content+after+text.slice(end);
- applyEdit(next,start+before.length,start+before.length+content.length);
+ wrap(before,after,isBlock?'Formatted paragraph':'formatted text');
  return true;
 }
 export function insertRichContent(group,id){
