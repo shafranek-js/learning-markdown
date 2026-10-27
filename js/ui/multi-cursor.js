@@ -12,6 +12,7 @@ import {markdownListEnterChange,editMarkdownListKey} from '../core/source-list-k
 import {sourceLineFormatEdits} from '../core/source-line-format.js';
 import {sourceIndentEdits} from '../core/source-indent.js';
 import {sourceInlineWrapChanges} from '../core/source-inline-format.js';
+import {sourceFencedBlockChanges} from '../core/source-fenced-block.js';
 import {explainProtectedSourceFormatting} from './line-format-feedback.js';
 
 // Source-oriented highlighting: only token colors and deliberately matched link/strike styles.
@@ -309,6 +310,22 @@ export function multiCursorWrap(prefix,suffix,placeholder){
  });
  view.dispatch({...transaction,annotations:isolateHistory.of('full')});view.focus();return true;
 }
+export function multiCursorFencedBlock(){
+ if(!active)return false;
+ const edits=sourceFencedBlockChanges(view.state.doc.toString(),view.state.selection.ranges);
+ if(edits===null){
+  explainProtectedSourceFormatting();view.focus();return true;
+ }
+ let index=0;
+ const transaction=view.state.changeByRange(()=>{
+  const edit=edits[index++];
+  return {changes:{from:edit.from,to:edit.to,insert:edit.insert},
+   range:EditorSelection.range(edit.selectionFrom,edit.selectionTo)};
+ });
+ view.dispatch({...transaction,annotations:isolateHistory.of('full')});
+ view.focus();return true;
+}
+
 export function multiCursorInsert(snippet,newline=true){
  if(!active)return false;
  const transaction=view.state.changeByRange(r=>{
