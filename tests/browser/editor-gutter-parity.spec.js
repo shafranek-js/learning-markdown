@@ -59,6 +59,23 @@ const sameGeometry=(off,on)=>{
  expect(Math.abs(off.line.top-on.line.top)).toBeLessThan(2);
 };
 
+// CodeMirror finishes applying its saved viewport after the activation click.
+// Compare settled geometry rather than the transient DOM positions that can
+// briefly place the first visible gutter number a full line (or page) away.
+// This still fails for persistent UI jumps after the layout has settled.
+async function expectSettledGeometry(reference,page){
+ await expect.poll(async()=>{
+  const current=await geometry(page);
+  return Math.abs(reference.gutter.width-current.gutter.width)<1.5&&
+   Math.abs(reference.gutter.right-current.gutter.right)<1.5&&
+   Math.abs(reference.number.right-current.number.right)<2&&
+   Math.abs(reference.number.top-current.number.top)<2&&
+   Math.abs(reference.line.left-current.line.left)<2&&
+   Math.abs(reference.line.top-current.line.top)<2;
+ },{timeout:5000}).toBe(true);
+ sameGeometry(reference,await geometry(page));
+}
+
 test('editor source and line numbers do not jump when Multi-cursor is toggled',async({page})=>{
  await page.goto('/');
  await page.evaluate(async()=>{await document.fonts.ready;});
@@ -89,9 +106,16 @@ test('line-number gutter remains fixed across 3-digit line counts, wrapping and 
  await input.fill(source);
  // Keep the first line in the viewport when the CodeMirror editor receives focus.
  await input.evaluate(el=>{el.setSelectionRange(0,0);el.scrollTop=0;});
+ // The textarea mirrors its viewport into the syntax backdrop and gutter in
+ // requestAnimationFrame. Do not measure the source before those layers catch
+ // up: the textarea may be at line 1 while its gutter still shows line 115.
+ await expect.poll(async()=>page.locator('#line-gutter').evaluate(el=>el.scrollTop),
+  {timeout:3000}).toBe(0);
+ await expect.poll(async()=>page.locator('#editor-highlight-backdrop').evaluate(el=>el.scrollTop),
+  {timeout:3000}).toBe(0);
  const off=await geometry(page);
  await toggle.click();
- sameGeometry(off,await geometry(page));
+ await expectSettledGeometry(off,page);
  const originalWidth=(await geometry(page)).gutter.width;
  await toggle.click();
  await page.locator('#wrap-text-toggle').click();
@@ -100,12 +124,12 @@ test('line-number gutter remains fixed across 3-digit line counts, wrapping and 
  await toggle.click();
  const offNoWrap=await geometry(page);
  await toggle.click();
- sameGeometry(offNoWrap,await geometry(page));
+ await expectSettledGeometry(offNoWrap,page);
  await toggle.click();
  await page.locator('#font-inc-btn').click();
  const enlarged=await geometry(page);
  await toggle.click();
- sameGeometry(enlarged,await geometry(page));
+ await expectSettledGeometry(enlarged,page);
  await expect(input).toHaveValue(source);
 });
 

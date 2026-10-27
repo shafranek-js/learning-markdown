@@ -127,3 +127,69 @@ test('Russian mobile status, keyboard traversal and IME guards are accessible',a
  await expect(input).not.toBeFocused();
  await expect(input).toHaveValue('  Пример текста');
 });
+
+
+test('Tab screen-reader description is never rendered as editor text or a flex item',async({page})=>{
+ await page.goto('/');
+ const help=page.locator('#editor-tab-help');
+ const input=page.locator('#markdown-input');
+ const container=page.locator('.editor-container');
+ await expect(help).toHaveAttribute('role','status');
+ await expect(help).toHaveAttribute('aria-live','polite');
+ await expect(input).toHaveAttribute('aria-describedby','editor-tab-help');
+ const check=async()=>{
+  const metrics=await page.evaluate(()=>{
+   const hint=document.querySelector('#editor-tab-help');
+   const parent=document.querySelector('.editor-container');
+   const multi=document.querySelector('#editor-pane').classList.contains('multi-cursor-active');
+   const editor=document.querySelector(multi?'#codemirror-mount':'#markdown-input');
+   const style=getComputedStyle(hint);
+   return {
+    position:style.position,
+    clipPath:style.clipPath,
+    overflow:style.overflow,
+    hintWidth:hint.getBoundingClientRect().width,
+    hintHeight:hint.getBoundingClientRect().height,
+    editorWidth:editor.getBoundingClientRect().width,
+    containerWidth:parent.getBoundingClientRect().width
+   };
+  });
+  expect(metrics.position).toBe('absolute');
+  expect(metrics.clipPath).toBe('inset(50%)');
+  expect(metrics.overflow).toBe('hidden');
+  expect(metrics.hintWidth).toBeLessThanOrEqual(1.5);
+  expect(metrics.hintHeight).toBeLessThanOrEqual(1.5);
+  expect(metrics.editorWidth).toBeGreaterThan(metrics.containerWidth-2);
+ };
+ await check();
+ await expect(help).toContainText('Ctrl+M');
+ await page.locator('#tab-focus-toggle').click();
+ await expect(help).toContainText('Tab moves focus');
+ await check();
+ await page.locator('#multi-cursor-toggle').click();
+ await expect(page.locator('#codemirror-mount .cm-content')).toBeVisible();
+ await check();
+ await page.locator('#multi-cursor-toggle').click();
+ await check();
+ await expect(container).toBeVisible();
+});
+
+test('localized Tab announcement stays visually clipped on a narrow mobile pane',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#lang-selector').selectOption('ru');
+ const help=page.locator('#editor-tab-help');
+ await expect(help).toContainText('Ctrl+M');
+ await expect(help).toContainText('Tab добавляет отступ');
+ const geometry=await help.evaluate(el=>{
+  const style=getComputedStyle(el);
+  const rect=el.getBoundingClientRect();
+  return {width:rect.width,height:rect.height,position:style.position,clip:style.clipPath};
+ });
+ expect(geometry).toMatchObject({position:'absolute',clip:'inset(50%)'});
+ expect(geometry.width).toBeLessThanOrEqual(1.5);
+ expect(geometry.height).toBeLessThanOrEqual(1.5);
+ await page.locator('#tab-focus-toggle').click();
+ await expect(help).toContainText('Tab переводит фокус');
+ await expect(page.locator('#tab-focus-toggle')).toHaveAttribute('aria-pressed','true');
+});
