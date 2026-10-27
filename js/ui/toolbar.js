@@ -1,10 +1,11 @@
-import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiFencedBlock,multiImage,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
+import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiFencedBlock,multiImage,multiBlockToolbar,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 import {formatSourceLineSelection} from '../core/source-line-format.js';
 import {formatSourceInlineSelection} from '../core/source-inline-format.js';
 import {formatSourceFencedBlockSelection} from '../core/source-fenced-block.js';
 import {formatSourceImageSelection} from '../core/source-image-insertion.js';
+import {formatSourceBlockToolbarSelection} from '../core/source-block-toolbar.js';
 import {explainProtectedSourceFormatting,explainImageSelectionFailure} from './line-format-feedback.js';
 export function setHeading(level){
  if(multiHeading(level))return;
@@ -63,6 +64,14 @@ export function insertImage(){
  if(change===null){explainImageSelectionFailure(reason);return;}
  applyEdit(change.text,change.start,change.end);
 }
+export function insertBlockToolbar(kind){
+ if(multiBlockToolbar(kind))return;
+ const input=area();
+ const change=formatSourceBlockToolbarSelection(
+  input.value,input.selectionStart,input.selectionEnd,kind);
+ if(change===null){explainProtectedSourceFormatting();return;}
+ applyEdit(change.text,change.start,change.end);
+}
 export function toolbarAction(action){
  if(['ul','ol','task','quote'].includes(action)){
   if(multiLineFormat(action))return;
@@ -85,13 +94,13 @@ export function toolbarAction(action){
  case 'code-inline':wrap('`','`','command');break;case 'code-block':insertCodeBlock();break;
  case 'link':wrap('[','](https://example.com)','Link text');break;case 'image':insertImage();break;
  case 'table':document.getElementById('table-picker-trigger')?.click();break;
- case 'hr':insertSnippet('\n---\n\n');break;
+ case 'hr':insertBlockToolbar('hr');break;
  // Advanced HTML actions are explicit opt-ins; they do not change the Markdown dialect.
  case 'adv-underline':wrap('<u>','</u>','underlined text');break;
  case 'adv-sup':wrap('<sup>','</sup>','2');break;
  case 'adv-sub':wrap('<sub>','</sub>','2');break;
  case 'adv-highlight':wrap('<mark>','</mark>','highlighted text');break;
- case 'adv-spoiler':insertSnippet('\n<details>\n<summary>More information</summary>\n\nHidden content\n</details>\n');break;
+ case 'adv-spoiler':insertBlockToolbar('spoiler');break;
  }}
 export function initToolbar(){registerEditorShortcut(toolbarAction);document.querySelectorAll('.toolbar-btn').forEach(button=>button.addEventListener('click',()=>toolbarAction(button.dataset.action)));
  document.getElementById('undo-btn').addEventListener('click',()=>undoOrRedo(-1));document.getElementById('redo-btn').addEventListener('click',()=>undoOrRedo(1));
