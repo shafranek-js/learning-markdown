@@ -15,12 +15,19 @@ const geometry=async page=>page.evaluate(()=>{
   return rect(range);
  };
  if(!on){
-  const line=document.querySelector('#editor-highlight-backdrop .editor-wrap-line');
+  const backdrop=document.querySelector('#editor-highlight-backdrop');
+  const wrappedLine=backdrop.querySelector('.editor-wrap-line');
+  const style=getComputedStyle(backdrop);
+  const backdropRect=rect(backdrop);
+  const firstLine=wrappedLine?rect(wrappedLine):{
+   left:backdropRect.left+parseFloat(style.paddingLeft),
+   top:backdropRect.top+parseFloat(style.paddingTop)
+  };
   const number=document.querySelector('#line-gutter .editor-gutter-row');
   return {
    gutter:rect(document.querySelector('#line-gutter')),
    number:ink(number),
-   line:rect(line)
+   line:firstLine
   };
  }
  const numbers=[...document.querySelectorAll('#codemirror-mount .cm-lineNumbers .cm-gutterElement')];
@@ -48,6 +55,7 @@ const sameGeometry=(off,on)=>{
 
 test('editor source and line numbers do not jump when Multi-cursor is toggled',async({page})=>{
  await page.goto('/');
+ await page.evaluate(()=>document.fonts.ready);
  const input=page.locator('#markdown-input');
  const source=['# Header','- Item one','- Item two','Ordinary **bold** words','Last line'].join('\n');
  await input.fill(source);
@@ -68,6 +76,7 @@ test('editor source and line numbers do not jump when Multi-cursor is toggled',a
 
 test('line-number gutter remains fixed across 3-digit line counts, wrapping and font resizing',async({page})=>{
  await page.goto('/');
+ await page.evaluate(()=>document.fonts.ready);
  const input=page.locator('#markdown-input');
  const toggle=page.locator('#multi-cursor-toggle');
  const source=Array.from({length:115},(_,i)=>'Line '+(i+1)).join('\n');
