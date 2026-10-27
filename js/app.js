@@ -229,7 +229,7 @@ function usePromptInSandbox(markdown,mode,warning){
  if(mode==='replace'&&existing.trim()&&existing!==markdown&&!window.confirm(warning))return false;
  if(state.currentLessonIndex!==-1)selectLesson(-1);
  const current=area().value;
- const next=mode==='append'&&current.trim()?current.replace(/\\s*$/,'')+'\\n\\n'+markdown:markdown;
+ const next=mode==='append'&&current.trim()?current.replace(/\s*$/,'')+'\n\n'+markdown:markdown;
  if(next!==current)applyEdit(next,next.length,next.length,{focus:false});
  if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');
  return true;
