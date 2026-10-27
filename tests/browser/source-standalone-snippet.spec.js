@@ -20,9 +20,9 @@ test('advanced HTML example adds a standalone block after selected source withou
  await page.locator('#advanced-lab summary').click();
  await page.locator('#advanced-lab-examples button').first().click();
  const updated=await input.inputValue();
- expect(updated).toContain('Before selected\n\n');
+ expect(updated).toContain('Before selected After\n\n');
  expect(updated).toContain('<u>Underlined text</u>');
- expect(updated).toContain('\n\n After');
+ expect(updated).toContain('<u>Underlined text</u>\n');
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue(original);
  await page.locator('#redo-btn').click();
@@ -36,8 +36,8 @@ test('definition HTML template preserves selected Markdown and one native Undo s
  await input.fill(original);await select(input,'important text');
  await page.locator('#definition-html-insert').click();
  const result=await input.inputValue();
- expect(result).toContain('Before important text\n\n<dl>');
- expect(result).toContain('</dl>\n\n After');
+ expect(result).toContain('Before important text After\n\n<dl>');
+ expect(result).toContain('</dl>\n');
  expect(result).toContain('First <strong>definition</strong>');
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue(original);
@@ -74,9 +74,9 @@ test('Mermaid insertion keeps selected prose and creates a separate preview diag
  await page.locator('#mermaid-template-choice').selectOption('flowchart');
  await page.locator('#mermaid-template-insert').click();
  const result=await input.inputValue();
- expect(result).toContain('Before GRAPH\n\n');
+ expect(result).toContain('Before GRAPH After\n\n');
  expect(result).toContain('\x60\x60\x60mermaid');
- expect(result).toContain('\n\n After');
+ expect(result).toContain('\x60\x60\x60\n');
  await expect(page.locator('#markdown-preview figure.mermaid-diagram')).toHaveCount(1,{timeout:20000});
  await page.locator('#undo-btn').click();
  await expect(input).toHaveValue(original);
