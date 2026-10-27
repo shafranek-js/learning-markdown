@@ -160,3 +160,15 @@ test('Prompt Library writes only into the active Sandbox document',async({page})
  await switchTo(page,first);
  await expect(source).toHaveValue('# Existing first document');
 });
+
+test('File New on mobile reveals the editor after reading the lesson guide',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#mobile-tabs [data-mobile-tab="guide"]').click();
+ await expect(page.locator('#workspace-container')).toHaveAttribute('data-mobile-tab','guide');
+ await page.locator('#file-menu-trigger').click();
+ await page.locator('#file-menu [data-file-action="new"]').click();
+ await expect(page.locator('#workspace-container')).toHaveAttribute('data-mobile-tab','editor');
+ await expect(page.locator('#document-tabs')).toBeVisible();
+ await expect(page.locator('#markdown-input')).toBeVisible();
+});
