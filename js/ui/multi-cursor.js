@@ -10,6 +10,7 @@ import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 import {markdownListEnterChange,editMarkdownListKey} from '../core/source-list-keyboard.js';
 import {sourceLineFormatEdits} from '../core/source-line-format.js';
+import {sourceIndentEdits} from '../core/source-indent.js';
 import {sourceInlineWrapChanges} from '../core/source-inline-format.js';
 import {explainProtectedSourceFormatting} from './line-format-feedback.js';
 
@@ -97,20 +98,9 @@ export function multiCursorIndent(editor,outdent=false){
   }else editor.dispatch({...state.replaceSelection('  '),annotations:isolateHistory.of('full')});
   return true;
  }
- const numbers=new Set();
- for(const r of ranges){
-  const first=doc.lineAt(r.from).number;
-  let last=doc.lineAt(r.to).number;
-  if(!r.empty&&last>first&&r.to===doc.line(last).from)last--;
-  for(let n=first;n<=last;n++)numbers.add(n);
- }
- const changes=[];
- for(const n of [...numbers].sort((a,b)=>a-b)){
-  const line=doc.line(n);
-  if(!outdent){changes.push({from:line.from,insert:'  '});continue;}
-  const match=line.text.match(/^(?: {1,2}|\t)/);
-  if(match)changes.push({from:line.from,to:line.from+match[0].length,insert:''});
- }
+ // Match textarea line-selection behavior for overlapping cursor ranges.
+ const changes=sourceIndentEdits(doc.toString(),ranges,outdent);
+ if(changes===null)return false;
  dispatchFormattingChanges(editor,changes);
  return true;
 }
