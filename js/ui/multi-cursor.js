@@ -10,6 +10,7 @@ import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 import {markdownListEnterChange,editMarkdownListKey} from '../core/source-list-keyboard.js';
 import {sourceLineFormatEdits} from '../core/source-line-format.js';
+import {sourceInlineWrapChanges} from '../core/source-inline-format.js';
 import {explainProtectedSourceFormatting} from './line-format-feedback.js';
 
 // Source-oriented highlighting: only token colors and deliberately matched link/strike styles.
@@ -276,11 +277,15 @@ export function multiCursorEdit(text,start,end,{focus=true}={}){
 }
 export function multiCursorWrap(prefix,suffix,placeholder){
  if(!active)return false;
- const transaction=view.state.changeByRange(r=>{
-  const selected=view.state.sliceDoc(r.from,r.to)||placeholder;
-  const replacement=prefix+selected+suffix;
-  return {changes:{from:r.from,to:r.to,insert:replacement},
-   range:EditorSelection.range(r.from+prefix.length,r.from+prefix.length+selected.length)};
+ const edits=sourceInlineWrapChanges(view.state.doc.toString(),view.state.selection.ranges,prefix,suffix,placeholder);
+ if(edits===null){
+  explainProtectedSourceFormatting();view.focus();return true;
+ }
+ let i=0;
+ const transaction=view.state.changeByRange(()=>{
+  const edit=edits[i++];
+  return {changes:{from:edit.from,to:edit.to,insert:edit.insert},
+   range:EditorSelection.range(edit.selectionFrom,edit.selectionTo)};
  });
  view.dispatch({...transaction,annotations:isolateHistory.of('full')});view.focus();return true;
 }
