@@ -3,7 +3,7 @@
 @media (min-width:768px){
  .app-header-left{
   flex:0 0 auto;
-  width:clamp(430px,42vw,590px);
+  width:clamp(470px,45vw,630px);
   min-width:0;
   overflow-x:auto;
   scrollbar-width:none;
@@ -12,7 +12,7 @@
  .app-header-brand{flex:1 1 0;min-width:0;overflow:hidden}
  .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
  .app-header-actions>*{flex-shrink:0}
- .app-header-left #view-menu-trigger,.app-header-left #file-menu-trigger,.app-header-left #edit-menu-trigger{white-space:nowrap}
+ .app-header-left #view-menu-trigger,.app-header-left #file-menu-trigger,.app-header-left #edit-menu-trigger,.app-header-left #help-menu-trigger{white-space:nowrap}
 }
 /* Compact Notepad-inspired application menu; independent of editor pane overflow. */
 .workspace-view-menu{
@@ -144,3 +144,48 @@
 }
 .workspace-find-options label{display:flex;align-items:center;gap:7px}
 #edit-find-count{font-variant-numeric:tabular-nums}
+
+.workspace-help-dialog{
+ position:fixed;
+ inset:0;
+ z-index:95;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:16px;
+ background:rgba(0,0,0,.62);
+}
+.workspace-help-dialog[hidden]{display:none!important}
+.workspace-help-surface{
+ width:min(560px,100%);
+ max-height:calc(100dvh - 32px);
+ overflow:auto;
+ border:1px solid var(--border-ui);
+ border-radius:12px;
+ background:var(--bg-panel);
+ color:var(--text-ui);
+ box-shadow:0 18px 50px rgba(0,0,0,.44);
+}
+.workspace-help-header{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ padding:14px 18px;
+ border-bottom:1px solid var(--border-ui);
+}
+.workspace-help-header h2{font-size:16px;font-weight:700}
+.workspace-help-header button{
+ font-size:22px;
+ padding:1px 8px;
+ border-radius:5px;
+ color:var(--text-ui);
+}
+.workspace-help-header button:hover,.workspace-help-header button:focus-visible{background:var(--accent-soft)}
+.workspace-help-content{padding:16px 18px;font-size:13px;line-height:1.6}
+.workspace-help-content p{margin-bottom:12px}
+.workspace-help-content a{color:var(--accent);text-decoration:underline}
+.workspace-help-content table{width:100%;border-collapse:collapse}
+.workspace-help-content td{padding:8px 4px;border-bottom:1px solid var(--border-ui)}
+.workspace-help-content td:last-child{text-align:right}
+.workspace-help-content kbd{font-family:ui-monospace,monospace;white-space:nowrap;font-size:11px}

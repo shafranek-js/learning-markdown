@@ -105,6 +105,28 @@
                 </div>
             </div>
 
+            <!-- Help keeps documentation out of the editor formatting ribbon. -->
+            <div class="shrink-0">
+                <button id="help-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="help-menu">Help</button>
+                <div id="help-menu" class="workspace-view-menu" role="menu" aria-label="Help" hidden>
+                    <button type="button" role="menuitem" tabindex="-1" data-help-action="guide"><span data-help-label="guide">Course Contents</span></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-help-action="cheats"><span data-help-label="cheats">Markdown Cheat Sheet</span></button>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <button type="button" role="menuitem" tabindex="-1" data-help-action="shortcuts"><span data-help-label="shortcuts">Keyboard Shortcuts</span></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-help-action="about"><span data-help-label="about">About Learning Markdown</span></button>
+                </div>
+            </div>
+
+            <section id="help-info-dialog" class="workspace-help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-info-title" hidden>
+                <div class="workspace-help-surface">
+                    <header class="workspace-help-header">
+                        <h2 id="help-info-title"></h2>
+                        <button id="help-info-close" type="button" aria-label="Close dialog">×</button>
+                    </header>
+                    <div id="help-info-content" class="workspace-help-content"></div>
+                </div>
+            </section>
+
             <div class="app-header-brand min-w-0 border-l theme-border pl-3" data-course-ui>
                 <div class="flex items-center gap-2">
                     <h1 id="course-main-title" class="font-bold text-xs sm:text-sm md:text-base tracking-tight truncate">
