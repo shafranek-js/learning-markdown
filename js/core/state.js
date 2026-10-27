@@ -53,7 +53,7 @@ export const state=fromStorage();
 const observers=new Set();
 export function subscribe(fn){observers.add(fn);return ()=>observers.delete(fn);}
 export function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(error){console.warn('Unable to save progress:',error);}observers.forEach(fn=>fn(state));}
-export function resetCourse(){state.completedLessons=[];for(const key of Object.keys(state.savedDrafts))if(!key.startsWith('advanced_'))delete state.savedDrafts[key];state.currentLessonIndex=0;save();}
+export function resetCourse(){state.completedLessons=[];for(const key of Object.keys(state.savedDrafts))if(key.startsWith('lesson_'))delete state.savedDrafts[key];state.currentLessonIndex=0;save();}
 export const docKey=()=>state.currentLessonIndex===-1
  ?(state.activeDocumentTab[state.lang]?tabDraftKey(state.lang,state.activeDocumentTab[state.lang]):`sandbox_${state.lang}`)
  :state.currentLessonIndex>=8?`advanced_${state.currentLessonIndex-7}_${state.lang}`:`lesson_${state.currentLessonIndex+1}_${state.lang}`;
