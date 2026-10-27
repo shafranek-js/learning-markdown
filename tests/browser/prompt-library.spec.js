@@ -154,10 +154,14 @@ test('Expanded catalog filters ten categories and supports multi-term search',as
 
 test('Favorites and custom templates from old and new categories survive catalog upgrade',async({page})=>{
  await page.addInitScript(()=>{
-  localStorage.setItem('md_prompt_library_v1',JSON.stringify({
-   personal:[{id:'own_saved04',title:'Pre-existing work note',category:'Work',description:'Stored before update',body:'# {{topic}}'}],
-   favorites:['writing-blog','own_saved04']
-  }));
+  // Seed once per browser tab; do not overwrite newly saved items on reload.
+  if(!sessionStorage.getItem('md_prompt_upgrade_seeded')){
+   localStorage.setItem('md_prompt_library_v1',JSON.stringify({
+    personal:[{id:'own_saved04',title:'Pre-existing work note',category:'Work',description:'Stored before update',body:'# {{topic}}'}],
+    favorites:['writing-blog','own_saved04']
+   }));
+   sessionStorage.setItem('md_prompt_upgrade_seeded','1');
+  }
  });
  await page.goto('/');
  await openLibrary(page);
