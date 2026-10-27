@@ -91,12 +91,12 @@ function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();
  ru:['Отменить','Повторить','Заголовок 1','Заголовок 2','Заголовок 3','Заголовок 4','Заголовок 5','Заголовок 6','Жирный','Курсив','Зачёркнутый','Цитата','Маркеры','Нумерованный список','Список задач','Строчный код','Блок кода','Ссылка','Изображение','Таблица','Разделитель']};
  [$('undo-btn'),$('redo-btn'),...document.querySelectorAll('.toolbar-btn')].forEach((e,i)=>{const shortcut=e.title.match(/(Ctrl\+[^)]*|Cmd\+[^)]*)/i)?.[1];e.title=(tip[state.lang]?.[i]??tip.en[i])+(shortcut?` (${shortcut})`:'');});
  const titles={
- en:['Toggle course contents','Show or hide lesson guide','Drag to resize lesson guide','Drag to resize editor and preview; double-click for equal widths','Reset current lesson','Decrease font size','Increase font size'],
- cs:['Zobrazit obsah kurzu','Zobrazit nebo skrýt průvodce','Tažením změnit velikost průvodce','Tažením změnit šířky; dvojklik obnoví 50:50','Resetovat lekci','Zmenšit písmo','Zvětšit písmo'],
- uk:['Відкрити зміст курсу','Показати або сховати гід','Перетягніть, щоб змінити ширину гіда','Перетягніть роздільник; подвійний клік — 50:50','Скинути урок','Зменшити шрифт','Збільшити шрифт'],
- ro:['Deschide cuprinsul','Arată sau ascunde ghidul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
- ru:['Открыть содержание курса','Показать или скрыть гид урока','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
- ['contents-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i+(i?1:0)]);
+ en:['Toggle course contents','Drag to resize lesson guide','Drag to resize editor and preview; double-click for equal widths','Reset current lesson','Decrease font size','Increase font size'],
+ cs:['Zobrazit obsah kurzu','Tažením změnit velikost průvodce','Tažením změnit šířky; dvojklik obnoví 50:50','Resetovat lekci','Zmenšit písmo','Zvětšit písmo'],
+ uk:['Відкрити зміст курсу','Перетягніть, щоб змінити ширину гіда','Перетягніть роздільник; подвійний клік — 50:50','Скинути урок','Зменшити шрифт','Збільшити шрифт'],
+ ro:['Deschide cuprinsul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
+ ru:['Открыть содержание курса','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
+ ['contents-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
  renderCheats();renderExtensionsLabLanguage();renderDialectUI();renderUtilityMenuLanguage();renderViewMenuLanguage();renderFileMenuLanguage();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
 }
 function selectLesson(index,{route=true,scroll=true}={}){
