@@ -766,7 +766,9 @@ const droppedOriginalContent=[
  '<audio>Fallback audio text</audio>',
  '<svg><title>Vector label</title></svg>',
  '<math><mi>x</mi></math>',
- '<xmp><strong>Literal markup</strong></xmp>'
+ '<xmp><strong>Literal markup</strong></xmp>',
+ '<custom-label>Retain original custom element</custom-label>',
+ '<widget:note>Retain unknown namespace</widget:note>'
 ];
 for(const content of droppedOriginalContent){
  const original='Intro\n\n<table><tr><td>First '+content+
