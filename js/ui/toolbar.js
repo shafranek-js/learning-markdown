@@ -47,7 +47,7 @@ export function insertRichContent(group,id){
  return true;
 }
 export function insertAdvancedPageBreak(){
- insertSnippet('\n<div class="af-page-break"></div>\n',true);
+ insertBlockToolbar('pagebreak');
 }
 export function insertCodeBlock(){
  if(multiFencedBlock())return;

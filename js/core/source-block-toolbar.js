@@ -5,7 +5,8 @@ import {sourceSelectionTouchesFencedCode} from './source-line-format.js';
 // The same edits feed textarea and CodeMirror's atomic multi-range transaction.
 const EXAMPLES={
  hr:'\n---\n\n',
- spoiler:'\n<details>\n<summary>More information</summary>\n\nHidden content\n</details>\n'
+ spoiler:'\n<details>\n<summary>More information</summary>\n\nHidden content\n</details>\n',
+ pagebreak:'\n<div class="af-page-break"></div>\n'
 };
 export function sourceBlockToolbarChanges(source,ranges,kind){
  if(!Object.hasOwn(EXAMPLES,kind)||sourceSelectionTouchesFencedCode(source,ranges))return null;
@@ -16,10 +17,11 @@ export function sourceBlockToolbarChanges(source,ranges,kind){
    const insert=leading+EXAMPLES[kind],pos=from+insert.length;
    return {from,to,insert,selectionFrom:pos,selectionTo:pos};
   }
-  if(kind==='hr'){
+  if(kind==='hr'||kind==='pagebreak'){
    // Put the rule AFTER the selected content, even when a selection ends
    // mid-line. Preserve every character of the selection and its neighbors.
-   const insert=selected+(selected.endsWith('\n')?'\n':'\n\n')+'---\n\n';
+   const block=kind==='hr'?'---':'<div class="af-page-break"></div>';
+   const insert=selected+(selected.endsWith('\n')?'\n':'\n\n')+block+'\n\n';
    const pos=from+insert.length;
    return {from,to,insert,selectionFrom:pos,selectionTo:pos};
   }
