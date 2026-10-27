@@ -121,3 +121,42 @@ test('Mobile tab bar scrolls without clipping other app controls',async({page})=
  await page.keyboard.press('Home');
  await expect(tabs(page).first()).toHaveAttribute('aria-selected','true');
 });
+
+test('Upgrading from single Sandbox migrates legacy Markdown without losing its filename',async({page})=>{
+ await page.addInitScript(()=>{
+  if(!sessionStorage.getItem('legacy-tabs-seeded')){
+   localStorage.setItem('md_course_state_v1',JSON.stringify({
+    lang:'en',currentLessonIndex:-1,sandboxFileName:'Legacy.md',
+    savedDrafts:{sandbox_en:'# Existing legacy Sandbox draft'}
+   }));
+   sessionStorage.setItem('legacy-tabs-seeded','1');
+  }
+ });
+ await page.goto('/');
+ const source=page.locator('#markdown-input');
+ await expect(source).toHaveValue('# Existing legacy Sandbox draft');
+ await expect(tabs(page)).toHaveCount(1);
+ await expect(tabs(page).first()).toContainText('Legacy.md');
+ await newTab(page);
+ await source.fill('# New document');
+ await page.reload();
+ await expect(tabs(page)).toHaveCount(2);
+ await expect(source).toHaveValue('# New document');
+ await switchTo(page,await tabs(page).first().getAttribute('data-document-id'));
+ await expect(source).toHaveValue('# Existing legacy Sandbox draft');
+});
+
+test('Prompt Library writes only into the active Sandbox document',async({page})=>{
+ await page.goto('/');
+ await page.locator('#sandbox-mode-btn').click();
+ const source=page.locator('#markdown-input');
+ await source.fill('# Existing first document');
+ const first=await tabs(page).first().getAttribute('data-document-id');
+ await newTab(page);
+ await page.locator('#prompt-library-trigger').click();
+ await page.locator('[data-prompt-id="writing-blog"]').click();
+ await page.locator('#prompt-library-append').click();
+ await expect(source).toHaveValue(/# Role/);
+ await switchTo(page,first);
+ await expect(source).toHaveValue('# Existing first document');
+});
