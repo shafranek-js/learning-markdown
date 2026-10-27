@@ -225,7 +225,12 @@ function activate(enabled,{focus=true}={}){
   }
  };
  restoreViewport();
- if(active)view.requestMeasure({write:restoreViewport});
+ if(active){
+  view.requestMeasure({write:restoreViewport});
+  // A newly revealed CodeMirror view may apply its scroll anchor a frame
+  // later; reapply the source viewport once layout has fully stabilized.
+  requestAnimationFrame(()=>requestAnimationFrame(restoreViewport));
+ }
 }
 export function initMultiCursor({textarea,refresh}){
  input=textarea;updateUI=refresh;
