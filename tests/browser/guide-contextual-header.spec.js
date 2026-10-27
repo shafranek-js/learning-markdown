@@ -5,18 +5,32 @@ const courseControls=[
  '#advanced-cert-top-btn','#certificate-btn'
 ];
 
+const guideItem=page=>page.locator('#view-menu [data-view-action="guide"]');
+async function setGuide(page){
+ await page.locator('#view-menu-trigger').click();
+ await guideItem(page).click();
+}
+async function expectGuideSelection(page,checked){
+ await page.locator('#view-menu-trigger').click();
+ await expect(guideItem(page)).toHaveAttribute('aria-checked',String(checked));
+ await page.keyboard.press('Escape');
+}
+
 test('Lesson Guide hides course-only controls but preserves editor tools and settings',async({page})=>{
  await page.goto('/');
  const guide=page.locator('#theory-pane-toggle-btn');
  await expect(page.locator('#theory-panel')).toBeVisible();
+ await expect(guide).toBeHidden();
  await expect(guide).toHaveAttribute('aria-pressed','true');
+ await expectGuideSelection(page,true);
  await expect(page.locator('#contents-toggle-btn')).toBeVisible();
  for(const selector of courseControls)await expect(page.locator(selector)).toBeVisible();
 
- await guide.click();
+ await setGuide(page);
  await expect(page.locator('#theory-panel')).toBeHidden();
  await expect(guide).toHaveAttribute('aria-pressed','false');
  await expect(guide).toHaveAttribute('aria-expanded','false');
+ await expectGuideSelection(page,false);
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
  for(const selector of ['#sandbox-mode-btn','#cheatsheet-btn','#theme-selector','#lang-selector','#markdown-input','#markdown-preview'])
@@ -26,7 +40,7 @@ test('Lesson Guide hides course-only controls but preserves editor tools and set
  await expect(guide).toHaveAttribute('aria-pressed','false');
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
- await guide.click();
+ await setGuide(page);
  await expect(page.locator('#theory-panel')).toBeVisible();
  await expect(page.locator('#contents-toggle-btn')).toBeVisible();
  for(const selector of courseControls)await expect(page.locator(selector)).toBeVisible();
@@ -39,7 +53,7 @@ test('Sandbox hides course header and Lesson Guide button restores the course',a
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
  await expect(page.locator('#sandbox-mode-btn')).toBeVisible();
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
- await page.locator('#theory-pane-toggle-btn').click();
+ await setGuide(page);
  await expect(page.locator('#theory-panel')).toBeVisible();
  for(const selector of courseControls)await expect(page.locator(selector)).toBeVisible();
 });
@@ -47,7 +61,7 @@ test('Sandbox hides course header and Lesson Guide button restores the course',a
 test('Course-only controls do not reappear at larger responsive breakpoints',async({page})=>{
  await page.setViewportSize({width:1650,height:900});
  await page.goto('/');
- await page.locator('#theory-pane-toggle-btn').click();
+ await setGuide(page);
  for(const selector of ['#contents-toggle-btn','.app-header-brand','#advanced-course-btn','#advanced-cert-top-btn','#certificate-btn'])
   await expect(page.locator(selector)).toBeHidden();
  await expect(page.locator('#progress-label')).toBeHidden();
@@ -64,9 +78,15 @@ test('Mobile users can reopen Lesson Guide when Contents is hidden',async({page}
  await page.reload();
  const guide=page.locator('#theory-pane-toggle-btn');
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
- await expect(guide).toBeVisible();
+ await expect(guide).toBeHidden();
  await expect(guide).toHaveAttribute('aria-pressed','false');
- await guide.click();
+ await setGuide(page);
  await expect(guide).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#workspace-container')).toHaveAttribute('data-mobile-tab','guide');
+ await expect(page.locator('#theory-panel')).toBeVisible();
  await expect(page.locator('#contents-toggle-btn')).toBeVisible();
+ await setGuide(page);
+ await expect(page.locator('#workspace-container')).toHaveAttribute('data-mobile-tab','editor');
+ await expect(page.locator('#theory-panel')).toBeHidden();
+ await expect(page.locator('#contents-toggle-btn')).toBeHidden();
 });
