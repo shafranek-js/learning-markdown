@@ -1,6 +1,6 @@
 import {state,save} from '../core/state.js';
 import {definitionText} from '../core/extensions.js';
-import {insertSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolbar.js';
+import {insertStandaloneSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolbar.js';
 import {ADVANCED_PRESETS} from '../core/advanced-presets.js';
 import {RICH_CONTENT,RICH_GROUPS,richLabels} from '../data/rich-content.js';
 import {insertRichContent} from './toolbar.js';
@@ -211,7 +211,7 @@ function renderMermaidControls(){
  button.setAttribute('aria-label',locale.insert+': '+locale.group);
  button.addEventListener('click',()=>{
   const snippet=mermaidSnippet(select.value);
-  if(snippet)insertSnippet(snippet);
+  if(snippet)insertStandaloneSnippet(snippet);
  });
  root.append(label,select,button);
 }
@@ -247,7 +247,7 @@ export function renderAdvancedUI(){
   btn.setAttribute('aria-label',words.insert+': '+words.actions[i]);
   btn.title=words.actions[i]+' · HTML';
   btn.append(label,action);
-  btn.addEventListener('click',()=>insertSnippet(item.source+'\n'));
+  btn.addEventListener('click',()=>insertStandaloneSnippet(item.source+'\n'));
   root.append(btn);
   const toolbarButton=document.querySelector('[data-action="'+item.action+'"]');
   if(toolbarButton){toolbarButton.title=words.actions[i]+' · HTML';toolbarButton.setAttribute('aria-label',words.actions[i]+' · HTML');}
@@ -255,7 +255,7 @@ export function renderAdvancedUI(){
 }
 export function initAdvancedUI(){
  $('definition-html-insert').addEventListener('click',()=>{
-  insertSnippet('\n\n<dl>\n  <dt>Term A</dt>\n  <dd>First <strong>definition</strong>.</dd>\n  <dd>Second definition.</dd>\n  <dt>Term B</dt>\n  <dd>Another explanation.</dd>\n</dl>\n\n');
+  insertStandaloneSnippet('\n\n<dl>\n  <dt>Term A</dt>\n  <dd>First <strong>definition</strong>.</dd>\n  <dd>Second definition.</dd>\n  <dt>Term B</dt>\n  <dd>Another explanation.</dd>\n</dl>\n\n');
  });
  const button=$('advanced-tools-toggle');
  button.addEventListener('click',()=>{

@@ -1,4 +1,4 @@
-import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiFencedBlock,multiImage,multiBlockToolbar,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
+import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiStandaloneSnippet,multiFencedBlock,multiImage,multiBlockToolbar,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 import {formatSourceLineSelection} from '../core/source-line-format.js';
@@ -6,6 +6,7 @@ import {formatSourceInlineSelection} from '../core/source-inline-format.js';
 import {formatSourceFencedBlockSelection} from '../core/source-fenced-block.js';
 import {formatSourceImageSelection} from '../core/source-image-insertion.js';
 import {formatSourceBlockToolbarSelection} from '../core/source-block-toolbar.js';
+import {formatSourceStandaloneSnippet} from '../core/source-standalone-snippet.js';
 import {explainProtectedSourceFormatting,explainImageSelectionFailure} from './line-format-feedback.js';
 export function setHeading(level){
  if(multiHeading(level))return;
@@ -22,6 +23,14 @@ export function setHeading(level){
  applyEdit(formatted.text,caret,singleCaret?caret:formatted.end);
 }
 export function insertSnippet(snippet,newline=true){if(multiInsert(snippet,newline))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,p=newline&&s>0&&v[s-1]!=='\n'?'\n':'';const value=p+snippet,pos=s+value.length;applyEdit(v.slice(0,s)+value+v.slice(e),pos,pos);}
+export function insertStandaloneSnippet(snippet){
+ if(multiStandaloneSnippet(snippet))return;
+ const input=area();
+ const change=formatSourceStandaloneSnippet(
+  input.value,input.selectionStart,input.selectionEnd,snippet);
+ if(change===null){explainProtectedSourceFormatting();return;}
+ applyEdit(change.text,change.start,change.end);
+}
 function wrap(prefix,suffix=prefix,placeholder='text'){
  if(multiWrap(prefix,suffix,placeholder))return;
  const a=area(),formatted=formatSourceInlineSelection(a.value,a.selectionStart,a.selectionEnd,prefix,suffix,placeholder);

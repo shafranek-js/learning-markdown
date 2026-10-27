@@ -82,6 +82,7 @@ export function renderMultiCursorUI(){
 }
 export const multiWrap=(a,b,placeholder)=>multiActive()?multi.multiCursorWrap(a,b,placeholder):false;
 export const multiInsert=(s,newline)=>multiActive()?multi.multiCursorInsert(s,newline):false;
+export const multiStandaloneSnippet=snippet=>multiActive()?multi.multiCursorStandaloneSnippet(snippet):false;
 export const multiFencedBlock=()=>multiActive()?multi.multiCursorFencedBlock():false;
 export const multiImage=()=>multiActive()?multi.multiCursorImage():false;
 export const multiBlockToolbar=kind=>multiActive()?multi.multiCursorBlockToolbar(kind):false;
