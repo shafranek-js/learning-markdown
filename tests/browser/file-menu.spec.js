@@ -23,17 +23,17 @@ test('File menu imports UTF-8 Markdown into Sandbox and preserves course draft',
  await expect(page.locator('#file-menu-current')).toHaveText('My notes.md');
 });
 
-test('New Markdown protects existing Sandbox text and resets name only when confirmed',async({page})=>{
+test('New Markdown opens another tab without overwriting existing Sandbox text',async({page})=>{
  await page.goto('/');
  await page.locator('#sandbox-mode-btn').click();
  const source=page.locator('#markdown-input');
  await source.fill('Keep this **draft**');
- page.once('dialog',dialog=>dialog.dismiss());
- await select(page,'new');
- await expect(source).toHaveValue('Keep this **draft**');
- page.once('dialog',dialog=>dialog.accept());
+ const first=await page.locator('#document-tab-list [data-document-id]').first().getAttribute('data-document-id');
  await select(page,'new');
  await expect(source).toHaveValue('');
+ await expect(page.locator('#document-tab-list [data-document-id]')).toHaveCount(2);
+ await page.locator('#document-tab-list [data-document-id="'+first+'"]').click();
+ await expect(source).toHaveValue('Keep this **draft**');
  await fileTrigger(page).click();
  await expect(page.locator('#file-menu-current')).toHaveText('Untitled.md');
 });
