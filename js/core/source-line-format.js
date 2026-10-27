@@ -42,7 +42,8 @@ function protectedFences(lines){
 }
 
 export function sourceLineFormatEdits(source,ranges,kind){
- if(typeof source!=='string'||!Array.isArray(ranges)||!ranges.length||!KINDS.has(kind))return null;
+ const heading=/^h[1-6]$/.test(kind)?Number(kind[1]):null;
+ if(typeof source!=='string'||!Array.isArray(ranges)||!ranges.length||(!KINDS.has(kind)&&!heading))return null;
  const lines=sourceLines(source),fenced=protectedFences(lines),selected=new Set();
  for(const range of ranges){
   if(!range||!Number.isInteger(range.from)||!Number.isInteger(range.to)||
@@ -58,6 +59,21 @@ export function sourceLineFormatEdits(source,ranges,kind){
  const edits=[];let ordinal=0,previous=-2;
  for(const i of [...selected].sort((a,b)=>a-b)){
   const line=lines[i],value=line.text;
+  if(heading){
+   // A multiline selection may contain blank separators. Preserve them;
+   // an isolated empty line still gets a useful Heading placeholder.
+   if(!value.trim()&&selected.size>1)continue;
+   // Markdown's four-space and tab indents are code, not ATX headings.
+   // Refuse the whole selection rather than half-converting its lines.
+   if(/^(?: {4,}|\t)\S/.test(value))return null;
+   const atx=value.match(/^( {0,3})(#{1,6})(?:[ \t]+|$)(.*)$/);
+   const leading=atx?atx[1]:(value.match(/^ {0,3}/)?.[0]||'');
+   const content=atx?atx[3]:value.slice(leading.length);
+   const next=atx?.[2].length===heading?leading+content:
+    leading+'#'.repeat(heading)+' '+(content||'Heading '+heading);
+   if(next!==value)edits.push({from:line.from,to:line.to,insert:next});
+   continue;
+  }
   const indent=value.match(/^[ \t]*/)[0],body=value.slice(indent.length);
   const taskMark=body.match(/^(?:[-*+]|\d+[.)])\s+\[([ xX])\]\s+/);
   const bare=body.replace(/^(?:>\s*)+/,'')

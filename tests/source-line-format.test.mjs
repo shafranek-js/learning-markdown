@@ -56,6 +56,43 @@ const apply=(source,edits)=>[...edits].reverse().reduce((text,e)=>
  const formatted=formatSourceLineSelection(source,0,source.indexOf('World'),'ul');
  assert.equal(formatted.text,'- Hello\r\nWorld\r\n');
 }
+
+// H1–H6 toolbar parity: multi-line prose, existing headings, blank separators,
+// selected-line boundaries and atomic rejection of Markdown code.
+{
+ const source='Before\n\nFirst\n\nSecond\n\nAfter';
+ const formatted=formatSourceLineSelection(source,source.indexOf('First'),source.indexOf('\n\nAfter'),'h2');
+ assert.equal(formatted.text,'Before\n\n## First\n\n## Second\n\nAfter');
+ assert.equal(formatted.text.slice(formatted.start,formatted.end),'## First\n\n## Second');
+}
+{
+ const source='One\n## Second\n### Third\nAfter';
+ assert.equal(formatSourceLineSelection(source,0,source.indexOf('After'),'h2').text,
+  '## One\nSecond\n## Third\nAfter');
+}
+{
+ const source='   Already';
+ assert.equal(formatSourceLineSelection(source,3,3,'h3').text,'   ### Already');
+ assert.equal(formatSourceLineSelection('## Existing',5,5,'h2').text,'Existing');
+ assert.equal(formatSourceLineSelection('',0,0,'h1').text,'# Heading 1');
+}
+{
+ const source='One\nTwo\nThree';
+ const edits=sourceLineFormatEdits(source,[
+  {from:0,to:source.indexOf('Two')},
+  {from:source.indexOf('Two'),to:source.length}
+ ],'h1');
+ assert.equal(edits.length,3);
+ assert.equal(apply(source,edits),'# One\n# Two\n# Three');
+}
+{
+ const source='Prose\n~~~markdown\n# Not heading\n~~~\nAfter';
+ assert.equal(formatSourceLineSelection(source,0,source.length,'h4'),null);
+ assert.equal(sourceLineFormatEdits(source,[{from:source.indexOf('# Not heading'),to:source.indexOf('# Not heading')}],'h4'),null);
+ assert.equal(formatSourceLineSelection('Intro\n    indented code',0,'Intro\n    indented code'.length,'h3'),null);
+ assert.equal(formatSourceLineSelection('Intro\n\tcode',0,'Intro\n\tcode'.length,'h3'),null);
+}
+
 assert.equal(sourceLineFormatEdits('ABC',[{from:2,to:1}],'quote'),null);
 assert.equal(sourceLineFormatEdits('ABC',[{from:0,to:1}],'invalid'),null);
 console.log('Source line toolbar formatting: passed');
