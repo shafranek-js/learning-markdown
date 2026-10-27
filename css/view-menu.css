@@ -3,7 +3,7 @@
 @media (min-width:768px){
  .app-header-left{
   flex:0 0 auto;
-  width:clamp(390px,38vw,540px);
+  width:clamp(430px,42vw,590px);
   min-width:0;
   overflow-x:auto;
   scrollbar-width:none;
@@ -12,7 +12,7 @@
  .app-header-brand{flex:1 1 0;min-width:0;overflow:hidden}
  .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
  .app-header-actions>*{flex-shrink:0}
- .app-header-left #view-menu-trigger,.app-header-left #file-menu-trigger{white-space:nowrap}
+ .app-header-left #view-menu-trigger,.app-header-left #file-menu-trigger,.app-header-left #edit-menu-trigger{white-space:nowrap}
 }
 /* Compact Notepad-inspired application menu; independent of editor pane overflow. */
 .workspace-view-menu{
@@ -92,3 +92,55 @@
  color:var(--text-ui-muted);
  white-space:nowrap;
 }
+
+.workspace-find-panel{
+ position:fixed;
+ z-index:79;
+ box-sizing:border-box;
+ width:min(520px,calc(100vw - 16px));
+ max-height:calc(100dvh - 16px);
+ overflow-y:auto;
+ padding:12px;
+ border:1px solid var(--border-ui);
+ border-radius:10px;
+ background:var(--bg-panel);
+ color:var(--text-ui);
+ box-shadow:0 12px 34px rgba(0,0,0,.38);
+ font-size:12px;
+}
+.workspace-find-panel[hidden],.workspace-find-row[hidden]{display:none!important}
+.workspace-find-row{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:7px;
+ margin-bottom:7px;
+}
+.workspace-find-row label{flex:0 0 80px;font-size:11px;color:var(--text-ui-muted)}
+.workspace-find-row input{
+ flex:1 1 130px;
+ min-width:95px;
+ padding:7px;
+ border:1px solid var(--border-ui);
+ border-radius:5px;
+ color:var(--text-ui);
+ background:var(--bg-editor);
+ outline-offset:2px;
+}
+.workspace-find-row button{
+ padding:6px 8px;
+ border-radius:5px;
+ border:1px solid var(--border-ui);
+ background:var(--bg-panel-alt);
+ color:var(--text-ui);
+}
+.workspace-find-row button:hover,.workspace-find-row button:focus-visible{background:var(--accent-soft)}
+.workspace-find-options{
+ display:flex;
+ gap:12px;
+ justify-content:space-between;
+ align-items:center;
+ color:var(--text-ui-muted);
+}
+.workspace-find-options label{display:flex;align-items:center;gap:7px}
+#edit-find-count{font-variant-numeric:tabular-nums}

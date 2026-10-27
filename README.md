@@ -26,6 +26,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 - [Lesson Guide and editor workspace](#lesson-guide-and-editor-workspace)
 - [View menu](#view-menu)
 - [File menu](#file-menu)
+- [Edit menu](#edit-menu)
 - [Learn Markdown](#learn-markdown)
 - [Editing and shortcuts](#editing-and-shortcuts)
 - [Compatibility and export](#compatibility-and-export)
@@ -128,6 +129,16 @@ Use the mouse or keyboard: focus **View**, press **Arrow Down** to open, navigat
 - **Download** generates a new `.md` download using the existing portability warnings. **Download As…** asks for a filename and updates the remembered Sandbox filename after a successful download.
 - **Export HTML** and **Print / PDF** reuse their established Preview export functions, including Mermaid rendering safety.
 - **Save** on this website is a **download**, not silent overwriting of the imported disk file. Standard browser file pickers do not grant persistent disk-write permission. The current Sandbox text and filename are persisted locally across refreshes; they are not a replacement for backing up the downloaded file.
+
+## Edit menu
+
+**Edit** provides **Undo**, **Redo**, **Find…** (`Ctrl/Cmd+F` in the editor), **Replace…** (`Ctrl/Cmd+H` in the editor), **Select All**, and the current **Multi-cursor** switch.
+
+- Find/Replace searches the literal **Markdown source**, not the rendered Preview; punctuation (such as `[link]` and `a+b`) is not interpreted as regular expressions.
+- Search is case-insensitive by default; **Match case** is optional. Next and Previous wrap around the document.
+- **Replace** edits the selected match; if no match is selected, it selects the next occurrence. **Replace All** edits all occurrences in one undoable operation.
+- The same Edit actions work in the standard textarea and the optional CodeMirror multi-cursor editor, without creating an extra document or bypassing either editor's history.
+- Keyboard focus supports the normal dropdown Arrow/Home/End/Escape navigation. Find/Replace opens as a compact overlay without shifting the resizable Split View.
 
 ## Learn Markdown
 

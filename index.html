@@ -47,6 +47,40 @@
             </div>
             <input id="file-menu-open-input" type="file" accept=".md,.markdown,.txt,text/plain,text/markdown" hidden tabindex="-1">
 
+            <!-- Text editing commands share the active textarea/CodeMirror source. -->
+            <div class="shrink-0">
+                <button id="edit-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="edit-menu">Edit</button>
+                <div id="edit-menu" class="workspace-view-menu" role="menu" aria-label="Edit" hidden>
+                    <button type="button" role="menuitem" tabindex="-1" data-edit-action="undo"><span data-edit-label="undo">Undo</span><kbd>Ctrl+Z</kbd></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-edit-action="redo"><span data-edit-label="redo">Redo</span><kbd>Ctrl+Y</kbd></button>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <button type="button" role="menuitem" tabindex="-1" data-edit-action="find"><span data-edit-label="find">Find…</span><kbd>Ctrl+F</kbd></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-edit-action="replace"><span data-edit-label="replace">Replace…</span><kbd>Ctrl+H</kbd></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-edit-action="select-all"><span data-edit-label="selectAll">Select All</span><kbd>Ctrl+A</kbd></button>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <button type="button" role="menuitemcheckbox" tabindex="-1" data-edit-action="multi-cursor" aria-checked="false"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-edit-label="multi">Multi-cursor</span></button>
+                </div>
+            </div>
+            <!-- Popover never replaces or reflows the Split View; all editing is source-only. -->
+            <section id="edit-find-panel" class="workspace-find-panel" role="region" aria-label="Find and replace" hidden>
+                <div class="workspace-find-row">
+                    <label for="edit-find-input" data-edit-label="find">Find</label>
+                    <input id="edit-find-input" type="search" autocomplete="off" spellcheck="false">
+                    <button id="edit-find-prev" type="button" data-edit-label="previous">Previous</button>
+                    <button id="edit-find-next" type="button" data-edit-label="next">Next</button>
+                    <button id="edit-find-close" type="button" aria-label="Close find panel">×</button>
+                </div>
+                <div id="edit-replace-row" class="workspace-find-row" hidden>
+                    <label for="edit-replace-input" data-edit-label="replacement">Replace with</label>
+                    <input id="edit-replace-input" type="text" autocomplete="off" spellcheck="false">
+                    <button id="edit-replace-one" type="button" data-edit-label="replaceOne">Replace</button>
+                    <button id="edit-replace-all" type="button" data-edit-label="replaceAll">Replace All</button>
+                </div>
+                <div class="workspace-find-options">
+                    <label><input id="edit-find-match-case" type="checkbox"><span data-edit-label="matchCase">Match case</span></label>
+                    <span id="edit-find-count" role="status" aria-live="polite"></span>
+                </div>
+            </section>
             <!-- Standard application View menu. Quick formatting remains in the editor toolbar. -->
             <div class="shrink-0">
                 <button id="view-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="view-menu">View</button>

@@ -135,6 +135,32 @@ export function refreshEditor({notify=true}={}){
 }
 export function setEditorContent(value,{resetSelection=true}={}){const a=area();a.value=value;if(resetSelection)a.setSelectionRange(value.length,value.length);ensureHistory(docKey(),value);if(multiActive())multi.loadMultiCursorDocument(value,resetSelection);refreshEditor();}
 export function applyEdit(text,start,end,{focus=true}={}){if(multiActive()){multi.multiCursorEdit(text,start,end,{focus});return;}const a=area();record(docKey(),a.value,a.selectionStart,a.selectionEnd,{force:true});a.value=text;if(focus)a.focus();a.setSelectionRange(start,end);record(docKey(),text,start,end,{force:true});refreshEditor();}
+// The Edit menu reads the active editor rather than assuming textarea focus.
+export function sourceSelection(){
+ if(multiActive())return multi.editSelection();
+ return {from:area().selectionStart,to:area().selectionEnd};
+}
+export function selectSourceRange(from,to){
+ if(multiActive())return multi.editSelectRange(from,to);
+ area().focus();area().setSelectionRange(from,to);
+ refreshEditor({notify:false});return true;
+}
+export function selectAllSource(){
+ if(multiActive())return multi.editSelectAll();
+ return selectSourceRange(0,area().value.length);
+}
+export function replaceSourceRange(from,to,insert){
+ if(multiActive())return multi.editReplaceRange(from,to,insert);
+ const source=area().value;
+ applyEdit(source.slice(0,from)+insert+source.slice(to),from+insert.length,from+insert.length);
+ return true;
+}
+export function replaceAllSource(nextText){
+ if(nextText===area().value)return false;
+ if(multiActive())return multi.editReplaceRange(0,area().value.length,nextText);
+ applyEdit(nextText,0,0);
+ return true;
+}
 export function undoOrRedo(direction){if(multiActive()){multi.multiCursorUndoOrRedo(direction);return;}const snap=step(docKey(),direction);if(!snap)return;const a=area();a.value=snap.text;a.focus();a.setSelectionRange(snap.start,snap.end);refreshEditor();}
 export function initEditor(listener){onChange=listener;const a=area(),backdrop=el('editor-highlight-backdrop'),gutter=el('line-gutter');let scheduled=false;
  applyWrapPreference();
