@@ -383,6 +383,7 @@
                         id="markdown-input"
                         wrap="soft"
                         aria-label="Markdown editor"
+                        aria-describedby="editor-tab-help"
                         class="editor-shared-metrics"
                         placeholder="# Write your Markdown here..."
                         spellcheck="false"
@@ -390,6 +391,7 @@
                         autocapitalize="off"
                     ></textarea>
                     <div id="codemirror-mount" hidden aria-label="Multi-cursor Markdown editor"></div>
+                    <span id="editor-tab-help" class="sr-only">Tab indents. Press Control+M to let Tab move keyboard focus.</span>
                 </div>
             </div>
 
@@ -469,6 +471,7 @@
             <span id="cursor-position" class="hidden sm:inline">Ln 1, Col 1</span>
         </div>
         <div class="flex items-center gap-2 sm:gap-4 shrink-0">
+            <button id="tab-focus-toggle" type="button" class="shrink-0 whitespace-nowrap px-1 rounded hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1" aria-pressed="false" title="Ctrl+M toggles Tab focus navigation">Tab: Indent</button>
             <span id="split-ratio-indicator" class="hidden md:inline">Split: 50% / 50%</span>
             <span id="history-status" class="hidden sm:inline">History: 1/1</span>
             <span id="editor-mode-status" class="hidden sm:inline">Lesson</span>
