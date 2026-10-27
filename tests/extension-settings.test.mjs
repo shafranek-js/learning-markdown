@@ -4,11 +4,13 @@ import {
  normalizeExtensionSettings,changeExtension,extensionEnabled,parserExtensionOptions,
  EXTENSIONS,EXTENSION_TEXT
 } from '../js/core/extensions.js';
-const samples={lesson_1_en:{softbreaks:true},sandbox_ru:{softbreaks:true},
+const samples={lesson_1_en:{softbreaks:true},sandbox_ru:{softbreaks:true},sandbox_doc_en_tab_12345678:{softbreaks:true,footnotes:true},sandbox_doc_en_tab_wrong!:{softbreaks:true},
  'lesson_9_en':{softbreaks:true},'__proto__':{softbreaks:true},
  lesson_2_cs:{softbreaks:'true'},advanced_1_uk:{unapproved:true}};
 const clean=normalizeExtensionSettings(samples);
-assert.deepEqual(Object.keys(clean).sort(),['lesson_1_en','sandbox_ru']);
+assert.deepEqual(Object.keys(clean).sort(),['lesson_1_en','sandbox_doc_en_tab_12345678','sandbox_ru']);
+assert.equal(extensionEnabled(clean,'sandbox_doc_en_tab_12345678','gfm','softbreaks'),true);
+assert.deepEqual(parserExtensionOptions(clean,'sandbox_doc_en_tab_12345678','gfm'),{breaks:true});
 assert.equal(clean['__proto__'],undefined);
 assert.equal(extensionEnabled(clean,'lesson_1_en','gfm','softbreaks'),true);
 assert.equal(extensionEnabled(clean,'lesson_1_en','commonmark','softbreaks'),false);
@@ -21,6 +23,10 @@ assert.equal(extensionEnabled(other,'lesson_2_en','gfm','softbreaks'),true);
 assert.equal(extensionEnabled(clean,'lesson_2_en','gfm','softbreaks'),false);
 assert.equal(Object.hasOwn(changeExtension(other,'lesson_2_en','softbreaks',false),'lesson_2_en'),false);
 assert(!Object.hasOwn(changeExtension(other,'lesson_3_en','evil',true),'lesson_3_en'));
+const changedTab=changeExtension(clean,'sandbox_doc_cs_tab_abcdefgh','softbreaks',true);
+assert.equal(extensionEnabled(changedTab,'sandbox_doc_cs_tab_abcdefgh','gfm','softbreaks'),true);
+assert.equal(extensionEnabled(changeExtension(changedTab,'sandbox_doc_cs_tab_abcdefgh','softbreaks',false),'sandbox_doc_cs_tab_abcdefgh','gfm','softbreaks'),false);
+assert(!Object.hasOwn(changeExtension(clean,'sandbox_doc_en_tab_<script>','softbreaks',true),'sandbox_doc_en_tab_<script>'));
 assert.equal(Object.keys(EXTENSIONS).length,5);
 for(const lang of ['en','cs','uk','ro','ru']){
  const text=EXTENSION_TEXT[lang];
