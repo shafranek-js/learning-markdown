@@ -9,6 +9,8 @@ import {state,save,docKey} from '../core/state.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 import {markdownListEnterChange,editMarkdownListKey} from '../core/source-list-keyboard.js';
+import {sourceLineFormatEdits} from '../core/source-line-format.js';
+import {explainProtectedSourceFormatting} from './line-format-feedback.js';
 
 // Source-oriented highlighting: only token colors and deliberately matched link/strike styles.
 // Never style headings as underlined, or strong/emphasis as bold/italic in source view.
@@ -348,31 +350,11 @@ export function multiCursorHeading(level){
 export function multiCursorLineFormat(kind){
  if(!active)return false;
  if(!['ul','ol','task','quote'].includes(kind))return false;
- const doc=view.state.doc,lines=new Set();
- for(const r of view.state.selection.ranges){
-  const first=doc.lineAt(r.from).number,last=doc.lineAt(r.to).number;
-  const end=r.to>r.from&&doc.line(last).from===r.to?last-1:last;
-  for(let n=first;n<=Math.max(first,end);n++)lines.add(n);
- }
- const edits=[];let ordinal=0,previous=-2;
- for(const n of [...lines].sort((a,b)=>a-b)){
-  const line=doc.line(n),value=line.text;
-  const indent=value.match(/^[ \t]*/)[0],body=value.slice(indent.length);
-  // Preserve existing checked tasks if the same task style is reapplied.
-  const taskMark=body.match(/^(?:[-*+]|\d+[.)])\s+\[([ xX])\]\s+/);
-  // Replace existing Markdown list/quote markers instead of nesting them.
-  const bare=body.replace(/^(?:>\s*)+/, '')
-   .replace(/^(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/, '');
-  let prefix;
-  if(kind==='ol'){
-   if(n!==previous+1)ordinal=0;
-   prefix=(++ordinal)+'. ';
-  }else if(kind==='task'){
-   prefix=taskMark&&/[xX]/.test(taskMark[1])?'- [x] ':'- [ ] ';
-  }else prefix={ul:'- ',quote:'> '}[kind];
-  previous=n;
-  const next=indent+prefix+bare;
-  if(next!==value)edits.push({from:line.from,to:line.to,insert:next});
+ const edits=sourceLineFormatEdits(view.state.doc.toString(),view.state.selection.ranges,kind);
+ if(edits===null){
+  explainProtectedSourceFormatting();
+  view.focus();
+  return true;
  }
  dispatchFormattingChanges(view,edits);
  view.focus();return true;
