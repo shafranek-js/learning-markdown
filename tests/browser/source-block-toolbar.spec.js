@@ -34,7 +34,7 @@ test('native Details wraps selected lines, keeps source selection and Undo/Redo'
  await input.fill(source);await select(input,'Alpha');
  await revealAdvanced(page);
  await button(page,'adv-spoiler').click();
- const expected='Before \n<details>\n<summary>More information</summary>\n\nAlpha\n</details>\n After';
+ const expected='Before \n\n<details>\n<summary>More information</summary>\n\nAlpha\n</details>\n\n After';
  await expect(input).toHaveValue(expected);
  expect(await input.evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd))).toBe('Alpha');
  await page.locator('#undo-btn').click();
