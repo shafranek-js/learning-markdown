@@ -4,7 +4,7 @@ import {
  normalizeExtensionSettings,changeExtension,extensionEnabled,parserExtensionOptions,
  EXTENSIONS,EXTENSION_TEXT
 } from '../js/core/extensions.js';
-const samples={lesson_1_en:{softbreaks:true},sandbox_ru:{softbreaks:true},sandbox_doc_en_tab_12345678:{softbreaks:true,footnotes:true},sandbox_doc_en_tab_wrong!:{softbreaks:true},
+const samples={lesson_1_en:{softbreaks:true},sandbox_ru:{softbreaks:true},sandbox_doc_en_tab_12345678:{softbreaks:true,footnotes:true},'sandbox_doc_en_tab_wrong!':{softbreaks:true},
  'lesson_9_en':{softbreaks:true},'__proto__':{softbreaks:true},
  lesson_2_cs:{softbreaks:'true'},advanced_1_uk:{unapproved:true}};
 const clean=normalizeExtensionSettings(samples);
