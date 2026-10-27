@@ -144,7 +144,7 @@ test('Expanded catalog filters ten categories and supports multi-term search',as
  await chooseTemplate(page,'design-accessibility-plan');
  await expect(page.locator('#prompt-library-variables textarea')).toHaveCount(3);
  await category.selectOption('all');
- await page.locator('#prompt-library-search').fill('SQL joins');
+ await page.locator('#prompt-library-search').fill('SQL join');
  await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(1);
  await expect(page.locator('#prompt-library-list [data-prompt-id]').first()).toHaveAttribute('data-prompt-id','coding-sql-review');
  await page.locator('#prompt-library-search').clear();
@@ -168,7 +168,7 @@ test('Favorites and custom templates from old and new categories survive catalog
  await page.locator('#prompt-library-new').click();
  await page.locator('#prompt-own-title').fill('New research note');
  await page.locator('#prompt-own-category').selectOption('Research');
- await page.locator('#prompt-own-body').fill('# {{question}}\\n\\n## Sources\\n{{sources}}');
+ await page.locator('#prompt-own-body').fill('# {{question}}\n\n## Sources\n{{sources}}');
  await page.locator('#prompt-own-save').click();
  await expect(page.locator('#prompt-library-selected-title')).toHaveText('New research note');
  await page.locator('#prompt-library-close').click();
