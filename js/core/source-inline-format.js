@@ -14,6 +14,13 @@ export function sourceInlineWrapChanges(source,ranges,prefix,suffix,placeholder)
   const inner=source.slice(from+marker.length,to-marker.length);
   // Whitespace-only and padded delimiter pairs are literal Markdown text.
   if(!inner||/^\s|\s$/.test(inner))return false;
+  // A double underscore is strong emphasis, not a single-underscore italic.
+  // Triple underscores encode both, so removing one delimiter is valid.
+  if(marker==='_'&&source.slice(from,from+2)==='__'&&
+     source.slice(to-2,to)==='__'&&
+     !(source.slice(from,from+3)==='___'&&source.slice(to-3,to)==='___'))return false;
+  if(marker==='_'&&source[from-1]==='_'&&source[to]==='_'&&
+     !(source[from-2]==='_'&&source[to+1]==='_'))return false;
   // A backslash escaping the opening delimiter must remain untouched.
   const before=source.slice(0,from).match(/\\+$/)?.[0]?.length||0;
   if(before%2===1)return false;
@@ -36,8 +43,15 @@ export function sourceInlineWrapChanges(source,ranges,prefix,suffix,placeholder)
   const inner=full?selected.slice(full.length,-full.length):(selected||placeholder);
   const from=around?range.from-around.length:range.from;
   const to=around?range.to+around.length:range.to;
-  const insert=full||around?inner:prefix+inner+suffix;
-  const selectionFrom=from+(full||around?0:prefix.length);
+  // In an identifier (file_name) underscores cannot create CommonMark
+  // emphasis. Prefer '*' there while preserving the default '_' elsewhere.
+  const inWord=prefix==='_'&&suffix==='_'&&
+   /[\p{L}\p{N}_]/u.test(source[range.from-1]||'')&&
+   /[\p{L}\p{N}_]/u.test(source[range.to]||'');
+  const opening=!full&&!around&&inWord?'*':prefix;
+  const closing=!full&&!around&&inWord?'*':suffix;
+  const insert=full||around?inner:opening+inner+closing;
+  const selectionFrom=from+(full||around?0:opening.length);
   return {from,to,insert,selectionFrom,selectionTo:selectionFrom+inner.length};
  });
 }
