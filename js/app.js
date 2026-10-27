@@ -7,7 +7,7 @@ import {advancedLesson,verifyAdvancedLesson,ADVANCED_IDS} from './data/advanced-
 import {verifyLesson} from './core/validator.js';
 import {initEditor,area,setEditorContent,refreshEditor,applyEdit} from './ui/editor.js';
 import {renderMultiCursorUI,renderWrapTextUI,renderTabFocusUI} from './ui/editor.js';
-import {initToolbar,insertSnippet} from './ui/toolbar.js';
+import {initToolbar,insertSnippet,insertStandaloneSnippet} from './ui/toolbar.js';
 import {initTablePicker,renderTablePickerLanguage} from './ui/table-picker.js';
 import {initTableEditor,renderTableEditorLanguage} from './ui/table-editor.js';
 import {renderPractice} from './ui/deep-practice.js';
@@ -186,7 +186,7 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertStandaloneSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
