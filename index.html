@@ -673,7 +673,13 @@
                         </div>
                         <div id="prompt-library-variables"></div>
                         <label for="prompt-library-output" id="prompt-library-output-label">Prepared Markdown prompt</label>
-                        <textarea id="prompt-library-output" readonly spellcheck="false" rows="13"></textarea>
+                        <div class="prompt-library-output-grid">
+                            <textarea id="prompt-library-output" readonly spellcheck="false" rows="13"></textarea>
+                            <section class="prompt-library-rendered-pane" aria-labelledby="prompt-library-preview-label">
+                                <h4 id="prompt-library-preview-label">Rendered Markdown preview</h4>
+                                <div id="prompt-library-rendered" class="md-preview"></div>
+                            </section>
+                        </div>
                         <p id="prompt-library-safety"></p>
                         <div class="prompt-library-actions">
                             <button type="button" id="prompt-library-append" class="prompt-library-primary">Add to Sandbox</button>
