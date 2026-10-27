@@ -8,10 +8,8 @@ export function applyRatio(){const editor=$('editor-pane'),container=$('ide-spli
 }
 export function showGuide(visible){
  const panel=$('theory-panel'),splitter=$('resizer-guide-editor'),toggle=$('theory-pane-toggle-btn');
- // On mobile the Guide toggle replaces Contents while the guide is closed.
- // On desktop the md:inline-flex utility continues to show the toggle.
- toggle.classList.toggle('hidden',visible);
- toggle.classList.toggle('inline-flex',!visible);
+ // The header no longer contains a visible Guide toggle.
+ // Retain this hidden command target until all internal callers migrate to View.
  panel.classList.toggle('hidden',!visible);
  splitter.classList.toggle('hidden',!visible);
  splitter.classList.toggle('md:flex',visible);
