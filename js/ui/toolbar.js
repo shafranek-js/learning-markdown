@@ -2,6 +2,7 @@ import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiHeading,multiLineFo
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 import {formatSourceLineSelection} from '../core/source-line-format.js';
+import {formatSourceInlineSelection} from '../core/source-inline-format.js';
 import {explainProtectedSourceFormatting} from './line-format-feedback.js';
 const FENCE='```';
 export function setHeading(level){
@@ -19,8 +20,11 @@ export function setHeading(level){
  applyEdit(formatted.text,caret,singleCaret?caret:formatted.end);
 }
 export function insertSnippet(snippet,newline=true){if(multiInsert(snippet,newline))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,p=newline&&s>0&&v[s-1]!=='\n'?'\n':'';const value=p+snippet,pos=s+value.length;applyEdit(v.slice(0,s)+value+v.slice(e),pos,pos);}
-function wrap(prefix,suffix=prefix,placeholder='text'){if(multiWrap(prefix,suffix,placeholder))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,selection=v.slice(s,e)||placeholder;
- const next=v.slice(0,s)+prefix+selection+suffix+v.slice(e);applyEdit(next,s+prefix.length,s+prefix.length+selection.length);
+function wrap(prefix,suffix=prefix,placeholder='text'){
+ if(multiWrap(prefix,suffix,placeholder))return;
+ const a=area(),formatted=formatSourceInlineSelection(a.value,a.selectionStart,a.selectionEnd,prefix,suffix,placeholder);
+ if(formatted===null){explainProtectedSourceFormatting();return;}
+ applyEdit(formatted.text,formatted.start,formatted.end);
 }
 export function applyAdvancedPreset(group,value){
  const cssClass=presetClass(group,value);
