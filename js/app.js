@@ -91,12 +91,12 @@ function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();
  ru:['Отменить','Повторить','Заголовок 1','Заголовок 2','Заголовок 3','Заголовок 4','Заголовок 5','Заголовок 6','Жирный','Курсив','Зачёркнутый','Цитата','Маркеры','Нумерованный список','Список задач','Строчный код','Блок кода','Ссылка','Изображение','Таблица','Разделитель']};
  [$('undo-btn'),$('redo-btn'),...document.querySelectorAll('.toolbar-btn')].forEach((e,i)=>{const shortcut=e.title.match(/(Ctrl\+[^)]*|Cmd\+[^)]*)/i)?.[1];e.title=(tip[state.lang]?.[i]??tip.en[i])+(shortcut?` (${shortcut})`:'');});
  const titles={
- en:['Toggle course contents','Show or hide lesson guide','Drag to resize lesson guide','Drag to resize editor and preview; double-click for equal widths','Reset current lesson','Decrease font size','Increase font size'],
- cs:['Zobrazit obsah kurzu','Zobrazit nebo skrýt průvodce','Tažením změnit velikost průvodce','Tažením změnit šířky; dvojklik obnoví 50:50','Resetovat lekci','Zmenšit písmo','Zvětšit písmo'],
- uk:['Відкрити зміст курсу','Показати або сховати гід','Перетягніть, щоб змінити ширину гіда','Перетягніть роздільник; подвійний клік — 50:50','Скинути урок','Зменшити шрифт','Збільшити шрифт'],
- ro:['Deschide cuprinsul','Arată sau ascunde ghidul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
- ru:['Открыть содержание курса','Показать или скрыть гид урока','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
- ['contents-toggle-btn','theory-pane-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
+ en:['Toggle course contents','Drag to resize lesson guide','Drag to resize editor and preview; double-click for equal widths','Reset current lesson','Decrease font size','Increase font size'],
+ cs:['Zobrazit obsah kurzu','Tažením změnit velikost průvodce','Tažením změnit šířky; dvojklik obnoví 50:50','Resetovat lekci','Zmenšit písmo','Zvětšit písmo'],
+ uk:['Відкрити зміст курсу','Перетягніть, щоб змінити ширину гіда','Перетягніть роздільник; подвійний клік — 50:50','Скинути урок','Зменшити шрифт','Збільшити шрифт'],
+ ro:['Deschide cuprinsul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
+ ru:['Открыть содержание курса','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
+ ['contents-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
  renderCheats();renderExtensionsLabLanguage();renderDialectUI();renderUtilityMenuLanguage();renderViewMenuLanguage();renderFileMenuLanguage();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
 }
 function selectLesson(index,{route=true,scroll=true}={}){
@@ -208,16 +208,20 @@ function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang
  if(r.dialect&&r.dialect!==state.dialect){state.dialect=r.dialect;rerender=true;}
  if(r.index!==null&&r.index!==state.currentLessonIndex){state.currentLessonIndex=r.index;rerender=true;}
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
+function toggleGuide(){
+ if(state.currentLessonIndex===-1){state.guideVisible=true;selectLesson(0);return;}
+ state.guideVisible=!state.guideVisible;showGuide(state.guideVisible);save();
+}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu();initFileMenu({replaceSandbox:replaceSandboxDocument,saveMarkdown:saveCurrentMarkdown});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu({onGuideToggle:toggleGuide});initFileMenu({replaceSandbox:replaceSandboxDocument,saveMarkdown:saveCurrentMarkdown});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
  selectLesson(state.currentLessonIndex,{route:false});syncRoute(state);onRouteChange(setFromRoute);
  document.addEventListener('advanced-course-open',()=>{selectLesson(8);toggleContents(false);if(window.matchMedia('(max-width:767px)').matches)setMobileTab('guide');});
  $('theme-selector').addEventListener('change',e=>setTheme(e.target.value));$('dialect-selector').addEventListener('change',e=>setDialect(e.target.value));$('lang-selector').addEventListener('change',e=>setLanguage(e.target.value));
- $('theory-pane-toggle-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1){state.guideVisible=true;selectLesson(0);return;}state.guideVisible=!state.guideVisible;showGuide(state.guideVisible);save();});
+
  $('sandbox-mode-btn').addEventListener('click',()=>{selectLesson(state.currentLessonIndex===-1?0:-1);if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');});
  $('toggle-hint-btn').addEventListener('click',()=>$('hint-box').classList.toggle('hidden'));
  $('insert-solution-btn').addEventListener('click',()=>{if(state.currentLessonIndex===-1)return;const txt=getLesson(state.currentLessonIndex).hint;applyEdit(txt,txt.length,txt.length);});

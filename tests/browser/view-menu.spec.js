@@ -40,16 +40,16 @@ test('View menu follows Lesson Guide and Sandbox state',async({page})=>{
  await open(page);
  await expect(item(page,'guide')).toHaveAttribute('aria-checked','true');
  await item(page,'guide').click();
- await expect(page.locator('#theory-pane-toggle-btn')).toHaveAttribute('aria-pressed','false');
+ await expect(page.locator('#theory-panel')).toBeHidden();
  await open(page);
  await expect(item(page,'guide')).toHaveAttribute('aria-checked','false');
  await item(page,'guide').click();
- await expect(page.locator('#theory-pane-toggle-btn')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#theory-panel')).toBeVisible();
  await page.locator('#sandbox-mode-btn').click();
  await open(page);
  await expect(item(page,'guide')).toHaveAttribute('aria-checked','false');
  await item(page,'guide').click();
- await expect(page.locator('#theory-pane-toggle-btn')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#theory-panel')).toBeVisible();
 });
 
 test('View menu supports keyboard, Escape, outside click and five languages',async({page})=>{
@@ -97,7 +97,7 @@ test('Mobile View menu remains inside the screen and switches preview safely',as
  expect(rect.y).toBeGreaterThanOrEqual(0);
  expect(rect.y+rect.height).toBeLessThanOrEqual(844);
  await item(page,'guide').click();
- await expect(page.locator('#theory-pane-toggle-btn')).toHaveAttribute('aria-pressed','false');
+ await expect(page.locator('#theory-panel')).toBeHidden();
  await choose(page,'preview');
  await expect(page.locator('#workspace-container')).toHaveAttribute('data-mobile-tab','preview');
  await expect(page.locator('#preview-pane')).toBeVisible();
