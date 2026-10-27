@@ -44,6 +44,8 @@ test('Native Tab and Shift+Tab adjust selected list lines without losing caret',
  await editor.fill('- One\nPlain paragraph');
  await editor.evaluate(el=>{el.focus();el.setSelectionRange(0,el.value.length);});
  await editor.press('Tab');
+ await expect(editor).toHaveValue('  - One\n  Plain paragraph');
+ await editor.press('Shift+Tab');
  await expect(editor).toHaveValue('- One\nPlain paragraph');
 });
 
