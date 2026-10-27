@@ -53,3 +53,12 @@
  #prompt-library-variables{grid-template-columns:1fr}
  .prompt-library-header p{max-width:250px}
 }
+
+.prompt-library-output-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-height:220px}
+.prompt-library-rendered-pane{border:1px solid var(--border-ui);border-radius:6px;background:var(--bg-preview);color:var(--preview-text);min-height:0;overflow:auto;padding:8px}
+.prompt-library-rendered-pane h4{font-size:11px;color:var(--text-ui-muted);font-weight:650;margin:0 0 8px}
+#prompt-library-rendered{font-size:12px;line-height:1.55;overflow-wrap:anywhere;max-height:290px;overflow-y:auto}
+@media(max-width:650px){
+ .prompt-library-output-grid{grid-template-columns:1fr}
+ #prompt-library-rendered{max-height:200px}
+}
