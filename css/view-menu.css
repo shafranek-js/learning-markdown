@@ -1,8 +1,19 @@
 /* Give the header's fixed-size controls real space. The course title may truncate,
    but neither View nor the progress indicator may overlap or intercept clicks. */
 @media (min-width:768px){
- .app-header-left{flex:1 1 0;min-width:0}
+ .app-header-left{
+  flex:0 0 auto;
+  width:clamp(350px,38vw,520px);
+  min-width:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+ }
+ .app-header-left::-webkit-scrollbar,.app-header-actions::-webkit-scrollbar{display:none}
  .app-header-brand{flex:1 1 0;min-width:0;overflow:hidden}
+ /* Secondary header actions can scroll when there is not enough horizontal space.
+    This keeps Course Progress and the app menu from overlapping on 1280px screens. */
+ .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+ .app-header-actions>*{flex-shrink:0}
  .app-header-left #view-menu-trigger{white-space:nowrap}
 }
 /* Compact Notepad-inspired application menu; independent of editor pane overflow. */
