@@ -447,3 +447,29 @@ export function multiCursorLineFormat(kind){
  dispatchFormattingChanges(view,edits);
  view.focus();return true;
 }
+
+// Expose source-focused operations to the shared Edit menu. Keep CodeMirror's
+// history and selection model authoritative in multi-cursor mode.
+export function editSelection(){
+ if(!active||!view)return null;
+ const r=view.state.selection.main;
+ return {from:r.from,to:r.to};
+}
+export function editSelectRange(from,to){
+ if(!active||!view)return false;
+ view.dispatch({selection:EditorSelection.single(from,to),scrollIntoView:true});
+ view.focus();
+ return true;
+}
+export function editSelectAll(){
+ if(!active||!view)return false;
+ return editSelectRange(0,view.state.doc.length);
+}
+export function editReplaceRange(from,to,insert){
+ if(!active||!view)return false;
+ view.dispatch({changes:{from,to,insert},
+  selection:EditorSelection.cursor(from+insert.length),
+  annotations:isolateHistory.of('full'),scrollIntoView:true});
+ view.focus();
+ return true;
+}
