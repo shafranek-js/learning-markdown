@@ -319,6 +319,22 @@ function selectedHTMLTable(entry){
  }
  return {doc,target,root:tables[0],model:modelFromHTML(target.outerHTML),sourceRange};
 }
+// Rowspans crossing thead/tbody/tfoot boundaries are structurally unsafe
+// for visual serialization. Keep them source-only and explain the precise reason.
+function crossesTableRowGroup(table){
+ for(const group of table.children){
+  if(!['THEAD','TBODY','TFOOT'].includes(group.tagName))continue;
+  const rows=[...group.children].filter(child=>child.tagName==='TR');
+  for(let row=0;row<rows.length;row++){
+   for(const cell of rows[row].children){
+    if(!['TH','TD'].includes(cell.tagName))continue;
+    const rowspan=cell.getAttribute('rowspan');
+    if(rowspan!==null&&Number(rowspan)>rows.length-row)return true;
+   }
+  }
+ }
+ return false;
+}
 // Reason codes are UI-neutral. The Preview explains why this table is
 // read-only instead of silently dropping the user's cell selection.
 export function getTableReadOnlyReason(source,index){
@@ -333,7 +349,8 @@ export function getTableReadOnlyReason(source,index){
  if(!target)return 'unmapped';
  if(target.querySelector('table'))return 'container';
  if(unmodeledRichMetadata(entry))return 'unsupported';
- return selectedHTMLTable(entry)?.model?null:'invalid-grid';
+ if(selectedHTMLTable(entry)?.model)return null;
+ return crossesTableRowGroup(target)?'cross-section-span':'invalid-grid';
 }
 function replaceSelectedTable(entry,resolved,updated){
  if(!updated)return null;
