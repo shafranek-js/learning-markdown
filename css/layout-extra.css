@@ -25,8 +25,11 @@ body{min-width:0}
  /* Keep Contents tappable; additional header controls scroll in their own lane. */
  .app-header{overflow-x:visible}
  .app-header-brand{display:none}
- .app-header-left{flex:0 0 auto}
- .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain}
+ /* Menus and workspace actions use independent scroll lanes on small screens.
+    Neither group can push the other outside the viewport. */
+ .app-header-left{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
+ .app-header-left>*{flex-shrink:0}
+ .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
  .app-header-actions>*{flex-shrink:0}
 }
 @media print{

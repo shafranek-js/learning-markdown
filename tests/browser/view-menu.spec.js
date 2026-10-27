@@ -68,7 +68,7 @@ test('View menu supports keyboard, Escape, outside click and five languages',asy
  await open(page);
  await page.keyboard.press('Tab');
  await expect(menu(page)).toBeHidden();
- await expect(page.locator('#sandbox-mode-btn')).toBeFocused();
+ await expect(page.locator('#help-menu-trigger')).toBeFocused();
  await open(page);
  await page.keyboard.press('Shift+Tab');
  await expect(menu(page)).toBeHidden();

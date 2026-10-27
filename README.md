@@ -27,6 +27,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 - [View menu](#view-menu)
 - [File menu](#file-menu)
 - [Edit menu](#edit-menu)
+- [Help menu](#help-menu)
 - [Learn Markdown](#learn-markdown)
 - [Editing and shortcuts](#editing-and-shortcuts)
 - [Compatibility and export](#compatibility-and-export)
@@ -139,6 +140,17 @@ Use the mouse or keyboard: focus **View**, press **Arrow Down** to open, navigat
 - **Replace** edits the selected match; if no match is selected, it selects the next occurrence. **Replace All** edits all occurrences in one undoable operation.
 - The same Edit actions work in the standard textarea and the optional CodeMirror multi-cursor editor, without creating an extra document or bypassing either editor's history.
 - Keyboard focus supports the normal dropdown Arrow/Home/End/Escape navigation. Find/Replace opens as a compact overlay without shifting the resizable Split View.
+
+## Help menu
+
+**Help** groups existing course navigation and reference tools without adding permanent toolbar controls:
+
+- **Course Contents** reopens Lesson Guide (if needed) and the lesson list. Returning from Sandbox keeps the saved Sandbox draft.
+- **Markdown Cheat Sheet** opens the same existing syntax reference as the header button.
+- **Keyboard Shortcuts** shows a keyboard-accessible quick reference covering common File/Edit actions, text formatting and multi-cursor.
+- **About Learning Markdown** shows the actual running build string (package version and commit revision) plus the project repository.
+
+The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewport, Escape dismissal and focus return. Opening Help does not alter Markdown source or progress.
 
 ## Learn Markdown
 
