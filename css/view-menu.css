@@ -1,3 +1,10 @@
+/* Give the header's fixed-size controls real space. The course title may truncate,
+   but neither View nor the progress indicator may overlap or intercept clicks. */
+@media (min-width:768px){
+ .app-header-left{flex:1 1 0;min-width:0}
+ .app-header-brand{flex:1 1 0;min-width:0;overflow:hidden}
+ .app-header-left #view-menu-trigger{white-space:nowrap}
+}
 /* Compact Notepad-inspired application menu; independent of editor pane overflow. */
 .workspace-view-menu{
  position:fixed;
