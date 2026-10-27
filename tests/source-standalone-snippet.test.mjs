@@ -22,7 +22,7 @@ const apply=(source,changes)=>changes.reduceRight((doc,e)=>
 {
  const source='One\nTwo\nThree',start=0,end=source.indexOf('Three');
  const out=formatSourceStandaloneSnippet(source,start,end,example);
- assert.equal(out.text,'One\nTwo\n\n'+example+'\nThree');
+ assert.equal(out.text,'One\nTwo\n\n'+example+'\n\nThree');
  assert.equal(out.text.slice(0,start+end),source.slice(0,end));
 }
 {
