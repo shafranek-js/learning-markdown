@@ -128,7 +128,7 @@ export function renderPromptLibraryLanguage(){
  button('all',w.all);button('favorites',w.favorites);button('mine',w.mine);
  button('append',w.append);button('replace',w.replace);button('copy',w.copy);
  button('download',w.download);button('edit',w.edit);button('delete',w.delete);
- button('save',w.save);button('cancel',w.cancel);
+ $('prompt-own-save').textContent=w.save;$('prompt-own-cancel').textContent=w.cancel;
  $('prompt-library-close').setAttribute('aria-label',w.close);
  const cat=$('prompt-library-category'),personalCat=$('prompt-own-category');
  const previous=cat.value;cat.replaceChildren();personalCat.replaceChildren();
