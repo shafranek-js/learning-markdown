@@ -151,6 +151,15 @@ export function initEditor(listener){onChange=listener;const a=area(),backdrop=e
    }
    const edit=editMarkdownListKey(a.value,start,end,e.key,{shiftKey:e.shiftKey});
    if(edit){e.preventDefault();applyEdit(edit.text,edit.start,edit.end);return;}
+   if(e.key==='Tab'&&e.shiftKey){
+    // With one caret, outdent an indented prose/code line just like CodeMirror.
+    // On an unindented line, leave Shift+Tab to normal browser focus traversal.
+    const outdent=indentSourceSelection(a.value,start,start,true);
+    if(outdent&&outdent.text!==a.value){
+     e.preventDefault();applyEdit(outdent.text,outdent.start,outdent.end);
+    }
+    return;
+   }
    if(e.key==='Tab'&&!e.shiftKey){
     e.preventDefault();
     applyEdit(a.value.slice(0,start)+'  '+a.value.slice(end),start+2,start+2);
