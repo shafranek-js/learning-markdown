@@ -52,3 +52,21 @@ test('Course-only controls do not reappear at larger responsive breakpoints',asy
   await expect(page.locator(selector)).toBeHidden();
  await expect(page.locator('#progress-label')).toBeHidden();
 });
+
+test('Mobile users can reopen Lesson Guide when Contents is hidden',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.evaluate(()=>{
+  const key='md_course_state_v1';
+  const saved=JSON.parse(localStorage.getItem(key)||'{}');
+  localStorage.setItem(key,JSON.stringify({...saved,guideVisible:false}));
+ });
+ await page.reload();
+ const guide=page.locator('#theory-pane-toggle-btn');
+ await expect(page.locator('#contents-toggle-btn')).toBeHidden();
+ await expect(guide).toBeVisible();
+ await expect(guide).toHaveAttribute('aria-pressed','false');
+ await guide.click();
+ await expect(guide).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#contents-toggle-btn')).toBeVisible();
+});
