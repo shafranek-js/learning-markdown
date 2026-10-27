@@ -785,7 +785,7 @@ const outerCustomPrefix='<table><tr><td><custom-note>Keep me</custom-note>';
 const innerSafe='<table><tr><td>Editable leaf</td></tr></table>';
 const outerCustomSuffix='<span>Following the leaf</span></td></tr></table>';
 const outerCustom=outerCustomPrefix+innerSafe+outerCustomSuffix;
-assert.equal(getTableReadOnlyReason(outerCustom,0),'container');
+assert.equal(getTableReadOnlyReason(outerCustom,0),'unsupported');
 assert.equal(getTableReadOnlyReason(outerCustom,1),null);
 const customLeafEdit=setTableCellText(outerCustom,1,0,0,'Changed leaf');
 assert(customLeafEdit?.text.startsWith(outerCustomPrefix));
