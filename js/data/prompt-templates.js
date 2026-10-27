@@ -1,6 +1,7 @@
 // Original offline Markdown templates. No AI requests or external services.
-export const PROMPT_CATEGORIES=["Writing","Coding","Analysis","Learning","Work"];
-export const BUILTIN_PROMPTS=[
+import {EXPANDED_PROMPTS} from './prompt-templates-expanded.js';
+export const PROMPT_CATEGORIES=["Writing","Coding","Analysis","Learning","Work","Research","Design & UX","Career","Marketing","Productivity"];
+const CORE_PROMPTS=[
   {
     "id": "writing-blog",
     "category": "Writing",
@@ -162,3 +163,5 @@ export const BUILTIN_PROMPTS=[
     "tip": "Action-oriented Markdown sections clarify deliverables and ownership."
   }
 ];
+// Preserve all original IDs and their positions for existing favorites.
+export const BUILTIN_PROMPTS=[...CORE_PROMPTS,...EXPANDED_PROMPTS];
