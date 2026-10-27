@@ -35,6 +35,30 @@
                 <span data-i18n="guideBtn">Lesson Guide</span>
             </button>
 
+            <!-- Standard application View menu. Quick formatting remains in the editor toolbar. -->
+            <div class="shrink-0">
+                <button id="view-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="view-menu">View</button>
+                <div id="view-menu" class="workspace-view-menu" role="menu" aria-label="View" hidden>
+                    <button type="button" role="menuitemcheckbox" aria-checked="true" tabindex="-1" data-view-action="wrap"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="wrap">Word Wrap</span></button>
+                    <button type="button" role="menuitemcheckbox" aria-checked="true" tabindex="-1" data-view-action="guide"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="guide">Lesson Guide</span></button>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <div role="group" aria-labelledby="view-layout-label">
+                        <div id="view-layout-label" class="workspace-menu-section" data-view-label="layout">Layout</div>
+                        <button type="button" role="menuitemradio" aria-checked="true" tabindex="-1" data-view-action="split"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="split">Split View</span></button>
+                        <button type="button" role="menuitemradio" aria-checked="false" tabindex="-1" data-view-action="preview"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="preview">Preview Only</span></button>
+                        <button type="button" role="menuitemradio" aria-checked="false" tabindex="-1" data-view-action="html"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="html">HTML Source</span></button>
+                    </div>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <div role="group" aria-labelledby="view-font-label">
+                        <div id="view-font-label" class="workspace-menu-section" data-view-label="font">Editor font</div>
+                        <button type="button" role="menuitem" tabindex="-1" data-view-action="smaller"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="smaller">Decrease font size</span></button>
+                        <button type="button" role="menuitem" tabindex="-1" data-view-action="larger"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="larger">Increase font size</span></button>
+                    </div>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <button type="button" role="menuitem" tabindex="-1" data-view-action="reset"><span class="workspace-menu-mark" aria-hidden="true"></span><span data-view-label="reset">Reset split widths (50:50)</span></button>
+                </div>
+            </div>
+
             <div class="app-header-brand min-w-0 border-l theme-border pl-3" data-course-ui>
                 <div class="flex items-center gap-2">
                     <h1 id="course-main-title" class="font-bold text-xs sm:text-sm md:text-base tracking-tight truncate">

@@ -24,6 +24,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 - [What you can do](#what-you-can-do)
 - [A quick tour](#a-quick-tour)
 - [Lesson Guide and editor workspace](#lesson-guide-and-editor-workspace)
+- [View menu](#view-menu)
 - [Learn Markdown](#learn-markdown)
 - [Editing and shortcuts](#editing-and-shortcuts)
 - [Compatibility and export](#compatibility-and-export)
@@ -72,8 +73,8 @@ Your document drafts and learning progress stay in your browser. No account, ser
 ## A quick tour
 
 1. Open the [live app](https://shafranek-js.github.io/learning-markdown/).
-2. Select **AI Prompt Sandbox** for an empty-ended writing exercise, or **Contents** for guided lessons.
-3. Write Markdown on the left and inspect **Live Preview** on the right. Drag the divider to change their widths. Toggle **Lesson Guide** to focus on the editor when you don't need the course panel.
+2. Select **AI Prompt Sandbox** for free-form writing, or **Contents** (when Lesson Guide is enabled) for guided lessons.
+3. Write Markdown on the left and inspect **Live Preview** on the right. Drag the divider to change their widths. Open **View** for Word Wrap, Lesson Guide, layout modes, editor font sizing and a 50:50 reset.
 4. Use **Wrap text** for long lines, or **Multi-cursor** to insert/edit at several positions at once.
 5. Choose **Export** above Preview to download Markdown or HTML, or print to PDF.
 
@@ -102,13 +103,20 @@ The **Lesson Guide** button switches between a learning-focused layout and a les
 |---|---|---|
 | Course title, subtitle and progress indicator | Shown (where screen width permits) | Hidden |
 | **Beyond Markdown** and the two certificate buttons | Shown | Hidden |
-| **Contents**, **Lesson Guide**, **AI Prompt Sandbox** and **Cheat Sheet** | Available | Available |
+| **Contents** (course navigation) | Available | Hidden |
+| **Lesson Guide**, **View**, **AI Prompt Sandbox** and **Cheat Sheet** | Available | Available |
 | Theme, language, Markdown toolbar, editor, Preview and export tools | Available | Available |
 
 - Closing the guide also closes the guide panel and its resize handle; the editor/Preview can use the freed space. Reopen it with **Lesson Guide**.
 - Your guide visibility preference survives a page reload. Course navigation, saved drafts and progress remain intact.
 - **AI Prompt Sandbox** is a dedicated free-form writing view. It hides the lesson-specific header and guide; the **Lesson Guide** button returns to the course.
-- The **Contents** drawer remains the place to navigate lessons, track progress and access course actions, even while the guide is hidden.
+- **Contents** is hidden while Lesson Guide is off. Re-enable Lesson Guide to restore course navigation; the **View** menu offers that switch even on small screens.
+
+## View menu
+
+The compact **View** menu provides the same actions as the existing editor controls: **Word Wrap**, **Lesson Guide**, **Split View / Preview Only / HTML Source**, **Decrease / Increase font size**, and **Reset split widths (50:50)**. The current checkmarks and radio selection reflect actual workspace state. Quick formatting tools remain in the Markdown toolbar; no file, editing, or course data is changed by opening the menu.
+
+Use the mouse or keyboard: focus **View**, press **Arrow Down** to open, navigate with **Up/Down/Home/End**, choose an item with **Enter** or **Space**, or press **Escape** to close and return focus. **Tab / Shift+Tab** leave the menu and continue normal keyboard navigation. The menu is available in English, Czech, Ukrainian, Romanian and Russian. Existing saved preferences are reused, including Word Wrap, Lesson Guide visibility, layout mode and editor font size.
 
 ## Learn Markdown
 
