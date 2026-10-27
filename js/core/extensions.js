@@ -7,7 +7,7 @@ export const EXTENSIONS=Object.freeze({
  emojiShortcodes:Object.freeze({id:'emojiShortcodes',category:'app',modes:Object.freeze(['gfm']),option:Object.freeze({})})
 });
 const LANG='en|cs|uk|ro|ru';
-export const validDocumentKey=key=>new RegExp('^(?:sandbox|lesson_[1-8]|advanced_[1-7])_(?:'+LANG+')$').test(key);
+export const validDocumentKey=key=>typeof key==='string'&&(/^(?:sandbox|lesson_[1-8]|advanced_[1-7])_(?:en|cs|uk|ro|ru)$/.test(key)||/^sandbox_doc_(?:en|cs|uk|ro|ru)_tab_[a-z0-9_-]{4,64}$/.test(key));
 export function normalizeExtensionSettings(data){
  const out=Object.create(null);
  if(!data||typeof data!=='object'||Array.isArray(data))return out;

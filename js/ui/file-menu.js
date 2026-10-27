@@ -54,7 +54,7 @@ function openMenu({last=false}={}){
  position();
  (last?items().at(-1):items()[0])?.focus();
 }
-export function initFileMenu({replaceSandbox,saveMarkdown}){
+export function initFileMenu({createDocument,renameDocument,saveMarkdown}){
  const trigger=$('file-menu-trigger'),menu=$('file-menu'),input=$('file-menu-open-input');
  function openPicker(){input.value='';input.click();}
  function saveAs(){
@@ -63,7 +63,7 @@ export function initFileMenu({replaceSandbox,saveMarkdown}){
   const name=normalizeMarkdownFilename(chosen);
   if(!name){window.alert(words().invalid);return;}
   if(saveMarkdown(name)&&state.currentLessonIndex===-1){
-   state.sandboxFileName=name;save();syncName();
+   renameDocument(name);syncName();
   }
  }
  async function importFile(file){
@@ -73,12 +73,12 @@ export function initFileMenu({replaceSandbox,saveMarkdown}){
   try{
    const source=await file.text();
    const name=normalizeMarkdownFilename(file.name)||'Untitled.md';
-   replaceSandbox(source,name,words().replace);
+   createDocument(source,name);
   }catch(error){console.warn('Unable to open Markdown file',error);window.alert(words().readError);}
  }
  input.addEventListener('change',()=>{const file=input.files?.[0];input.value='';if(file)void importFile(file);});
  const actions={
-  new:()=>replaceSandbox('','Untitled.md',words().replace),
+  new:()=>createDocument('','Untitled.md'),
   open:openPicker,
   save:()=>saveMarkdown(),
   'save-as':saveAs,
@@ -123,7 +123,7 @@ export function initFileMenu({replaceSandbox,saveMarkdown}){
   }
   if((event.ctrlKey||event.metaKey)&&!event.altKey&&!event.shiftKey&&!event.isComposing){
    if(event.code==='KeyN'){
-    event.preventDefault();closeMenu();replaceSandbox('','Untitled.md',words().replace);
+    event.preventDefault();closeMenu();createDocument('','Untitled.md');
    }else if(event.code==='KeyO'){
     event.preventDefault();closeMenu();openPicker();
    }else if(event.code==='KeyS'){

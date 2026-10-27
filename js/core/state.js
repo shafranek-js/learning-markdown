@@ -1,8 +1,9 @@
 import {normalizeExtensionSettings} from './extensions.js';
+import {normalizeDocumentTabs,normalizeActiveDocumentTabs,tabDraftKey} from './document-tabs.js';
 import {EXTENSIONS_LABS,extensionsLabIds} from '../data/extensions-track.js';
 export const STORAGE_KEY='md_course_state_v1';
 const LEGACY_KEY='learning_markdown_studio_v3';
-export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],completedAdvancedLessons:[],extensionsLabCompleted:[],extensionsLabDrafts:{},extensionsLabCurrent:EXTENSIONS_LABS[0].id,savedDrafts:{},sandboxFileName:'Untitled.md',extensionSettingsByDocument:{},tocMaxDepth:6,tocOpen:false,guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,multiCursorMode:false,wrapText:true,tabFocusMode:false,dialect:'gfm',deepPracticeExpanded:false,advancedToolsOpen:false,advancedCategory:'all',advancedLabExpanded:false,advancedPresetChoices:{},advancedRichChoices:{},layoutMode:'split',mobileTab:'editor',name:''};
+export const defaults={lang:'en',theme:'codepen',currentLessonIndex:0,completedLessons:[],completedAdvancedLessons:[],extensionsLabCompleted:[],extensionsLabDrafts:{},extensionsLabCurrent:EXTENSIONS_LABS[0].id,savedDrafts:{},sandboxFileName:'Untitled.md',documentTabs:{},activeDocumentTab:{},extensionSettingsByDocument:{},tocMaxDepth:6,tocOpen:false,guideVisible:true,guideWidth:350,editorRatio:0.5,fontSize:15,multiCursorMode:false,wrapText:true,tabFocusMode:false,dialect:'gfm',deepPracticeExpanded:false,advancedToolsOpen:false,advancedCategory:'all',advancedLabExpanded:false,advancedPresetChoices:{},advancedRichChoices:{},layoutMode:'split',mobileTab:'editor',name:''};
 const LANGS=new Set(['en','cs','uk','ro','ru']);
 export const DIALECTS=new Set(['gfm','commonmark','original']);
 const THEMES=new Set(['codepen','midnight','daylight','dracula','nord','solarized']);
@@ -27,6 +28,8 @@ function fromStorage(){
    extensionsLabDrafts:safeLabDrafts(saved.extensionsLabDrafts),
    extensionsLabCurrent:extensionsLabIds.has(saved.extensionsLabCurrent)?saved.extensionsLabCurrent:EXTENSIONS_LABS[0].id,
    savedDrafts:saved.savedDrafts&&typeof saved.savedDrafts==='object'&&!Array.isArray(saved.savedDrafts)?saved.savedDrafts:{},
+   documentTabs:normalizeDocumentTabs(saved.documentTabs),
+   activeDocumentTab:normalizeActiveDocumentTabs(saved.activeDocumentTab,normalizeDocumentTabs(saved.documentTabs)),
    sandboxFileName:typeof saved.sandboxFileName==='string'&&/^[^\/\\\x00-\x1f]{1,120}\.md$/i.test(saved.sandboxFileName)?saved.sandboxFileName:'Untitled.md',
    extensionSettingsByDocument:normalizeExtensionSettings(saved.extensionSettingsByDocument),
    tocMaxDepth:Number.isInteger(saved.tocMaxDepth)&&saved.tocMaxDepth>=1&&saved.tocMaxDepth<=6?saved.tocMaxDepth:6,
@@ -50,5 +53,7 @@ export const state=fromStorage();
 const observers=new Set();
 export function subscribe(fn){observers.add(fn);return ()=>observers.delete(fn);}
 export function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(error){console.warn('Unable to save progress:',error);}observers.forEach(fn=>fn(state));}
-export function resetCourse(){state.completedLessons=[];for(const key of Object.keys(state.savedDrafts))if(!key.startsWith('advanced_'))delete state.savedDrafts[key];state.currentLessonIndex=0;save();}
-export const docKey=()=>state.currentLessonIndex===-1?`sandbox_${state.lang}`:state.currentLessonIndex>=8?`advanced_${state.currentLessonIndex-7}_${state.lang}`:`lesson_${state.currentLessonIndex+1}_${state.lang}`;
+export function resetCourse(){state.completedLessons=[];for(const key of Object.keys(state.savedDrafts))if(key.startsWith('lesson_'))delete state.savedDrafts[key];state.currentLessonIndex=0;save();}
+export const docKey=()=>state.currentLessonIndex===-1
+ ?(state.activeDocumentTab[state.lang]?tabDraftKey(state.lang,state.activeDocumentTab[state.lang]):`sandbox_${state.lang}`)
+ :state.currentLessonIndex>=8?`advanced_${state.currentLessonIndex-7}_${state.lang}`:`lesson_${state.currentLessonIndex+1}_${state.lang}`;
