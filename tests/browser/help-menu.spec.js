@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 const help=page=>page.locator('#help-menu-trigger');
 const action=(page,name)=>page.locator('#help-menu [data-help-action="'+name+'"]');
 async function choose(page,name){await help(page).click();await action(page,name).click();}
@@ -24,7 +25,7 @@ test('Help Shortcuts is accessible, translated, dismissible and leaves Markdown 
  await expect(help(page)).toBeFocused();
  await expect(editor).toHaveValue(source);
  for(const [lang,title] of [['en','Help'],['cs','Nápověda'],['uk','Довідка'],['ro','Ajutor'],['ru','Справка']]){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await expect(help(page)).toHaveText(title);
   await choose(page,'shortcuts');
   await expect(page.locator('#help-info-title')).not.toBeEmpty();

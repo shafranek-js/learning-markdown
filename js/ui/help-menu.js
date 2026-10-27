@@ -95,7 +95,7 @@ export function initHelpMenu({onOpenCourseContents}={}){
   if(event.key==='Home')next=items[0];
   if(event.key==='End')next=items.at(-1);
   if(next){event.preventDefault();next.focus();}
-  if(event.key==='Tab'){event.preventDefault();closeMenu();(event.shiftKey?$('view-menu-trigger'):$('sandbox-mode-btn')).focus();}
+  if(event.key==='Tab'){event.preventDefault();closeMenu();(event.shiftKey?$('settings-menu-trigger'):$('sandbox-mode-btn')).focus();}
  });
  $('help-info-close').addEventListener('click',closeDialog);
  dialog.addEventListener('pointerdown',event=>{if(event.target===dialog)closeDialog();});

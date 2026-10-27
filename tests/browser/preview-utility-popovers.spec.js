@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const paneTop=page=>page.evaluate(()=>{
  const editor=document.querySelector('#editor-pane .editor-container');
@@ -69,7 +70,7 @@ test('Small-screen Preview utility controls remain accessible without changing c
  await expect(page.locator('#toc-panel')).toBeHidden();
  await page.locator('#export-trigger').click();
  await expect(page.locator('#preview-export-menu')).toBeVisible();
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(page.locator('#export-trigger')).toContainText('Экспорт');
 });
 
@@ -79,7 +80,7 @@ test('very narrow Preview preserves all localized actions inside the pane',async
  await page.goto('/');
  await page.locator('#mobile-tabs [data-mobile-tab="preview"]').click();
  for(const lang of ['en','cs','uk','ro','ru']){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   const actionRow=page.locator('.preview-header-actions');
   const box=await actionRow.evaluate(element=>{
    const actions=element.getBoundingClientRect();

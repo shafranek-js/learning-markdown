@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const fileTrigger=page=>page.locator('#file-menu-trigger');
 const fileMenu=page=>page.locator('#file-menu');
@@ -90,7 +91,7 @@ test('File menu is keyboard reachable, localized and mobile-safe',async({page})=
  await page.keyboard.press('Escape');
  await expect(trigger).toBeFocused();
  for(const [lang,title] of [['en','File'],['cs','Soubor'],['uk','Файл'],['ro','Fișier'],['ru','Файл']]){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await expect(trigger).toHaveText(title);
   await trigger.click();
   await expect(action(page,'open')).not.toBeEmpty();

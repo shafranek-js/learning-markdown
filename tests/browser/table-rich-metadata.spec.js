@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 // Visual editing must never silently erase metadata on rich cell descendants.
 // All languages share the same source integrity guard and localize its notice.
@@ -6,7 +7,7 @@ for(const language of ['en','cs','uk','ro','ru']){
  test('rich cell metadata remains source-only in '+language,async({page})=>{
   if(language==='ru')await page.setViewportSize({width:390,height:844});
   await page.goto('/');
-  await page.locator('#lang-selector').selectOption(language);
+  await setAppLanguage(page,language);
   const original='Before\n\n<table><tr>'+
    '<td><p title="Imported value"><strong>Original</strong></p>'+
    '<span aria-label="Source label">Accessible</span></td>'+

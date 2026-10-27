@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('nested HTML leaf edits preserve untouched outer raw markup and Undo/Redo',async({page})=>{
  await page.goto('/');
@@ -32,7 +33,7 @@ test('nested HTML leaf edits preserve untouched outer raw markup and Undo/Redo',
 test('nested sibling leaf editing on mobile keeps the other nested table source',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const first='<table><tr><td>Первая</td></tr></table>';
  const second='<table><tr><td>Вторая</td></tr></table>';
  const before='Старт\n\n<table><tr><td>Начало '+first+' Между '+second+' Конец</td></tr></table>';

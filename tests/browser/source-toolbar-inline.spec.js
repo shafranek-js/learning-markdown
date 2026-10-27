@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('textarea Bold/Italic/Strikethrough toggle existing source markers with Undo/Redo',async({page})=>{
  await page.goto('/');
@@ -88,7 +89,7 @@ test('fenced code rejects all inline changes atomically in textarea and CodeMirr
 test('Russian mobile editor keeps source unchanged when inline formatting touches code',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const input=page.locator('#markdown-input');
  const source='Текст\n~~~\nкод\n~~~';
  await input.fill(source);

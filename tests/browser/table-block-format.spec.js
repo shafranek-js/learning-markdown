@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('issue #6 multi-block Bold preserves paragraphs, lists, rich markup, source and Undo',async({page})=>{
  await page.goto('/');
@@ -63,7 +64,7 @@ test('issue #6 code crossing selection refuses all formatting without partial ch
 test('issue #6 mobile Russian mixed-block Underline preserves list geometry',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><tr><td><p>Первый текст</p><ol><li>Один</li>'+
   '<li><em>Второй</em></li></ol></td></tr></table>';
  const input=page.locator('#markdown-input');

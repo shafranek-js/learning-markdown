@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('table header scope remains accessible through cell editing and row insertion',async({page})=>{
  await page.goto('/');
@@ -30,7 +31,7 @@ test('table header scope remains accessible through cell editing and row inserti
 test('mobile read-only guard keeps unsupported header relationships intact',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><thead><tr><th abbr="Title">Название</th></tr></thead>'+
   '<tbody><tr><td>Один</td></tr></tbody></table>';
  const input=page.locator('#markdown-input');

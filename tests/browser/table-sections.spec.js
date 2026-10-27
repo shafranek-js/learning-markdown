@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('semantic table sections survive visual cell save, body row insertion and Undo/Redo',async({page})=>{
  await page.goto('/');
@@ -38,7 +39,7 @@ test('semantic table sections survive visual cell save, body row insertion and U
 test('Russian mobile reports unsupported semantic section attributes without changing source',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><thead class="custom"><tr><th>Товар</th></tr></thead>'+
   '<tbody><tr><td>Значение</td></tr></tbody></table>';
  const input=page.locator('#markdown-input');

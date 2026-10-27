@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const url='https://placehold.co/600x160/png';
 const imageButton=page=>page.locator('.toolbar-btn[data-action="image"]');
@@ -102,7 +103,7 @@ test('mixed multi-line and code-fenced selections reject entire Image operation'
 test('Russian narrow view preserves alt text and gives localized multiline feedback',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const input=page.locator('#markdown-input');
  await input.fill('Описание изображения');
  await input.evaluate(el=>{el.focus();el.setSelectionRange(0,el.value.length);});

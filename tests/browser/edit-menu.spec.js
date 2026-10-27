@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 const menu=page=>page.locator('#edit-menu');
 const action=(page,name)=>page.locator('#edit-menu [data-edit-action="'+name+'"]');
 async function choose(page,name){
@@ -86,7 +87,7 @@ test('Edit keyboard menu and localized labels are accessible on mobile',async({p
  await page.keyboard.press('Escape');
  await expect(trigger).toBeFocused();
  for(const [lang,label] of [['en','Edit'],['cs','Úpravy'],['uk','Редагування'],['ro','Editare'],['ru','Правка']]){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await expect(trigger).toHaveText(label);
   await trigger.click();
   await expect(action(page,'replace')).not.toBeEmpty();

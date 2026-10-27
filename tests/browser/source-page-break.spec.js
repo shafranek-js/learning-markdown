@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 async function reveal(page){
  const toggle=page.locator('#advanced-tools-toggle');
@@ -100,7 +101,7 @@ test('Page break refuses fenced-code edits in either mode without data loss',asy
 test('Russian narrow view keeps selected prose when inserting Page break',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const input=page.locator('#markdown-input');
  await input.fill('Начало\nСодержимое\nКонец');
  await select(input,'Содержимое');

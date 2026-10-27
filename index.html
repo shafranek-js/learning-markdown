@@ -105,6 +105,35 @@
                 </div>
             </div>
 
+            <!-- Appearance and language share their existing selectors, moved out of the crowded header. -->
+            <div class="shrink-0">
+                <button id="settings-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-panel">Settings</button>
+                <section id="settings-panel" class="workspace-view-menu workspace-settings-panel" role="dialog" aria-labelledby="settings-panel-title" hidden>
+                    <div class="workspace-settings-head">
+                        <strong id="settings-panel-title" data-settings-label="settings">Settings</strong>
+                        <button id="settings-close" type="button" aria-label="Close settings">×</button>
+                    </div>
+                    <label for="theme-selector" data-settings-label="theme">Theme</label>
+                    <select id="theme-selector" class="workspace-settings-select theme-panel border theme-border rounded-lg" aria-label="Theme">
+                        <option value="codepen">CodePen Studio</option>
+                        <option value="midnight">Midnight Dark</option>
+                        <option value="daylight">Daylight Paper</option>
+                        <option value="dracula">Dracula Neon</option>
+                        <option value="nord">Nordic Frost</option>
+                        <option value="solarized">Solarized Warm</option>
+                    </select>
+                    <label for="lang-selector" data-settings-label="language">Language</label>
+                    <select id="lang-selector" class="workspace-settings-select theme-panel border theme-border rounded-lg" aria-label="Language">
+                        <option value="en">EN (English)</option>
+                        <option value="cs">CS (Čeština)</option>
+                        <option value="uk">UK (Українська)</option>
+                        <option value="ro">RO (Română)</option>
+                        <option value="ru">RU (Русский)</option>
+                    </select>
+                    <p id="settings-persistence-note" data-settings-label="saved">Your preferences are saved automatically.</p>
+                </section>
+            </div>
+
             <!-- Help keeps documentation out of the editor formatting ribbon. -->
             <div class="shrink-0">
                 <button id="help-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="help-menu">Help</button>
@@ -152,7 +181,7 @@
             </div>
         </div>
 
-        <!-- Right: Controls (Sandbox, CheatSheet, Certificate, Theme Selector, Language Selector) -->
+        <!-- Right: Primary workspace actions; appearance and language live in Settings. -->
         <div class="app-header-actions flex items-center gap-1.5 sm:gap-2 shrink-0">
             <!-- Prompt / Sandbox Button -->
             <button id="sandbox-mode-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
@@ -182,34 +211,6 @@
                 <span class="hidden md:inline" data-i18n="certBtn">Certificate</span>
             </button>
 
-            <!-- Theme Selector Dropdown -->
-            <div class="relative">
-                <select id="theme-selector" aria-label="Theme" class="appearance-none theme-panel border theme-border rounded-lg pl-2.5 pr-7 py-1.5 text-xs font-semibold cursor-pointer focus:outline-none">
-                    <option value="codepen">🎨 CodePen Studio</option>
-                    <option value="midnight">🌙 Midnight Dark</option>
-                    <option value="daylight">☀️ Daylight Paper</option>
-                    <option value="dracula">🧛 Dracula Neon</option>
-                    <option value="nord">❄️ Nordic Frost</option>
-                    <option value="solarized">🌅 Solarized Warm</option>
-                </select>
-                <svg class="w-3.5 h-3.5 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </div>
-
-            <!-- Language Selector Dropdown (EN Default, CS, UK, RO, RU) -->
-            <div class="relative">
-                <select id="lang-selector" aria-label="Language" class="appearance-none theme-panel border theme-border rounded-lg pl-2.5 pr-7 py-1.5 text-xs font-bold cursor-pointer focus:outline-none">
-                    <option value="en">🇬🇧 EN (English)</option>
-                    <option value="cs">🇨🇿 CS (Čeština)</option>
-                    <option value="uk">🇺🇦 UK (Українська)</option>
-                    <option value="ro">🇷🇴 RO (Română)</option>
-                    <option value="ru">🇷🇺 RU (Русский)</option>
-                </select>
-                <svg class="w-3.5 h-3.5 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </div>
         </div>
     </header>
 
