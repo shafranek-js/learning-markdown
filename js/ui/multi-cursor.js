@@ -235,7 +235,9 @@ function activate(enabled,{focus=true}={}){
  };
  restoreViewport();
  if(active){
-  view.requestMeasure({write:restoreViewport});
+  // CodeMirror requires a read phase for every measure request. Omitting it
+  // threw `TypeError: request.read is not a function` during viewport restore.
+  view.requestMeasure({read:()=>null,write:restoreViewport});
   // A newly revealed CodeMirror view may apply its scroll anchor a frame
   // later; reapply the source viewport once layout has fully stabilized.
   requestAnimationFrame(()=>requestAnimationFrame(restoreViewport));
