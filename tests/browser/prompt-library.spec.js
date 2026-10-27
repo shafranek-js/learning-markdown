@@ -22,6 +22,8 @@ test('Template variable filling, Markdown export, safe append and Undo',async({p
  await page.locator('[data-variable="code"]').fill('const answer = 42;');
  await expect(page.locator('#prompt-library-output')).toHaveValue(/JavaScript/);
  await expect(page.locator('#prompt-library-output')).toHaveValue(/const answer = 42;/);
+ await expect(page.locator('#prompt-library-rendered h1')).toContainText('Role');
+ await expect(page.locator('#prompt-library-rendered')).toContainText('JavaScript');
  const downloadEvent=page.waitForEvent('download');
  await page.locator('#prompt-library-download').click();
  const download=await downloadEvent;
@@ -115,4 +117,15 @@ test('Search, locale and accessible mobile dialog',async({page})=>{
  await page.keyboard.press('Escape');
  await expect(modal(page)).toBeHidden();
  await expect(page.locator('#prompt-library-trigger')).toBeFocused();
+});
+
+test('Prompt preview sanitizes user-controlled HTML while preserving raw Markdown',async({page})=>{
+ await page.goto('/');
+ await openLibrary(page);
+ await chooseTemplate(page,'analysis-document');
+ const payload='<img src=x onerror=alert(1)>';
+ await page.locator('[data-variable="document"]').fill(payload);
+ await expect(page.locator('#prompt-library-output')).toHaveValue(/onerror=alert/);
+ await expect(page.locator('#prompt-library-rendered [onerror]')).toHaveCount(0);
+ await expect(page.locator('#prompt-library-rendered')).toBeVisible();
 });
