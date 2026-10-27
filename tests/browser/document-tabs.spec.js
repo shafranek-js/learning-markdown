@@ -146,6 +146,30 @@ test('Upgrading from single Sandbox migrates legacy Markdown without losing its 
  await expect(source).toHaveValue('# Existing legacy Sandbox draft');
 });
 
+
+test('Document-scoped soft breaks are migrated, isolated and persisted across tabs',async({page})=>{
+ await page.addInitScript(()=>{
+  if(!sessionStorage.getItem('softbreak-tabs-seeded')){
+   localStorage.setItem('md_course_state_v1',JSON.stringify({
+    lang:'en',currentLessonIndex:-1,savedDrafts:{sandbox_en:'First line\\nSecond line'},
+    extensionSettingsByDocument:{sandbox_en:{softbreaks:true}}
+   }));
+   sessionStorage.setItem('softbreak-tabs-seeded','1');
+  }
+ });
+ await page.goto('/');
+ const source=page.locator('#markdown-input');
+ await expect(source).toHaveValue('First line\nSecond line');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+ const first=await tabs(page).first().getAttribute('data-document-id');
+ await newTab(page);
+ await source.fill('Other first\nOther second');
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(0);
+ await switchTo(page,first);
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+ await page.reload();
+ await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
+});
 test('Prompt Library writes only into the active Sandbox document',async({page})=>{
  await page.goto('/');
  await page.locator('#sandbox-mode-btn').click();
