@@ -22,7 +22,7 @@ test('Template variable filling, Markdown export, safe append and Undo',async({p
  await page.locator('[data-variable="code"]').fill('const answer = 42;');
  await expect(page.locator('#prompt-library-output')).toHaveValue(/JavaScript/);
  await expect(page.locator('#prompt-library-output')).toHaveValue(/const answer = 42;/);
- await expect(page.locator('#prompt-library-rendered h1')).toContainText('Role');
+ await expect(page.locator('#prompt-library-rendered h1').first()).toHaveText('Role');
  await expect(page.locator('#prompt-library-rendered')).toContainText('JavaScript');
  const downloadEvent=page.waitForEvent('download');
  await page.locator('#prompt-library-download').click();
