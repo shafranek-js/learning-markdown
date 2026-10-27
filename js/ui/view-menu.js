@@ -12,6 +12,7 @@ const LABELS={
 
 const items=()=>Array.from($('view-menu').querySelectorAll('[role^="menuitem"]'));
 const menuOpen=()=>!$('view-menu').hidden;
+let guideToggle=()=>{};
 
 export function syncViewMenu(){
  if(!$('view-menu'))return;
@@ -66,9 +67,8 @@ function openMenu({last=false}={}){
 function action(name){
  if(name==='wrap')$('wrap-text-toggle').click();
  else if(name==='guide'){
-  $('theory-pane-toggle-btn').click();
-  // When View is the only Guide control, toggling it on mobile must also
-  // display the requested pane (and return to the editor when hiding it).
+  guideToggle();
+  // On mobile, immediately reveal the chosen Guide/Editor workspace.
   if(window.matchMedia('(max-width:767px)').matches)
    setMobileTab(state.guideVisible&&state.currentLessonIndex!==-1?'guide':'editor');
  }
@@ -82,7 +82,8 @@ function action(name){
  syncViewMenu();
 }
 
-export function initViewMenu(){
+export function initViewMenu({onGuideToggle}={}){
+ if(typeof onGuideToggle==='function')guideToggle=onGuideToggle;
  const trigger=$('view-menu-trigger'),menu=$('view-menu');
  trigger.addEventListener('click',()=>menuOpen()?closeMenu({focus:true}):openMenu());
  trigger.addEventListener('keydown',event=>{
