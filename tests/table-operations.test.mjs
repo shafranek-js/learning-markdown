@@ -753,4 +753,38 @@ assert(setTableCellBlocks(richSafe,0,0,0,
  '<p><strong>Updated</strong> <a href="https://example.org/info">reference</a></p>'+
  '<ul><li>Alpha</li><li>Beta</li></ul>')?.text.includes('<strong>Updated</strong>'));
 
+
+// #57: An edit in another cell must not delete author comments or unsupported
+// original HTML that the Preview sanitizer strips/unwraps. Never mutate source.
+const droppedOriginalContent=[
+ '<!-- Preserve author markup note -->',
+ '<script>window.hidden = true</script>',
+ '<style>.custom { color: red }</style>',
+ '<template><p>Reusable fragment</p></template>',
+ '<textarea>Original plain text</textarea>',
+ '<video>Fallback video text</video>',
+ '<audio>Fallback audio text</audio>',
+ '<svg><title>Vector label</title></svg>',
+ '<math><mi>x</mi></math>',
+ '<xmp><strong>Literal markup</strong></xmp>'
+];
+for(const content of droppedOriginalContent){
+ const original='Intro\n\n<table><tr><td>First '+content+
+  '</td><td>Safe neighbor</td></tr></table>\n\nOutro';
+ assert.equal(getTableReadOnlyReason(original,0),'unsupported',content);
+ assert.equal(editTableAt(original,0,'cell-mint',select(0,1)),null,content);
+ assert.equal(setTableCellText(original,0,0,1,'Change'),null,content);
+ assert.equal(setTableCellHTML(original,0,0,1,'<strong>Change</strong>'),null,content);
+ assert.equal(setTableCellBlocks(original,0,0,1,'<p>Change</p>'),null,content);
+}
+// Guarding one source block must not disable unrelated standalone tables.
+const onlyFirstGuarded='<table><tr><td><!-- Keep source -->First</td></tr></table>\n\n'+
+ '<table><tr><td>Other</td></tr></table>';
+assert.equal(findEditableTables(onlyFirstGuarded).length,2);
+assert.equal(getTableReadOnlyReason(onlyFirstGuarded,0),'unsupported');
+assert.equal(getTableReadOnlyReason(onlyFirstGuarded,1),null);
+const independentEdit=setTableCellText(onlyFirstGuarded,1,0,0,'Changed');
+assert(independentEdit?.text.startsWith(onlyFirstGuarded.split('\n\n')[0]+'\n\n'));
+assert(independentEdit.text.includes('<td>Changed</td>'));
+
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
