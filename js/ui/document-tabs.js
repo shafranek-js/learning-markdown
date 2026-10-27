@@ -27,6 +27,8 @@ export function ensureSandboxTabs(lang=state.lang){
   items.push(tab);
   const legacy=state.savedDrafts['sandbox_'+lang];
   if(typeof legacy==='string')state.savedDrafts[tabDraftKey(lang,tab.id)]=legacy;
+  const previousSettings=state.extensionSettingsByDocument['sandbox_'+lang];
+  if(previousSettings)state.extensionSettingsByDocument[tabDraftKey(lang,tab.id)]={...previousSettings};
   state.activeDocumentTab[lang]=tab.id;
   save();
  }else if(!items.some(tab=>tab.id===state.activeDocumentTab[lang])){
@@ -79,6 +81,7 @@ function closeSandboxTab(id){
  if(text.length&&!confirm(words().confirm))return;
  const active=id===state.activeDocumentTab[state.lang];
  list.splice(position,1);delete state.savedDrafts[key];
+ delete state.extensionSettingsByDocument[key];
  if(list.length===0){
   const blank={id:newTabId(),name:'Untitled.md'};
   list.push(blank);state.savedDrafts[tabDraftKey(state.lang,blank.id)]='';
