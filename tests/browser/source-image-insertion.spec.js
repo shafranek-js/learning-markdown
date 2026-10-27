@@ -27,28 +27,19 @@ test('Image with empty caret retains the previous placeholder template in both e
  const input=page.locator('#markdown-input');
  const expected='Before\n![Image]('+url+')\n';
  for(const multi of [false,true]){
-  if(multi){
-   await page.locator('#multi-cursor-toggle').click();
-   await expect(page.locator('#codemirror-mount .cm-content')).toBeVisible();
-  }
+  await page.goto('/');
   await input.fill('Before');
-  if(multi){
-   await page.locator('#multi-cursor-toggle').click();
-   await page.locator('#multi-cursor-toggle').click();
-  }
   await input.evaluate(el=>{
    el.focus();el.setSelectionRange(el.value.length,el.value.length);
   });
   if(multi){
    await page.locator('#multi-cursor-toggle').click();
-   const editor=page.locator('#codemirror-mount .cm-content');
-   await expect(editor).toBeVisible();
+   await expect(page.locator('#codemirror-mount .cm-content')).toBeVisible();
   }
   await imageButton(page).click();
   await expect(input).toHaveValue(expected);
   await page.locator('#undo-btn').click();
   await expect(input).toHaveValue('Before');
-  if(multi)await page.locator('#multi-cursor-toggle').click();
  }
 });
 
