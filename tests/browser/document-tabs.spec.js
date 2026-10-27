@@ -92,7 +92,8 @@ test('Tabs work with Multi-cursor editor and maintain per-document Undo history'
  await page.locator('#multi-cursor-toggle').click();
  await expect(page.locator('#multi-cursor-toggle')).toHaveAttribute('aria-pressed','true');
  await newTab(page);
- await source.fill('# Second history');
+ await page.locator('#codemirror-mount .cm-content').fill('# Second history');
+ await expect(source).toHaveValue('# Second history');
  const second=await tabs(page).last().getAttribute('data-document-id');
  const first=await tabs(page).first().getAttribute('data-document-id');
  await switchTo(page,first);
