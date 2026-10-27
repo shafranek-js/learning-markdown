@@ -75,7 +75,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 
 1. Open the [live app](https://shafranek-js.github.io/learning-markdown/).
 2. Select **AI Prompt Sandbox** for free-form writing, or **Contents** (when Lesson Guide is enabled) for guided lessons.
-3. Write Markdown on the left and inspect **Live Preview** on the right. Drag the divider to change their widths. Open **View** for Word Wrap, Lesson Guide, layout modes, editor font sizing and a 50:50 reset.
+3. Write Markdown on the left and inspect **Live Preview** on the right. Drag the divider to change their widths. Use **View → Lesson Guide** to show or hide course instructions, alongside Word Wrap, layout modes, editor font sizing and the 50:50 reset.
 4. Use **Wrap text** for long lines, or **Multi-cursor** to insert/edit at several positions at once.
 5. Choose **Export** above Preview to download Markdown or HTML, or print to PDF.
 
@@ -98,7 +98,7 @@ renders as a formatted heading, quotation, checklist and link without changing t
 
 ## Lesson Guide and editor workspace
 
-The **Lesson Guide** button switches between a learning-focused layout and a less cluttered writing workspace. It doesn't delete lessons, reset progress or alter your Markdown document.
+**View → Lesson Guide** switches between a learning-focused layout and a less cluttered writing workspace. It doesn't delete lessons, reset progress or alter your Markdown document.
 
 | Header content | Lesson Guide on | Lesson Guide off |
 |---|---|---|
@@ -108,9 +108,9 @@ The **Lesson Guide** button switches between a learning-focused layout and a les
 | **Lesson Guide**, **View**, **AI Prompt Sandbox** and **Cheat Sheet** | Available | Available |
 | Theme, language, Markdown toolbar, editor, Preview and export tools | Available | Available |
 
-- Closing the guide also closes the guide panel and its resize handle; the editor/Preview can use the freed space. Reopen it with **Lesson Guide**.
+- Closing the guide also closes the guide panel and its resize handle; the editor/Preview can use the freed space. Reopen it with **View → Lesson Guide**. There is no duplicate Guide button in the header.
 - Your guide visibility preference survives a page reload. Course navigation, saved drafts and progress remain intact.
-- **AI Prompt Sandbox** is a dedicated free-form writing view. It hides the lesson-specific header and guide; the **Lesson Guide** button returns to the course.
+- **AI Prompt Sandbox** is a dedicated free-form writing view. It hides the lesson-specific header and guide; **View → Lesson Guide** returns to the course.
 - **Contents** is hidden while Lesson Guide is off. Re-enable Lesson Guide to restore course navigation; the **View** menu offers that switch even on small screens.
 
 ## View menu
