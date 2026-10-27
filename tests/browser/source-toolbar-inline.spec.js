@@ -30,6 +30,12 @@ test('textarea wraps new bold selection once and selects its original text',asyn
  await page.locator('.toolbar-btn[data-action="bold"]').click();
  await expect(input).toHaveValue('Before **Alpha** After');
  expect(await input.evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd))).toBe('Alpha');
+ await page.locator('.toolbar-btn[data-action="bold"]').click();
+ await expect(input).toHaveValue('Before Alpha After');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue('Before **Alpha** After');
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue('Before Alpha After');
 });
 
 test('CodeMirror native multi-range Bold toggle is one Undo step',async({page})=>{
