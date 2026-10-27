@@ -15,6 +15,7 @@ import {sourceInlineWrapChanges} from '../core/source-inline-format.js';
 import {sourceFencedBlockChanges} from '../core/source-fenced-block.js';
 import {sourceImageInsertionChanges} from '../core/source-image-insertion.js';
 import {sourceBlockToolbarChanges} from '../core/source-block-toolbar.js';
+import {sourceStandaloneSnippetChanges} from '../core/source-standalone-snippet.js';
 import {explainProtectedSourceFormatting,explainImageSelectionFailure} from './line-format-feedback.js';
 
 // Source-oriented highlighting: only token colors and deliberately matched link/strike styles.
@@ -362,6 +363,23 @@ export function multiCursorBlockToolbar(kind){
  view.dispatch({...transaction,annotations:isolateHistory.of('full')});
  view.focus();return true;
 }
+export function multiCursorStandaloneSnippet(snippet){
+ if(!active)return false;
+ const edits=sourceStandaloneSnippetChanges(
+  view.state.doc.toString(),view.state.selection.ranges,snippet);
+ if(edits===null){
+  explainProtectedSourceFormatting();view.focus();return true;
+ }
+ let index=0;
+ const transaction=view.state.changeByRange(()=>{
+  const edit=edits[index++];
+  return {changes:{from:edit.from,to:edit.to,insert:edit.insert},
+   range:EditorSelection.cursor(edit.selectionFrom)};
+ });
+ view.dispatch({...transaction,annotations:isolateHistory.of('full')});
+ view.focus();return true;
+}
+
 export function multiCursorInsert(snippet,newline=true){
  if(!active)return false;
  const transaction=view.state.changeByRange(r=>{
