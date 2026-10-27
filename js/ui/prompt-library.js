@@ -33,8 +33,16 @@ function matchFilter(t){
 }
 function visible(){return allTemplates().filter(matchFilter);}
 function choose(id){
+ const focusInList=Boolean(document.activeElement?.closest('#prompt-library-list'));
  if(id!==selectedId){selectedId=id;values=Object.create(null);}
  renderList();renderSelected();
+ // The selected button is recreated during list rendering. Preserve focus
+ // instead of falling back to <body>, which also broke Escape dismissal.
+ if(focusInList){
+  const node=[...$('prompt-library-list').querySelectorAll('[data-prompt-id]')]
+   .find(item=>item.dataset.promptId===id);
+  node?.focus();
+ }
 }
 function renderList(){
  const rows=visible(),root=$('prompt-library-list');
