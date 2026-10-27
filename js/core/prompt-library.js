@@ -34,7 +34,7 @@ export function parsePromptLibrary(raw){
  }
  const validIds=new Set([...BUILTIN_PROMPTS.map(x=>x.id),...ids]);
  const favorites=Array.isArray(input.favorites)
-  ?[...new Set(input.favorites.filter(id=>typeof id==='string'&&validIds.has(id)))].slice(0,70):[];
+  ?[...new Set(input.favorites.filter(id=>typeof id==='string'&&validIds.has(id)))].slice(0,BUILTIN_PROMPTS.length+50):[];
  return {personal,favorites};
 }
 export function createPersonalTemplate({id,title,category,description,body}){
@@ -45,4 +45,28 @@ export function createPersonalTemplate({id,title,category,description,body}){
  if(typeof description!=='string'||description.length>400)throw Error('Invalid description');
  if(placeholders(body).length>12)throw Error('Too many variables');
  return {id,title:title.trim(),category,description:description.trim(),body,tip:''};
+}
+
+/**
+ * Match all query terms across title, description, body and category; prefer
+ * concise title matches. Stable ordering keeps the catalog predictable.
+ */
+export function searchPromptTemplates(templates,{query='',category='all'}={}){
+ const terms=String(query).toLocaleLowerCase().trim().split(/\s+/u).filter(Boolean);
+ return templates
+  .map((template,index)=>{
+   const fields=[template.title,template.description,template.category,template.body,template.tip||'']
+    .map(value=>String(value||'').toLocaleLowerCase());
+   const match=(category==='all'||template.category===category)
+    &&terms.every(term=>fields.some(field=>field.includes(term)));
+   const score=terms.reduce((total,term)=>total
+    +(fields[0].includes(term)?8:0)
+    +(fields[1].includes(term)?4:0)
+    +(fields[2].includes(term)?2:0)
+    +(fields[3].includes(term)?1:0),0);
+   return {template,index,match,score};
+  })
+  .filter(row=>row.match)
+  .sort((a,b)=>terms.length?(b.score-a.score||a.index-b.index):a.index-b.index)
+  .map(row=>row.template);
 }
