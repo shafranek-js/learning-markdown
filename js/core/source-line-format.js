@@ -41,6 +41,22 @@ function protectedFences(lines){
  return result;
 }
 
+// Shared fence detection for inline formatting and other source commands.
+// A non-empty selection ending at the start of the next line does not touch
+// that final line, mirroring native text selection and CodeMirror semantics.
+export function sourceSelectionTouchesFencedCode(source,ranges){
+ if(typeof source!=='string'||!Array.isArray(ranges)||!ranges.length)return true;
+ const lines=sourceLines(source),fenced=protectedFences(lines);
+ for(const range of ranges){
+  if(!range||!Number.isInteger(range.from)||!Number.isInteger(range.to)||
+     range.from<0||range.to<range.from||range.to>source.length)return true;
+  const first=lineIndex(lines,range.from),last=lineIndex(lines,range.to);
+  const end=range.to>range.from&&last>first&&lines[last].from===range.to?last-1:last;
+  for(let i=first;i<=end;i++)if(fenced.has(i))return true;
+ }
+ return false;
+}
+
 export function sourceLineFormatEdits(source,ranges,kind){
  const heading=/^h[1-6]$/.test(kind)?Number(kind[1]):null;
  if(typeof source!=='string'||!Array.isArray(ranges)||!ranges.length||(!KINDS.has(kind)&&!heading))return null;
