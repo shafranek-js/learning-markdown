@@ -3,6 +3,7 @@ import {record,ensureHistory,step,status} from '../core/history.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
 import {getWrapTextLabels} from './wrap-text-i18n.js';
 import {editMarkdownListKey} from '../core/source-list-keyboard.js';
+import {indentSourceSelection} from '../core/source-indent.js';
 export const area=()=>document.getElementById('markdown-input');
 const el=id=>document.getElementById(id);
 let onChange=()=>{};
@@ -139,13 +140,19 @@ export function initEditor(listener){onChange=listener;const a=area(),backdrop=e
   if(mod||e.altKey||e.isComposing||e.keyCode===229||multiActive())return;
   if(e.key==='Tab'||e.key==='Enter'){
    const start=a.selectionStart,end=a.selectionEnd;
+   // Any nonempty selection is indented as whole source lines, including
+   // mixed prose/lists. This matches CodeMirror instead of silently doing
+   // nothing (or deleting selected Markdown text with the old Tab fallback).
+   if(e.key==='Tab'&&start!==end){
+    e.preventDefault();
+    const changed=indentSourceSelection(a.value,start,end,e.shiftKey);
+    if(changed&&changed.text!==a.value)applyEdit(changed.text,changed.start,changed.end);
+    return;
+   }
    const edit=editMarkdownListKey(a.value,start,end,e.key,{shiftKey:e.shiftKey});
    if(edit){e.preventDefault();applyEdit(edit.text,edit.start,edit.end);return;}
    if(e.key==='Tab'&&!e.shiftKey){
-    // A mixed multi-line selection cannot be safely treated as a list. Never
-    // replace that entire selection with two spaces (legacy Tab fallback).
     e.preventDefault();
-    if(a.value.slice(start,end).includes('\n'))return;
     applyEdit(a.value.slice(0,start)+'  '+a.value.slice(end),start+2,start+2);
    }
   }
