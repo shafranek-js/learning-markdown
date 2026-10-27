@@ -507,6 +507,39 @@ assert.equal(findEditableTables(nestedBlockChange.text).length,2);
 
 
 
+// #57: All six heading levels are safe block content. They must not be
+// flattened into plain cell text, and HTML list/media guards still apply.
+const headingSource='Before\n\n<table class="af-table-outline"><tr><td>'+
+ '<h1>Main title</h1><p>Body text</p><h5>Detail title</h5>'+
+ '<h6>Fine print</h6></td><td>Unchanged</td></tr></table>\n\nAfter';
+const headingBlocks=getTableCellBlocks(headingSource,0,0,0);
+assert(headingBlocks?.includes('<h1>Main title</h1>'));
+assert(headingBlocks?.includes('<h5>Detail title</h5>'));
+assert(headingBlocks?.includes('<h6>Fine print</h6>'));
+assert.equal(getTableCellHTML(headingSource,0,0,0),null);
+const updatedHeadings=setTableCellBlocks(headingSource,0,0,0,
+ headingBlocks.replace('Detail title','Revised heading'));
+assert(updatedHeadings?.text.includes('<h1>Main title</h1>'));
+assert(updatedHeadings.text.includes('<h5>Revised heading</h5>'));
+assert(updatedHeadings.text.includes('<h6>Fine print</h6>'));
+assert(updatedHeadings.text.includes('<td>Unchanged</td>'));
+assert(updatedHeadings.text.startsWith('Before\n\n'));
+assert(updatedHeadings.text.endsWith('\n\nAfter'));
+assert.equal(getTableCellBlocks(updatedHeadings.text,0,0,0).includes('Revised heading'),true);
+for(const heading of ['h1','h2','h3','h4','h5','h6']){
+ assert(sanitizeBlockCellHTML('<'+heading+'>Safe heading</'+heading+'>')?.includes('Safe heading'));
+}
+assert.equal(sanitizeBlockCellHTML('<h1>Safe</h1><script>alert(1)</script>'),null);
+assert.equal(setTableCellHTML(headingSource,0,0,0,'<p>Unsafe replacement</p>'),null);
+const headingImageSource='<table><tr><td><h5>Product</h5></td></tr></table>';
+const headingImage=insertTableCellImage(headingImageSource,0,0,0,{
+ url:'https://example.org/product.png',alt:'Product image',decorative:false,width:'',height:''
+});
+assert(headingImage?.text.includes('<h5>Product</h5>'));
+assert(headingImage.text.includes('<p><img'));
+assert(!headingImage.text.includes('<h5>Product</h5><br>'));
+assert.equal(getTableCellImage(headingImage.text,0,0,0).alt,'Product image');
+
 // #6: Image properties are edited in place without flattening mixed content.
 const pictureSrc='Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
  '<p>Caption <strong>bold</strong> <a href="https://example.org/guide">guide</a>.</p>'+
