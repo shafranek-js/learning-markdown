@@ -8,19 +8,24 @@ export function sourceStandaloneSnippetChanges(source,ranges,snippet){
     sourceSelectionTouchesFencedCode(source,ranges))return null;
  return ranges.map(({from,to})=>{
   const hasSelection=to>from;
+  // A partial-line selection might be a Markdown link label, inline code or
+  // an emphasis span. Insert AFTER that entire line, never inside its syntax.
+  // A selection ending exactly at the next line's start already has a safe
+  // block boundary and must not consume that next line.
+  const lineEnd=hasSelection&&to<source.length&&source[to-1]!=='\n'
+   ?source.indexOf('\n',to):-1;
+  const at=hasSelection&&lineEnd>=0?lineEnd:to;
   let insert;
   if(hasSelection){
-   // A block can interrupt ordinary Markdown; isolate it from the selected
-   // text and the untouched suffix without changing either's source bytes.
-   const before=to>0&&source[to-1]!=='\n'?'\n\n':'\n';
-   const after=to<source.length&&source[to]!=='\n'?'\n\n':'\n';
+   const before=at>0&&source[at-1]!=='\n'?'\n\n':'\n';
+   const after=at<source.length&&source[at]!=='\n'?'\n\n':'\n';
    insert=before+snippet.replace(/^\n+|\n+$/g,'')+after;
   }else{
    const prefix=to>0&&source[to-1]!=='\n'?'\n':'';
    insert=prefix+snippet;
   }
-  const pos=to+insert.length;
-  return {from:to,to,insert,selectionFrom:pos,selectionTo:pos};
+  const pos=at+insert.length;
+  return {from:at,to:at,insert,selectionFrom:pos,selectionTo:pos};
  });
 }
 export function formatSourceStandaloneSnippet(source,start,end,snippet){
