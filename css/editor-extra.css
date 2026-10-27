@@ -1,8 +1,16 @@
-.editor-container{position:relative;isolation:isolate}
-.editor-shared-metrics{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace!important;white-space:pre!important;word-wrap:normal!important;overflow-wrap:normal!important;padding-left:4.3rem!important;tab-size:2}
+.editor-container{
+ position:relative;
+ isolation:isolate;
+ /* Both source engines share one fixed ruler and source-text origin. */
+ --editor-gutter-width:3.1rem;
+ --editor-source-indent:4.3rem;
+ --editor-gutter-label-gap:.6rem;
+ --editor-source-top:1.25rem;
+}
+.editor-shared-metrics{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace!important;white-space:pre!important;word-wrap:normal!important;overflow-wrap:normal!important;padding-left:var(--editor-source-indent)!important;tab-size:2}
 #markdown-input{white-space:pre!important;overflow-x:auto!important}
 #editor-highlight-backdrop{overflow:hidden!important}
-#line-gutter{position:absolute;top:0;bottom:0;left:0;width:3.1rem;z-index:3;pointer-events:none;overflow:hidden;white-space:pre;text-align:right;padding:1.25rem .6rem 1.25rem 0;font:var(--editor-font-size,15px)/1.65 'JetBrains Mono',ui-monospace,Consolas,monospace;color:var(--text-ui-muted);opacity:.55;background:var(--bg-editor);border-right:1px solid var(--border-ui);box-sizing:border-box}
+#line-gutter{position:absolute;top:0;bottom:0;left:0;width:var(--editor-gutter-width);z-index:3;pointer-events:none;overflow:hidden;white-space:pre;text-align:right;padding:var(--editor-source-top) var(--editor-gutter-label-gap) var(--editor-source-top) 0;font:var(--editor-font-size,15px)/1.65 'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--text-ui-muted);opacity:.55;background:var(--bg-editor);border-right:1px solid var(--border-ui);box-sizing:border-box}
 #markdown-input:focus{outline:none}
 #markdown-input::placeholder{color:transparent}
 #markdown-input{color:transparent;-webkit-text-fill-color:transparent}
@@ -20,7 +28,45 @@
 #codemirror-mount .cm-scroller{height:100%;overflow:auto}
 #codemirror-mount .cm-content{min-height:100%;white-space:pre}
 #codemirror-mount .cm-line{font-size:var(--editor-font-size,15px)}
-#codemirror-mount .cm-gutters{user-select:none}
+/* Match the textarea ruler, line baselines and glyph origin in CodeMirror.
+   Keep gutter width fixed as line counts grow from 9 to 1000+ lines. */
+#codemirror-mount .cm-scroller{
+ font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+ font-size:var(--editor-font-size,15px);
+ line-height:1.65;
+ letter-spacing:0;
+ tab-size:2;
+}
+#codemirror-mount .cm-gutters{
+ user-select:none;
+ flex:0 0 var(--editor-gutter-width);
+ width:var(--editor-gutter-width);
+ min-width:var(--editor-gutter-width);
+ box-sizing:border-box;
+}
+#codemirror-mount .cm-lineNumbers{
+ width:100%;
+ min-width:0;
+}
+#codemirror-mount .cm-lineNumbers .cm-gutterElement{
+ box-sizing:border-box;
+ width:100%;
+ min-width:0;
+ padding:0 var(--editor-gutter-label-gap) 0 0;
+ font-family:inherit;
+ font-size:var(--editor-font-size,15px);
+ line-height:1.65;
+ text-align:right;
+ opacity:.55;
+}
+#codemirror-mount .cm-content{
+ padding:var(--editor-source-top) 1.5rem var(--editor-source-top)
+  calc(var(--editor-source-indent) - var(--editor-gutter-width));
+}
+#codemirror-mount .cm-line{
+ padding:0;
+}
+
 #multi-cursor-toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 

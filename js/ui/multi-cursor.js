@@ -187,6 +187,10 @@ function ensureView(){
 }
 function activate(enabled,{focus=true}={}){
  if(enabled===active)return;
+ // Switching between two scroll containers must not reset the user's
+ // viewport position, even when the document has hundreds of lines.
+ const priorScroll=active?view.scrollDOM:input;
+ const scrollTop=priorScroll.scrollTop,scrollLeft=priorScroll.scrollLeft;
  if(enabled){
   ensureView();
   const key=docKey(),text=input.value;
@@ -213,6 +217,26 @@ function activate(enabled,{focus=true}={}){
  renderMultiCursorLabels();
  updateUI(false);
  if(focus)(active?view:input).focus();
+ const restoreViewport=()=>{
+  // CodeMirror can re-anchor its viewport in a follow-up layout measurement.
+  // Restore again after that measurement to avoid a 1-3 line scroll jump.
+  if(active!==enabled)return;
+  const nextScroll=active?view.scrollDOM:input;
+  nextScroll.scrollTop=scrollTop;
+  nextScroll.scrollLeft=scrollLeft;
+  if(!active){
+   const backdrop=$('editor-highlight-backdrop'),gutter=$('line-gutter');
+   if(backdrop){backdrop.scrollTop=input.scrollTop;backdrop.scrollLeft=input.scrollLeft;}
+   if(gutter)gutter.scrollTop=input.scrollTop;
+  }
+ };
+ restoreViewport();
+ if(active){
+  view.requestMeasure({write:restoreViewport});
+  // A newly revealed CodeMirror view may apply its scroll anchor a frame
+  // later; reapply the source viewport once layout has fully stabilized.
+  requestAnimationFrame(()=>requestAnimationFrame(restoreViewport));
+ }
 }
 export function initMultiCursor({textarea,refresh,toggleTabFocus:toggle}){
  input=textarea;updateUI=refresh;toggleTabFocus=toggle;
