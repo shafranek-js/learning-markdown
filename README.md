@@ -29,6 +29,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 - [Edit menu](#edit-menu)
 - [Settings menu](#settings-menu)
 - [Help menu](#help-menu)
+- [Prompt Library and Builder](#prompt-library-and-builder)
 - [Learn Markdown](#learn-markdown)
 - [Editing and shortcuts](#editing-and-shortcuts)
 - [Compatibility and export](#compatibility-and-export)
@@ -161,7 +162,20 @@ Frequently used commands stay close to their work: **View** controls the layout,
 
 The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewport, Escape dismissal and focus return. Opening Help does not alter Markdown source or progress.
 
-## Learn Markdown
+## Prompt Library and Builder
+
+**Prompt Library** is an offline, reusable Markdown prompt catalog built into the AI Prompt Sandbox. It includes **20 original English-language templates**, four each for Writing, Coding, Analysis, Learning and Work. The application does **not** call ChatGPT or any other AI provider.
+
+1. Open **Prompt Library** next to **AI Prompt Sandbox**, search by title/content or filter by category.
+2. Choose a template. Fill in fields generated from placeholders such as `{{topic}}` or `{{context}}`. The **Prepared Markdown prompt** updates immediately; empty fields remain visible as placeholders.
+3. Choose **Add to Sandbox** to append the prepared prompt to any existing Sandbox draft, or **Replace Sandbox** (explicit confirmation if there is existing text). Course lesson drafts are not overwritten. Undo works with the editor history.
+4. **Copy** the prepared Markdown or **Download .md**. You remain responsible for pasting it into an AI service of your choice, if needed.
+
+**Favorites** are saved between visits. **My Templates** lets you create, edit and delete your own Markdown templates using the same variable syntax. Deletion and abandoning unsaved template edits require confirmation. Personal templates are stored in guarded browser-local storage, separate from lesson progress, without requiring an account. Storage limits: 50 personal templates, 20,000 characters per template and up to 12 distinct variables. Your stored templates are tied to the browser/device; clear-site-data operations can remove them, so download important prompt content.
+
+The interface is translated into five languages (English, Czech, Ukrainian, Romanian, Russian), while the initial prompt texts remain in English. All templates are rendered as plain source text rather than executable HTML. This is a writing and learning tool, not an AI chat interface.
+
+
 
 | Track | Contents | Progress |
 |---|---|---|
