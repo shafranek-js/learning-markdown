@@ -110,7 +110,7 @@ test('line-number gutter remains fixed across 3-digit line counts, wrapping and 
 test('switching editors keeps the current scroll position and source intact',async({page})=>{
  await page.goto('/');
  const input=page.locator('#markdown-input');
- const source=Array.from({length:120},(_,i)=>'Line '+(i+1)+' with readable text').join('\\n');
+ const source=Array.from({length:120},(_,i)=>'Line '+(i+1)+' with readable text').join('\n');
  await input.fill(source);
  await input.evaluate(el=>{el.focus();el.scrollTop=300;});
  const offScroll=await input.evaluate(el=>el.scrollTop);
