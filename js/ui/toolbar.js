@@ -10,12 +10,13 @@ export function setHeading(level){
  const formatted=formatSourceLineSelection(source,start,end,'h'+level);
  if(!formatted){explainProtectedSourceFormatting();return;}
  if(formatted.text===source)return;
- // An empty source line generates a sample heading: leave the caret after it.
+ // Legacy single-caret heading actions leave the caret at the line end;
+ // preserve that UX, while keeping a multiline selection across the edits.
  const lineStart=source.lastIndexOf('\n',start-1)+1;
- const lineEnd=source.indexOf('\n',start);
- const emptyLine=start===end&&!source.slice(lineStart,lineEnd<0?source.length:lineEnd).trim();
- const caret=emptyLine?lineStart+('Heading '+level).length+level+1:formatted.start;
- applyEdit(formatted.text,caret,emptyLine?caret:formatted.end);
+ const updatedLineEnd=formatted.text.indexOf('\n',lineStart);
+ const singleCaret=start===end;
+ const caret=singleCaret?(updatedLineEnd<0?formatted.text.length:updatedLineEnd):formatted.start;
+ applyEdit(formatted.text,caret,singleCaret?caret:formatted.end);
 }
 export function insertSnippet(snippet,newline=true){if(multiInsert(snippet,newline))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,p=newline&&s>0&&v[s-1]!=='\n'?'\n':'';const value=p+snippet,pos=s+value.length;applyEdit(v.slice(0,s)+value+v.slice(e),pos,pos);}
 function wrap(prefix,suffix=prefix,placeholder='text'){if(multiWrap(prefix,suffix,placeholder))return;const a=area(),s=a.selectionStart,e=a.selectionEnd,v=a.value,selection=v.slice(s,e)||placeholder;
