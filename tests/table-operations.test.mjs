@@ -187,6 +187,20 @@ for(const invalidSections of [
  assert.notEqual(getTableReadOnlyReason(invalidSections,0),null,'invalid semantic topology must stay read-only');
  assert.equal(apply(invalidSections,'cell-blue',select(0,0)),null);
 }
+// #57: identify a rowspan that escapes its semantic row-group, rather than
+// giving the generic invalid-grid notice. Never attempt a lossy rewrite.
+const crossingSection='Before\n\n<table><thead><tr><th rowspan="2">Header</th></tr></thead>'+
+ '<tbody><tr><td>Body</td></tr></tbody></table>\n\nAfter';
+assert.equal(getTableReadOnlyReason(crossingSection,0),'cross-section-span');
+assert.equal(editTableAt(crossingSection,0,'cell-blue',select(0,0)),null);
+assert.equal(setTableCellText(crossingSection,0,0,0,'Altered'),null);
+const sameGroupSpan='<table><tbody><tr><td rowspan="2">Item</td><td>A</td></tr>'+
+ '<tr><td>B</td></tr></tbody></table>';
+assert.equal(getTableReadOnlyReason(sameGroupSpan,0),null,
+ 'row spans confined to a section remain editable');
+const sameGroupEdit=setTableCellText(sameGroupSpan,0,1,1,'Updated');
+assert(sameGroupEdit?.text.includes('rowspan="2"'));
+assert(sameGroupEdit.text.includes('Updated'));
 const customSection='<table><tbody class="important"><tr><td>Value</td></tr></tbody></table>';
 assert.equal(apply(customSection,'cell-blue',select(0,0)),null,
  'unmodeled section metadata must be preserved by declining visual editing');
