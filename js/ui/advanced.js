@@ -1,6 +1,6 @@
 import {state,save} from '../core/state.js';
 import {definitionText} from '../core/extensions.js';
-import {insertSnippet,insertStandaloneSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolbar.js';
+import {insertStandaloneSnippet,applyAdvancedPreset,insertAdvancedPageBreak} from './toolbar.js';
 import {ADVANCED_PRESETS} from '../core/advanced-presets.js';
 import {RICH_CONTENT,RICH_GROUPS,richLabels} from '../data/rich-content.js';
 import {insertRichContent} from './toolbar.js';
