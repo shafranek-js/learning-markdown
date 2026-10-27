@@ -25,8 +25,8 @@ export function sourceInlineWrapChanges(source,ranges,prefix,suffix,placeholder)
   const before=source.slice(0,from).match(/\\+$/)?.[0]?.length||0;
   if(before%2===1)return false;
   // CommonMark does not recognize intraword underscores as emphasis.
-  if(marker.includes('_')&&/^[\p{L}\p{N}]$/u.test(source[from-1]||'')&&
-     /^[\p{L}\p{N}]$/u.test(source[to]||''))return false;
+  if(marker.includes('_')&&(/^[\p{L}\p{N}]$/u.test(source[from-1]||'')||
+     /^[\p{L}\p{N}]$/u.test(source[to]||'')))return false;
   return true;
  };
  return ranges.map(range=>{
