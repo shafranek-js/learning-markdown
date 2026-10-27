@@ -100,8 +100,13 @@ export function initViewMenu(){
   else if(event.key==='End')next=options.at(-1);
   if(next){event.preventDefault();next.focus();}
   if(event.key==='Tab'){
-   // Menus never trap keyboard focus.
+   // Continue in normal document tab order after the menu trigger.
+   event.preventDefault();
    closeMenu();
+   const controls=Array.from(document.querySelectorAll('button,select,input,a[href],[tabindex]:not([tabindex="-1"])'))
+    .filter(node=>!node.disabled&&node.getClientRects().length);
+   const nextIndex=controls.indexOf(trigger)+(event.shiftKey?-1:1);
+   (controls[nextIndex]||trigger).focus();
   }
  });
  document.addEventListener('pointerdown',event=>{
