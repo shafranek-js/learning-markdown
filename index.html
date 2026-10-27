@@ -30,9 +30,10 @@
                 <span data-i18n="contentsBtn">Contents</span>
             </button>
 
-            <button id="theory-pane-toggle-btn" type="button" aria-controls="theory-panel" aria-pressed="true" aria-expanded="true" class="hidden md:inline-flex px-2.5 py-1.5 rounded-lg theme-panel-alt hover:opacity-90 border theme-border items-center gap-1.5 text-xs font-semibold transition shrink-0" title="Show/Hide Lesson Guide Panel">
-                <span class="w-2 h-2 rounded-full bg-emerald-400" id="guide-indicator-dot"></span>
-                <span data-i18n="guideBtn">Lesson Guide</span>
+            <!-- Legacy command target stays in the DOM for shared course-navigation
+                 handlers. View is the only visible Lesson Guide switch. -->
+            <button id="theory-pane-toggle-btn" type="button" hidden tabindex="-1" aria-hidden="true" aria-controls="theory-panel" aria-pressed="true" aria-expanded="true">
+                <span id="guide-indicator-dot" hidden></span>
             </button>
 
             <!-- Browser-safe File menu; downloads are labeled as downloads, not native disk saves. -->
