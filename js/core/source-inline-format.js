@@ -13,13 +13,13 @@ export function sourceInlineWrapChanges(source,ranges,prefix,suffix,placeholder)
  const markerIsValid=(marker,from,to)=>{
   const inner=source.slice(from+marker.length,to-marker.length);
   // Whitespace-only and padded delimiter pairs are literal Markdown text.
-  if(!inner||/^\\s|\\s$/.test(inner))return false;
+  if(!inner||/^\s|\s$/.test(inner))return false;
   // A backslash escaping the opening delimiter must remain untouched.
-  const before=source.slice(0,from).match(/\\\\+$/)?.[0]?.length||0;
+  const before=source.slice(0,from).match(/\\+$/)?.[0]?.length||0;
   if(before%2===1)return false;
   // CommonMark does not recognize intraword underscores as emphasis.
-  if(marker.includes('_')&&/^[\\p{L}\\p{N}]$/u.test(source[from-1]||'')&&
-     /^[\\p{L}\\p{N}]$/u.test(source[to]||''))return false;
+  if(marker.includes('_')&&/^[\p{L}\p{N}]$/u.test(source[from-1]||'')&&
+     /^[\p{L}\p{N}]$/u.test(source[to]||''))return false;
   return true;
  };
  return ranges.map(range=>{
