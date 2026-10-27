@@ -18,18 +18,13 @@ async function expectGuideSelection(page,checked){
 
 test('Lesson Guide hides course-only controls but preserves editor tools and settings',async({page})=>{
  await page.goto('/');
- const guide=page.locator('#theory-pane-toggle-btn');
  await expect(page.locator('#theory-panel')).toBeVisible();
- await expect(guide).toBeHidden();
- await expect(guide).toHaveAttribute('aria-pressed','true');
  await expectGuideSelection(page,true);
  await expect(page.locator('#contents-toggle-btn')).toBeVisible();
  for(const selector of courseControls)await expect(page.locator(selector)).toBeVisible();
 
  await setGuide(page);
  await expect(page.locator('#theory-panel')).toBeHidden();
- await expect(guide).toHaveAttribute('aria-pressed','false');
- await expect(guide).toHaveAttribute('aria-expanded','false');
  await expectGuideSelection(page,false);
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
@@ -37,7 +32,6 @@ test('Lesson Guide hides course-only controls but preserves editor tools and set
   await expect(page.locator(selector)).toBeVisible();
 
  await page.reload();
- await expect(guide).toHaveAttribute('aria-pressed','false');
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
  await setGuide(page);
@@ -46,7 +40,7 @@ test('Lesson Guide hides course-only controls but preserves editor tools and set
  for(const selector of courseControls)await expect(page.locator(selector)).toBeVisible();
 });
 
-test('Sandbox hides course header and Lesson Guide button restores the course',async({page})=>{
+test('Sandbox hides course header and View restores Lesson Guide',async({page})=>{
  await page.goto('/');
  await page.locator('#sandbox-mode-btn').click();
  await expect(page.locator('#theory-panel')).toBeHidden();
@@ -76,12 +70,8 @@ test('Mobile users can reopen Lesson Guide when Contents is hidden',async({page}
   localStorage.setItem(key,JSON.stringify({...saved,guideVisible:false}));
  });
  await page.reload();
- const guide=page.locator('#theory-pane-toggle-btn');
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
- await expect(guide).toBeHidden();
- await expect(guide).toHaveAttribute('aria-pressed','false');
  await setGuide(page);
- await expect(guide).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('#workspace-container')).toHaveAttribute('data-mobile-tab','guide');
  await expect(page.locator('#theory-panel')).toBeVisible();
  await expect(page.locator('#contents-toggle-btn')).toBeVisible();
