@@ -140,8 +140,9 @@ test('Tab screen-reader description is never rendered as editor text or a flex i
  const check=async()=>{
   const metrics=await page.evaluate(()=>{
    const hint=document.querySelector('#editor-tab-help');
-   const editor=document.querySelector('#markdown-input');
    const parent=document.querySelector('.editor-container');
+   const multi=document.querySelector('#editor-pane').classList.contains('multi-cursor-active');
+   const editor=document.querySelector(multi?'#codemirror-mount':'#markdown-input');
    const style=getComputedStyle(hint);
    return {
     position:style.position,
