@@ -181,6 +181,10 @@ function ensureView(){
 }
 function activate(enabled,{focus=true}={}){
  if(enabled===active)return;
+ // Switching between two scroll containers must not reset the user's
+ // viewport position, even when the document has hundreds of lines.
+ const priorScroll=active?view.scrollDOM:input;
+ const scrollTop=priorScroll.scrollTop,scrollLeft=priorScroll.scrollLeft;
  if(enabled){
   ensureView();
   const key=docKey(),text=input.value;
@@ -207,6 +211,15 @@ function activate(enabled,{focus=true}={}){
  renderMultiCursorLabels();
  updateUI(false);
  if(focus)(active?view:input).focus();
+ const nextScroll=active?view.scrollDOM:input;
+ nextScroll.scrollTop=scrollTop;
+ nextScroll.scrollLeft=scrollLeft;
+ if(!active){
+  // The textarea's two presentation layers are independent scroll elements.
+  const backdrop=$('editor-highlight-backdrop'),gutter=$('line-gutter');
+  if(backdrop){backdrop.scrollTop=input.scrollTop;backdrop.scrollLeft=input.scrollLeft;}
+  if(gutter)gutter.scrollTop=input.scrollTop;
+ }
 }
 export function initMultiCursor({textarea,refresh}){
  input=textarea;updateUI=refresh;
