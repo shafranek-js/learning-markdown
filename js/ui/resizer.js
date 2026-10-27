@@ -8,13 +8,23 @@ export function applyRatio(){const editor=$('editor-pane'),container=$('ide-spli
 }
 export function showGuide(visible){
  const panel=$('theory-panel'),splitter=$('resizer-guide-editor'),toggle=$('theory-pane-toggle-btn');
+ // On mobile the Guide toggle replaces Contents while the guide is closed.
+ // On desktop the md:inline-flex utility continues to show the toggle.
+ toggle.classList.toggle('hidden',visible);
+ toggle.classList.toggle('inline-flex',!visible);
  panel.classList.toggle('hidden',!visible);
  splitter.classList.toggle('hidden',!visible);
  splitter.classList.toggle('md:flex',visible);
+ // Course navigation belongs to the Lesson Guide, not the standalone editor.
+ $('contents-toggle-btn').classList.toggle('hidden',!visible);
+ if(!visible){
+  $('contents-drawer').classList.add('-translate-x-full');
+  $('contents-backdrop').classList.add('hidden');
+ }
  $('guide-indicator-dot').className='w-2 h-2 rounded-full '+(visible?'bg-emerald-400':'bg-slate-500');
  toggle.setAttribute('aria-pressed',String(visible));
  toggle.setAttribute('aria-expanded',String(visible));
- // The editor is a workspace when the guide is closed; course actions stay accessible via Contents.
+ // Keep course-only actions out of the standalone editor when the guide is closed.
  document.querySelectorAll('[data-course-ui]').forEach(element=>{element.hidden=!visible;});
 }
 export function setLayoutMode(next){mode=next;state.layoutMode=next;
