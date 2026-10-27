@@ -1,10 +1,11 @@
-import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiFencedBlock,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
+import {area,applyEdit,undoOrRedo,multiWrap,multiInsert,multiFencedBlock,multiImage,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
 import {makeRichSnippet} from '../data/rich-content.js';
 import {formatSourceLineSelection} from '../core/source-line-format.js';
 import {formatSourceInlineSelection} from '../core/source-inline-format.js';
 import {formatSourceFencedBlockSelection} from '../core/source-fenced-block.js';
-import {explainProtectedSourceFormatting} from './line-format-feedback.js';
+import {formatSourceImageSelection} from '../core/source-image-insertion.js';
+import {explainProtectedSourceFormatting,explainImageSelectionFailure} from './line-format-feedback.js';
 export function setHeading(level){
  if(multiHeading(level))return;
  const a=area(),start=a.selectionStart,end=a.selectionEnd,source=a.value;
@@ -54,6 +55,14 @@ export function insertCodeBlock(){
  if(change===null){explainProtectedSourceFormatting();return;}
  applyEdit(change.text,change.start,change.end);
 }
+export function insertImage(){
+ if(multiImage())return;
+ const input=area();
+ const {change,reason}=formatSourceImageSelection(
+  input.value,input.selectionStart,input.selectionEnd);
+ if(change===null){explainImageSelectionFailure(reason);return;}
+ applyEdit(change.text,change.start,change.end);
+}
 export function toolbarAction(action){
  if(['ul','ol','task','quote'].includes(action)){
   if(multiLineFormat(action))return;
@@ -74,7 +83,7 @@ export function toolbarAction(action){
  case 'ul':insertSnippet('- List item\n');break;case 'ol':insertSnippet('1. First step\n2. Second step\n');break;
  case 'task':insertSnippet('- [x] Completed task\n- [ ] Open task\n');break;
  case 'code-inline':wrap('`','`','command');break;case 'code-block':insertCodeBlock();break;
- case 'link':wrap('[','](https://example.com)','Link text');break;case 'image':insertSnippet('![Image](https://placehold.co/600x160/png)\n');break;
+ case 'link':wrap('[','](https://example.com)','Link text');break;case 'image':insertImage();break;
  case 'table':document.getElementById('table-picker-trigger')?.click();break;
  case 'hr':insertSnippet('\n---\n\n');break;
  // Advanced HTML actions are explicit opt-ins; they do not change the Markdown dialect.
