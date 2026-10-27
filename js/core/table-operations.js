@@ -614,7 +614,7 @@ export function setTableCellHTML(source,index,row,col,value){
 
 // Block cell editing is a separate explicit mode: inline-only operations must
 // never flatten paragraphs, lists, quotations or preformatted text.
-const CELL_BLOCK_TAGS=new Set('p div ul ol li blockquote pre h2 h3 h4'.split(' '));
+const CELL_BLOCK_TAGS=new Set('p div ul ol li blockquote pre h1 h2 h3 h4 h5 h6'.split(' '));
 const CELL_SAFE_TAGS=new Set([...CELL_INLINE_TAGS,...CELL_BLOCK_TAGS]);
 export function sanitizeBlockCellHTML(value){
  if(typeof value!=='string'||value.length>20000)return null;
@@ -790,7 +790,7 @@ export function insertTableCellImage(source,index,row,col,options={}){
   if(w!=='')image.setAttribute('width',String(w));
   if(h!=='')image.setAttribute('height',String(h));
   const hasContent=Boolean(owner.html.trim());
-  const hasBlocks=Boolean(parsed.body.querySelector('p,div,ul,ol,blockquote,pre,h2,h3,h4,figure'));
+  const hasBlocks=Boolean(parsed.body.querySelector('p,div,ul,ol,blockquote,pre,h1,h2,h3,h4,h5,h6,figure'));
   if(hasBlocks){
    const container=parsed.createElement('p');container.append(image);parsed.body.append(container);
   }else{
