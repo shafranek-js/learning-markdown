@@ -1,5 +1,5 @@
 import {marked} from 'marked';
-import {sanitizeHTML} from './sanitize.js';
+import {sanitizeHTML,isSupportedSanitizedTag} from './sanitize.js';
 import {MAX_COLUMNS,MAX_ROWS} from './table-generator.js';
 import {safeFigureUrl,figureDimension} from './figures.js';
 import {filterAdvancedClasses} from './advanced-presets.js';
@@ -88,6 +88,10 @@ function sourceTableTopologyReason(raw){
  if(/<!--|<!\[CDATA\[|<\s*\/?\s*(?:script|style|iframe|object|embed|svg|math|form|button|textarea|select|link|meta|base|template|noscript|audio|video|canvas|xmp|plaintext|listing|foreignObject)\b/i.test(raw))
   return 'unsupported';
  const doc=new DOMParser().parseFromString(raw,'text/html');
+ // Custom/unknown author elements are flattened by the sanitizer; never
+ // discard those elements during an unrelated table-cell edit.
+ if([...doc.body.querySelectorAll('*')].some(node=>!isSupportedSanitizedTag(node.tagName)))
+  return 'unsupported';
  if(doc.head.children.length||doc.body.children.length!==1||
     doc.body.firstElementChild?.tagName!=='TABLE'||[...doc.body.childNodes]
      .some(node=>node.nodeType!==1&&(node.nodeType!==3||node.textContent.trim())))return 'multiple-roots';
