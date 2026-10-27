@@ -164,9 +164,24 @@ The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewpor
 
 ## Prompt Library and Builder
 
-**Prompt Library** is an offline, reusable Markdown prompt catalog built into the AI Prompt Sandbox. It includes **20 original English-language templates**, four each for Writing, Coding, Analysis, Learning and Work. The application does **not** call ChatGPT or any other AI provider.
+**Prompt Library** is an offline, reusable Markdown prompt catalog built into the AI Prompt Sandbox. It includes **60 original English-language templates across 10 categories**, including Research, Design & UX, Career, Marketing and Productivity. The application does **not** call ChatGPT or any other AI provider.
 
-1. Open **Prompt Library** next to **AI Prompt Sandbox**, search by title/content or filter by category.
+The original 20 templates and their IDs remain unchanged. The catalog now includes:
+
+| Category | Templates | Example tasks |
+|---|---:|---|
+| Writing | 8 | Technical guide, FAQ, newsletter, video script |
+| Coding | 8 | Code review, SQL validation, API design, migration |
+| Analysis | 8 | KPI framework, root cause, executive brief, experiments |
+| Learning | 8 | Socratic tutor, worked examples, study plans |
+| Work | 8 | UAT, stakeholder status, process control, decision memo |
+| Research | 4 | Research plan, evidence matrix, literature synthesis |
+| Design & UX | 4 | Journey map, heuristic audit, accessibility test plan |
+| Career | 4 | CV tailoring, interview practice, job comparisons |
+| Marketing | 4 | Positioning, segmentation, landing page, launch plan |
+| Productivity | 4 | Weekly planning, breakdown, prioritization, retrospective |
+
+1. Open **Prompt Library** next to **AI Prompt Sandbox**. Search by multiple words (all terms must match), with the most relevant title and description matches first. Filter by category; the options show the number of templates in the current collection.
 2. Choose a template. Fill in fields generated from placeholders such as `{{topic}}` or `{{context}}`. The **Prepared Markdown prompt** updates immediately; empty fields remain visible as placeholders.
 3. Choose **Add to Sandbox** to append the prepared prompt to any existing Sandbox draft, or **Replace Sandbox** (explicit confirmation if there is existing text). Course lesson drafts are not overwritten. Undo works with the editor history.
 4. **Copy** the prepared Markdown or **Download .md**. You remain responsible for pasting it into an AI service of your choice, if needed.
