@@ -115,3 +115,83 @@ test('IME-composing Tab does not invoke selected-line formatting',async({page})=
  });
  expect(data).toEqual({prevented:false,value:'Alpha\nBeta'});
 });
+
+
+test('Shift+Tab with one caret outdents ordinary text without moving focus',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const original='Before\n  Ordinary text\nAfter';
+ await input.fill(original);
+ await input.evaluate(el=>{
+  el.focus();
+  const caret=el.value.indexOf('text');
+  el.setSelectionRange(caret,caret);
+ });
+ const originalCaret=await input.evaluate(el=>el.selectionStart);
+ await input.press('Shift+Tab');
+ await expect(input).toHaveValue('Before\nOrdinary text\nAfter');
+ await expect(input).toBeFocused();
+ expect(await input.evaluate(el=>el.selectionStart)).toBe(originalCaret-2);
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(original);
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue('Before\nOrdinary text\nAfter');
+});
+
+test('Shift+Tab with no indentation retains standard backward keyboard traversal',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('Plain line');
+ await input.focus();
+ await input.press('Shift+Tab');
+ await expect(page.locator('#clear-editor-btn')).toBeFocused();
+ await expect(input).toHaveValue('Plain line');
+});
+
+test('single caret Shift+Tab outdents tab indentation inside a code fence',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const original='~~~js\n\tconst x=1;\n~~~';
+ await input.fill(original);
+ await input.evaluate(el=>{el.focus();const p=el.value.indexOf('const');el.setSelectionRange(p,p);});
+ await input.press('Shift+Tab');
+ await expect(input).toHaveValue('~~~js\nconst x=1;\n~~~');
+ await expect(input).toBeFocused();
+ await input.press('Shift+Tab');
+ await expect(input).toHaveValue('~~~js\nconst x=1;\n~~~');
+});
+
+test('CodeMirror already supports single-caret Shift+Tab on indented prose',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const original='  Prose';
+ await input.fill(original);
+ await page.locator('#multi-cursor-toggle').click();
+ const editor=page.locator('#codemirror-mount .cm-content');
+ await expect(editor).toBeVisible();
+ await editor.click();
+ await page.keyboard.press('Control+End');
+ await editor.press('Shift+Tab');
+ await expect(input).toHaveValue('Prose');
+ await expect(editor).toBeFocused();
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(original);
+});
+
+test('mobile Shift+Tab and composing Shift+Tab do not lose source or focus',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('  Dobrý den');
+ await input.focus();
+ const composing=await input.evaluate(el=>{
+  const before=el.value;
+  const event=new KeyboardEvent('keydown',{key:'Tab',shiftKey:true,isComposing:true,bubbles:true,cancelable:true});
+  el.dispatchEvent(event);
+  return {unchanged:el.value===before,prevented:event.defaultPrevented};
+ });
+ expect(composing).toEqual({unchanged:true,prevented:false});
+ await input.press('Shift+Tab');
+ await expect(input).toHaveValue('Dobrý den');
+ await expect(input).toBeFocused();
+});
