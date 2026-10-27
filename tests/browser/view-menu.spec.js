@@ -66,6 +66,14 @@ test('View menu supports keyboard, Escape, outside click and five languages',asy
  await expect(menu(page)).toBeHidden();
  await expect(trigger(page)).toBeFocused();
  await open(page);
+ await page.keyboard.press('Tab');
+ await expect(menu(page)).toBeHidden();
+ await expect(page.locator('#sandbox-mode-btn')).toBeFocused();
+ await open(page);
+ await page.keyboard.press('Shift+Tab');
+ await expect(menu(page)).toBeHidden();
+ await expect(page.locator('#theory-pane-toggle-btn')).toBeFocused();
+ await open(page);
  await page.locator('#sandbox-mode-btn').click();
  await expect(menu(page)).toBeHidden();
  for(const [lang,label] of [['en','View'],['cs','Zobrazení'],['uk','Вигляд'],['ro','Vizualizare'],['ru','Вид']]){
