@@ -14,7 +14,8 @@ export function sourceStandaloneSnippetChanges(source,ranges,snippet){
   // block boundary and must not consume that next line.
   const lineEnd=hasSelection&&to<source.length&&source[to-1]!=='\n'
    ?source.indexOf('\n',to):-1;
-  const at=hasSelection&&to<source.length&&source[to-1]!=='\n'\n   ?(lineEnd>=0?lineEnd:source.length):to;
+  const at=hasSelection&&to<source.length&&source[to-1]!=='\n'
+   ?(lineEnd>=0?lineEnd:source.length):to;
   let insert;
   if(hasSelection){
    const before=at>0&&source[at-1]!=='\n'?'\n\n':'\n';
