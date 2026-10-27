@@ -119,10 +119,22 @@ test('switching editors keeps the current scroll position and source intact',asy
  expect(offScroll).toBeGreaterThan(200);
  await page.locator('#multi-cursor-toggle').click();
  // Let CodeMirror complete its deferred layout/scroll anchoring first.
- await expect.poll(async()=>{
-  const onScroll=await page.locator('#codemirror-mount .cm-scroller').evaluate(el=>el.scrollTop);
-  return Math.abs(onScroll-offScroll);
- },{timeout:3000}).toBeLessThan(3);
+ try{
+  await expect.poll(async()=>{
+   const onScroll=await page.locator('#codemirror-mount .cm-scroller').evaluate(el=>el.scrollTop);
+   return Math.abs(onScroll-offScroll);
+  },{timeout:3000}).toBeLessThan(3);
+ }catch(error){
+  const diagnostics=await page.evaluate(()=>{
+   const metrics=el=>({
+    scrollTop:el.scrollTop,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight,
+    fontSize:getComputedStyle(el).fontSize,lineHeight:getComputedStyle(el).lineHeight
+   });
+   return {textarea:metrics(document.querySelector('#markdown-input')),
+    codemirror:metrics(document.querySelector('#codemirror-mount .cm-scroller'))};
+  });
+  throw new Error('Editor scroll mismatch: '+JSON.stringify({offScroll,...diagnostics})+'\\n'+error.message);
+ }
  await page.locator('#multi-cursor-toggle').click();
  const restoredScroll=await input.evaluate(el=>el.scrollTop);
  expect(Math.abs(restoredScroll-offScroll)).toBeLessThan(3);
