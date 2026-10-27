@@ -1,5 +1,5 @@
 import {marked} from 'marked';
-import {sanitizeHTML} from './sanitize.js';
+import {sanitizeHTML,isSupportedSanitizedTag} from './sanitize.js';
 import {MAX_COLUMNS,MAX_ROWS} from './table-generator.js';
 import {safeFigureUrl,figureDimension} from './figures.js';
 import {filterAdvancedClasses} from './advanced-presets.js';
@@ -79,8 +79,19 @@ const spanValue=(el,name)=>{const n=Number(el.getAttribute(name)||1);return Numb
 // reject source that the HTML parser would repair, or structures the serializer
 // cannot reproduce (multiple roots, section metadata, malformed spans).
 // Keeping such source read-only is safer than silently rewriting it.
-function sourceTableTopologyReason(raw){
+function sourceTableTopologyReason(raw,{checkContent=true}={}){
+ // Do not silently discard original authoring data. HTML comments, CDATA,
+ // browser raw-text nodes, foreign content and active/unsupported elements
+ // cannot be faithfully rebuilt by the table serializer or sanitizer.
+ // New content inserted through visual editing is sanitized separately;
+ // this check concerns only existing source that must be preserved.
+ if(checkContent&&/<!--|<!\[CDATA\[|<\s*\/?\s*(?:script|style|iframe|object|embed|svg|math|form|button|textarea|select|link|meta|base|template|noscript|audio|video|canvas|xmp|plaintext|listing|foreignObject)\b/i.test(raw))
+  return 'unsupported';
  const doc=new DOMParser().parseFromString(raw,'text/html');
+ // Custom/unknown author elements are flattened by the sanitizer; never
+ // discard those elements during an unrelated table-cell edit.
+ if(checkContent&&[...doc.body.querySelectorAll('*')].some(node=>!isSupportedSanitizedTag(node.tagName)))
+  return 'unsupported';
  if(doc.head.children.length||doc.body.children.length!==1||
     doc.body.firstElementChild?.tagName!=='TABLE'||[...doc.body.childNodes]
      .some(node=>node.nodeType!==1&&(node.nodeType!==3||node.textContent.trim())))return 'multiple-roots';
@@ -276,7 +287,8 @@ function unmodeledRichMetadata(entry){
 
 // Resolve the selected leaf table from its original source-backed HTML block.
 function selectedHTMLTable(entry){
- if(!entry||!['html','nested'].includes(entry.type)||sourceTableTopologyReason(entry.raw))return null;
+ if(!entry||!['html','nested'].includes(entry.type)||
+    sourceTableTopologyReason(entry.raw,{checkContent:entry.type!=='nested'}))return null;
  const doc=new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html');
  const tables=[...doc.querySelectorAll('table')];
  if(tables.length>26)return null;
@@ -293,6 +305,8 @@ function selectedHTMLTable(entry){
   // A source range must represent exactly the same leaf the DOM selected.
   // Refuse browser-repaired or ambiguous source rather than editing a neighbor.
   const fragment=entry.raw.slice(sourceRange.start,sourceRange.end);
+  // This exact leaf is rewritten; unrelated outer content is copied intact.
+  if(sourceTableTopologyReason(fragment))return null;
   const match=new DOMParser().parseFromString(sanitizeHTML(fragment),'text/html').querySelector('table');
   if(!match||match.outerHTML!==target.outerHTML)return null;
   let ancestor=target.parentElement.closest('table');
@@ -311,7 +325,7 @@ export function getTableReadOnlyReason(source,index){
  const entry=findEditableTables(source)[index];
  if(!entry)return 'unmapped';
  if(entry.type==='gfm')return null;
- const reason=sourceTableTopologyReason(entry.raw);
+ const reason=sourceTableTopologyReason(entry.raw,{checkContent:entry.type!=='nested'});
  if(reason)return reason;
  const doc=new DOMParser().parseFromString(sanitizeHTML(entry.raw),'text/html');
  const tables=[...doc.querySelectorAll('table')];

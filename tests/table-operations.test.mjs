@@ -753,4 +753,57 @@ assert(setTableCellBlocks(richSafe,0,0,0,
  '<p><strong>Updated</strong> <a href="https://example.org/info">reference</a></p>'+
  '<ul><li>Alpha</li><li>Beta</li></ul>')?.text.includes('<strong>Updated</strong>'));
 
+
+// #57: An edit in another cell must not delete author comments or unsupported
+// original HTML that the Preview sanitizer strips/unwraps. Never mutate source.
+const droppedOriginalContent=[
+ '<!-- Preserve author markup note -->',
+ '<script>window.hidden = true</script>',
+ '<style>.custom { color: red }</style>',
+ '<template><p>Reusable fragment</p></template>',
+ '<textarea>Original plain text</textarea>',
+ '<video>Fallback video text</video>',
+ '<audio>Fallback audio text</audio>',
+ '<svg><title>Vector label</title></svg>',
+ '<math><mi>x</mi></math>',
+ '<xmp><strong>Literal markup</strong></xmp>',
+ '<custom-label>Retain original custom element</custom-label>',
+ '<widget:note>Retain unknown namespace</widget:note>'
+];
+for(const content of droppedOriginalContent){
+ const original='Intro\n\n<table><tr><td>First '+content+
+  '</td><td>Safe neighbor</td></tr></table>\n\nOutro';
+ assert.equal(getTableReadOnlyReason(original,0),'unsupported',content);
+ assert.equal(editTableAt(original,0,'cell-mint',select(0,1)),null,content);
+ assert.equal(setTableCellText(original,0,0,1,'Change'),null,content);
+ assert.equal(setTableCellHTML(original,0,0,1,'<strong>Change</strong>'),null,content);
+ assert.equal(setTableCellBlocks(original,0,0,1,'<p>Change</p>'),null,content);
+}
+// Source preservation is scoped: unsupported custom content in an outer
+// parent remains byte-identical when a safe nested LEAF is edited.
+const outerCustomPrefix='<table><tr><td><custom-note>Keep me</custom-note>';
+const innerSafe='<table><tr><td>Editable leaf</td></tr></table>';
+const outerCustomSuffix='<span>Following the leaf</span></td></tr></table>';
+const outerCustom=outerCustomPrefix+innerSafe+outerCustomSuffix;
+assert.equal(getTableReadOnlyReason(outerCustom,0),'unsupported');
+assert.equal(getTableReadOnlyReason(outerCustom,1),null);
+const customLeafEdit=setTableCellText(outerCustom,1,0,0,'Changed leaf');
+assert(customLeafEdit?.text.startsWith(outerCustomPrefix));
+assert(customLeafEdit.text.endsWith(outerCustomSuffix));
+assert(customLeafEdit.text.includes('<td>Changed leaf</td>'));
+const innerUnknown='<table><tr><td><custom-note>Must stay</custom-note></td></tr></table>';
+const nestedUnknown='<table><tr><td>Outer '+innerUnknown+'</td></tr></table>';
+assert.notEqual(getTableReadOnlyReason(nestedUnknown,1),null);
+assert.equal(setTableCellText(nestedUnknown,1,0,0,'Unsafe rewrite'),null);
+
+// Guarding one source block must not disable unrelated standalone tables.
+const onlyFirstGuarded='<table><tr><td><!-- Keep source -->First</td></tr></table>\n\n'+
+ '<table><tr><td>Other</td></tr></table>';
+assert.equal(findEditableTables(onlyFirstGuarded).length,2);
+assert.equal(getTableReadOnlyReason(onlyFirstGuarded,0),'unsupported');
+assert.equal(getTableReadOnlyReason(onlyFirstGuarded,1),null);
+const independentEdit=setTableCellText(onlyFirstGuarded,1,0,0,'Changed');
+assert(independentEdit?.text.startsWith(onlyFirstGuarded.split('\n\n')[0]+'\n\n'));
+assert(independentEdit.text.includes('<td>Changed</td>'));
+
 console.log('PASS: source-scoped GFM/HTML table edits, merged grid topology, safety, spans and reversible representations');
