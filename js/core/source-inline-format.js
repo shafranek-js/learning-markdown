@@ -45,9 +45,9 @@ export function sourceInlineWrapChanges(source,ranges,prefix,suffix,placeholder)
   const to=around?range.to+around.length:range.to;
   // In an identifier (file_name) underscores cannot create CommonMark
   // emphasis. Prefer '*' there while preserving the default '_' elsewhere.
-  const inWord=prefix==='_'&&suffix==='_'&&
-   /[\p{L}\p{N}_]/u.test(source[range.from-1]||'')&&
-   /[\p{L}\p{N}_]/u.test(source[range.to]||'');
+  const inWord=prefix==='_'&&suffix==='_'&&(
+   /[\p{L}\p{N}_]/u.test(source[range.from-1]||'')||
+   /[\p{L}\p{N}_]/u.test(source[range.to]||''));
   const opening=!full&&!around&&inWord?'*':prefix;
   const closing=!full&&!around&&inWord?'*':suffix;
   const insert=full||around?inner:opening+inner+closing;
