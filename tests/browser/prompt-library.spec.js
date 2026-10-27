@@ -20,16 +20,16 @@ test('Template variable filling, Markdown export, safe append and Undo',async({p
  await expect(page.locator('#prompt-library-variables textarea')).toHaveCount(2);
  await page.locator('[data-variable="stack"]').fill('JavaScript');
  await page.locator('[data-variable="code"]').fill('const answer = 42;');
- await expect(page.locator('#prompt-library-output')).toContainText('JavaScript');
- await expect(page.locator('#prompt-library-output')).toContainText('const answer = 42;');
+ await expect(page.locator('#prompt-library-output')).toHaveValue(/JavaScript/);
+ await expect(page.locator('#prompt-library-output')).toHaveValue(/const answer = 42;/);
  const downloadEvent=page.waitForEvent('download');
  await page.locator('#prompt-library-download').click();
  const download=await downloadEvent;
  expect(download.suggestedFilename()).toBe('Code-review.md');
  await page.locator('#prompt-library-append').click();
  await expect(modal(page)).toBeHidden();
- await expect(editor).toContainText('# Existing work');
- await expect(editor).toContainText('const answer = 42;');
+ await expect(editor).toHaveValue(/# Existing work/);
+ await expect(editor).toHaveValue(/const answer = 42;/);
  await page.locator('#undo-btn').click();
  await expect(editor).toHaveValue('# Existing work');
 });
@@ -51,10 +51,10 @@ test('Replacement can be cancelled without switching course or damaging Sandbox 
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('#prompt-library-replace').click();
  await expect(modal(page)).toBeHidden();
- await expect(editor).toContainText('# Role');
+ await expect(editor).toHaveValue(/# Role/);
  await expect(page.locator('#active-tab-title')).toContainText('Sandbox');
  await page.reload();
- await expect(editor).toContainText('# Role');
+ await expect(editor).toHaveValue(/# Role/);
 });
 
 test('Personal template CRUD and Favorites persist on reload',async({page})=>{
@@ -108,7 +108,7 @@ test('Search, locale and accessible mobile dialog',async({page})=>{
  await page.locator('#prompt-library-search').fill('flash');
  await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(1);
  await chooseTemplate(page,'learning-flashcards');
- await expect(page.locator('#prompt-library-output')).toContainText('# Notes');
+ await expect(page.locator('#prompt-library-output')).toHaveValue(/# Notes/);
  const box=await page.locator('.prompt-library-surface').boundingBox();
  expect(box.x).toBeGreaterThanOrEqual(0);
  expect(box.x+box.width).toBeLessThanOrEqual(391);
