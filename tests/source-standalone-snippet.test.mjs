@@ -8,8 +8,8 @@ const apply=(source,changes)=>changes.reduceRight((doc,e)=>
 {
  const source='Before SELECTED after',start=source.indexOf('SELECTED');
  const out=formatSourceStandaloneSnippet(source,start,start+8,example);
- assert.equal(out.text,'Before SELECTED\n\n'+example+'\n\n after');
- assert.equal(out.start,out.text.length-' after'.length);
+ assert.equal(out.text,'Before SELECTED after\n\n'+example+'\n');
+ assert.equal(out.start,out.text.length);
  assert.equal(out.end,out.start);
  assert(out.text.includes('SELECTED'), 'all selected bytes must remain present');
 }
@@ -48,7 +48,7 @@ const apply=(source,changes)=>changes.reduceRight((doc,e)=>
  const selection=source.indexOf('[link]');
  const snippet='\n\n\x60\x60\x60mermaid\nflowchart LR\n  A --> B\n\x60\x60\x60\n';
  const out=formatSourceStandaloneSnippet(source,selection,selection+6,snippet);
- assert(out.text.startsWith('Text [link]\n\n\x60\x60\x60mermaid'));
- assert(out.text.endsWith('\n\n(https://example.org)'));
+ assert(out.text.startsWith('Text [link](https://example.org)\n\n\x60\x60\x60mermaid'));
+ assert(out.text.endsWith('\x60\x60\x60\n'));
 }
 console.log('Source-safe standalone snippets: passed');
