@@ -15,7 +15,7 @@ test('Template variable filling, Markdown export, safe append and Undo',async({p
  const editor=page.locator('#markdown-input');
  await editor.fill('# Existing work');
  await openLibrary(page);
- await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(20);
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(60);
  await chooseTemplate(page,'coding-review');
  await expect(page.locator('#prompt-library-variables textarea')).toHaveCount(2);
  await page.locator('[data-variable="stack"]').fill('JavaScript');
@@ -128,4 +128,67 @@ test('Prompt preview sanitizes user-controlled HTML while preserving raw Markdow
  await expect(page.locator('#prompt-library-output')).toHaveValue(/onerror=alert/);
  await expect(page.locator('#prompt-library-rendered [onerror]')).toHaveCount(0);
  await expect(page.locator('#prompt-library-rendered')).toBeVisible();
+});
+
+test('Expanded catalog filters ten categories and supports multi-term search',async({page})=>{
+ await page.goto('/');
+ await openLibrary(page);
+ const category=page.locator('#prompt-library-category');
+ await expect(category.locator('option')).toHaveCount(11);
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(60);
+ await category.selectOption('Research');
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(4);
+ await expect(page.locator('#prompt-library-count')).toContainText('4 templates');
+ await category.selectOption('Design & UX');
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(4);
+ await chooseTemplate(page,'design-accessibility-plan');
+ await expect(page.locator('#prompt-library-variables textarea')).toHaveCount(3);
+ await category.selectOption('all');
+ await page.locator('#prompt-library-search').fill('SQL joins');
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(1);
+ await expect(page.locator('#prompt-library-list [data-prompt-id]').first()).toHaveAttribute('data-prompt-id','coding-sql-review');
+ await page.locator('#prompt-library-search').clear();
+ await category.selectOption('Career');
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(4);
+});
+
+test('Favorites and custom templates from old and new categories survive catalog upgrade',async({page})=>{
+ await page.addInitScript(()=>{
+  localStorage.setItem('md_prompt_library_v1',JSON.stringify({
+   personal:[{id:'own_saved04',title:'Pre-existing work note',category:'Work',description:'Stored before update',body:'# {{topic}}'}],
+   favorites:['writing-blog','own_saved04']
+  }));
+ });
+ await page.goto('/');
+ await openLibrary(page);
+ await page.locator('#prompt-library-favorites').click();
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(2);
+ await page.locator('#prompt-library-mine').click();
+ await expect(page.locator('#prompt-library-selected-title')).toHaveText('Pre-existing work note');
+ await page.locator('#prompt-library-new').click();
+ await page.locator('#prompt-own-title').fill('New research note');
+ await page.locator('#prompt-own-category').selectOption('Research');
+ await page.locator('#prompt-own-body').fill('# {{question}}\\n\\n## Sources\\n{{sources}}');
+ await page.locator('#prompt-own-save').click();
+ await expect(page.locator('#prompt-library-selected-title')).toHaveText('New research note');
+ await page.locator('#prompt-library-close').click();
+ await page.reload();
+ await openLibrary(page);
+ await page.locator('#prompt-library-mine').click();
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(2);
+ await page.locator('#prompt-library-favorites').click();
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(2);
+});
+
+test('Expanded category names remain localizable without changing saved IDs',async({page})=>{
+ await page.goto('/');
+ for(const [lang,word] of [['en','Research'],['cs','Výzkum'],['uk','Дослідження'],['ro','Cercetare'],['ru','Исследования']]){
+  await setAppLanguage(page,lang);
+  await openLibrary(page);
+  await expect(page.locator('#prompt-library-category option[value="Research"]')).toContainText(word);
+  await page.locator('#prompt-library-category').selectOption('Research');
+  await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(4);
+  await page.keyboard.press('Escape');
+  await expect(modal(page)).toBeHidden();
+ }
 });
