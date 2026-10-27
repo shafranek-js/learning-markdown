@@ -45,6 +45,29 @@ const apply=(source,edits)=>[...edits].reverse().reduce((text,e)=>
  const changed=indentSourceSelection(src,0,src.indexOf('World'));
  assert.equal(changed.text,'  Hello\r\nWorld\r\n');
 }
+// Collapsed cursors outdent only their own logical line and preserve the
+// position relative to the remaining text, including mixed whitespace.
+{
+ const source='Before\n  Ordinary text\nAfter';
+ const caret=source.indexOf('text');
+ const change=indentSourceSelection(source,caret,caret,true);
+ assert.deepEqual(change,{text:'Before\nOrdinary text\nAfter',start:caret-2,end:caret-2});
+ assert.deepEqual(indentSourceSelection(change.text,change.start,change.end,true),
+  {text:change.text,start:change.start,end:change.end});
+}
+{
+ const source='  Heading';
+ assert.deepEqual(indentSourceSelection(source,1,1,true),
+  {text:'Heading',start:0,end:0});
+}
+{
+ const source='Before\n\tcode literal\nAfter';
+ const caret=source.indexOf('literal');
+ const change=indentSourceSelection(source,caret,caret,true);
+ assert.equal(change.text,'Before\ncode literal\nAfter');
+ assert.equal(change.start,caret-1);
+}
+
 assert.equal(sourceIndentEdits('abc',[{from:3,to:2}]),null);
 assert.equal(sourceIndentEdits('abc',[{from:0,to:4}]),null);
 assert.equal(sourceIndentEdits('abc',[{from:0,to:1}],1),null);
