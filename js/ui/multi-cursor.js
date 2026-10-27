@@ -328,20 +328,12 @@ export function multiCursorRichContent(group,id){
 export function multiCursorHeading(level){
  if(!active)return false;
  if(!Number.isInteger(level)||level<1||level>6)return false;
- const doc=view.state.doc,changes=new Map();
- for(const range of view.state.selection.ranges){
-  const first=doc.lineAt(range.from).number;
-  const last=doc.lineAt(range.to).number;
-  const end=range.to>range.from&&doc.line(last).from===range.to?last-1:last;
-  for(let number=first;number<=Math.max(first,end);number++){
-   const line=doc.line(number),match=line.text.match(/^(#{1,6})[ \t]*(.*)$/);
-   const value=match?match[2]:line.text.trim();
-   const updated=match?.[1].length===level?value:'#'.repeat(level)+' '+(value||'Heading '+level);
-   if(updated!==line.text)changes.set(line.from,{from:line.from,to:line.to,insert:updated});
-  }
+ const edits=sourceLineFormatEdits(view.state.doc.toString(),view.state.selection.ranges,'h'+level);
+ if(edits===null){
+  explainProtectedSourceFormatting();
+  view.focus();return true;
  }
- if(!changes.size)return true;
- dispatchFormattingChanges(view,[...changes.values()].sort((a,b)=>a.from-b.from));
+ dispatchFormattingChanges(view,edits);
  view.focus();return true;
 }
 
