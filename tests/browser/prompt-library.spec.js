@@ -1,0 +1,118 @@
+import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
+
+const modal=page=>page.locator('#prompt-library-dialog');
+async function openLibrary(page){
+ await page.locator('#prompt-library-trigger').click();
+ await expect(modal(page)).toBeVisible();
+}
+async function chooseTemplate(page,id){
+ await page.locator('[data-prompt-id="'+id+'"]').click();
+}
+test('Template variable filling, Markdown export, safe append and Undo',async({page})=>{
+ await page.goto('/');
+ await page.locator('#sandbox-mode-btn').click();
+ const editor=page.locator('#markdown-input');
+ await editor.fill('# Existing work');
+ await openLibrary(page);
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(20);
+ await chooseTemplate(page,'coding-review');
+ await expect(page.locator('#prompt-library-variables textarea')).toHaveCount(2);
+ await page.locator('[data-variable="stack"]').fill('JavaScript');
+ await page.locator('[data-variable="code"]').fill('const answer = 42;');
+ await expect(page.locator('#prompt-library-output')).toContainText('JavaScript');
+ await expect(page.locator('#prompt-library-output')).toContainText('const answer = 42;');
+ const downloadEvent=page.waitForEvent('download');
+ await page.locator('#prompt-library-download').click();
+ const download=await downloadEvent;
+ expect(download.suggestedFilename()).toBe('Code-review.md');
+ await page.locator('#prompt-library-append').click();
+ await expect(modal(page)).toBeHidden();
+ await expect(editor).toContainText('# Existing work');
+ await expect(editor).toContainText('const answer = 42;');
+ await page.locator('#undo-btn').click();
+ await expect(editor).toHaveValue('# Existing work');
+});
+
+test('Replacement can be cancelled without switching course or damaging Sandbox draft',async({page})=>{
+ await page.goto('/');
+ await page.locator('#sandbox-mode-btn').click();
+ const editor=page.locator('#markdown-input');
+ await editor.fill('Sandbox data to keep');
+ await page.locator('#sandbox-mode-btn').click();
+ await editor.fill('# Lesson draft');
+ await openLibrary(page);
+ await chooseTemplate(page,'analysis-document');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.locator('#prompt-library-replace').click();
+ await expect(modal(page)).toBeVisible();
+ await expect(editor).toHaveValue('# Lesson draft');
+ await expect(page.locator('#active-tab-title')).not.toContainText('Sandbox');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#prompt-library-replace').click();
+ await expect(modal(page)).toBeHidden();
+ await expect(editor).toContainText('# Role');
+ await expect(page.locator('#active-tab-title')).toContainText('Sandbox');
+ await page.reload();
+ await expect(editor).toContainText('# Role');
+});
+
+test('Personal template CRUD and Favorites persist on reload',async({page})=>{
+ await page.goto('/');
+ await openLibrary(page);
+ await page.locator('#prompt-library-new').click();
+ await page.locator('#prompt-own-title').fill('Release checklist');
+ await page.locator('#prompt-own-category').selectOption('Work');
+ await page.locator('#prompt-own-description').fill('Custom release template');
+ await page.locator('#prompt-own-body').fill('# {{project}}\n\n- [ ] {{test_name}}');
+ await page.locator('#prompt-own-save').click();
+ await expect(page.locator('#prompt-library-selected-title')).toHaveText('Release checklist');
+ await page.locator('#prompt-library-star').click();
+ await expect(page.locator('#prompt-library-star')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#prompt-library-close').click();
+ await page.reload();
+ await openLibrary(page);
+ await page.locator('#prompt-library-favorites').click();
+ await expect(page.locator('#prompt-library-selected-title')).toHaveText('Release checklist');
+ await page.locator('#prompt-library-edit').click();
+ await page.locator('#prompt-own-title').fill('Release UAT checklist');
+ await page.locator('#prompt-own-save').click();
+ await expect(page.locator('#prompt-library-selected-title')).toHaveText('Release UAT checklist');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.locator('#prompt-library-delete').click();
+ await expect(page.locator('#prompt-library-selected-title')).toHaveText('Release UAT checklist');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#prompt-library-delete').click();
+ await expect(page.locator('#prompt-library-count')).toContainText('0 templates');
+});
+
+test('Unsaved personal template editor warns before discarding',async({page})=>{
+ await page.goto('/');
+ await openLibrary(page);
+ await page.locator('#prompt-library-new').click();
+ await page.locator('#prompt-own-title').fill('Draft unsaved');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.locator('#prompt-library-close').click();
+ await expect(modal(page)).toBeVisible();
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#prompt-library-close').click();
+ await expect(modal(page)).toBeHidden();
+});
+
+test('Search, locale and accessible mobile dialog',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await setAppLanguage(page,'ru');
+ await openLibrary(page);
+ await expect(page.locator('#prompt-library-title')).toHaveText('Библиотека промптов');
+ await page.locator('#prompt-library-search').fill('flash');
+ await expect(page.locator('#prompt-library-list [data-prompt-id]')).toHaveCount(1);
+ await chooseTemplate(page,'learning-flashcards');
+ await expect(page.locator('#prompt-library-output')).toContainText('# Notes');
+ const box=await page.locator('.prompt-library-surface').boundingBox();
+ expect(box.x).toBeGreaterThanOrEqual(0);
+ expect(box.x+box.width).toBeLessThanOrEqual(391);
+ await page.keyboard.press('Escape');
+ await expect(modal(page)).toBeHidden();
+ await expect(page.locator('#prompt-library-trigger')).toBeFocused();
+});
