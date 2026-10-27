@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const menu=page=>page.locator('#view-menu');
 const trigger=page=>page.locator('#view-menu-trigger');
@@ -68,7 +69,7 @@ test('View menu supports keyboard, Escape, outside click and five languages',asy
  await open(page);
  await page.keyboard.press('Tab');
  await expect(menu(page)).toBeHidden();
- await expect(page.locator('#help-menu-trigger')).toBeFocused();
+ await expect(page.locator('#settings-menu-trigger')).toBeFocused();
  await open(page);
  await page.keyboard.press('Shift+Tab');
  await expect(menu(page)).toBeHidden();
@@ -77,7 +78,7 @@ test('View menu supports keyboard, Escape, outside click and five languages',asy
  await page.locator('#sandbox-mode-btn').click();
  await expect(menu(page)).toBeHidden();
  for(const [lang,label] of [['en','View'],['cs','Zobrazení'],['uk','Вигляд'],['ro','Vizualizare'],['ru','Вид']]){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await expect(trigger(page)).toHaveText(label);
   await open(page);
   await expect(menu(page)).toHaveAttribute('aria-label',label);

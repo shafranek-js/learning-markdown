@@ -28,7 +28,7 @@ test('Lesson Guide hides course-only controls but preserves editor tools and set
  await expectGuideSelection(page,false);
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
- for(const selector of ['#sandbox-mode-btn','#cheatsheet-btn','#theme-selector','#lang-selector','#markdown-input','#markdown-preview'])
+ for(const selector of ['#sandbox-mode-btn','#cheatsheet-btn','#settings-menu-trigger','#markdown-input','#markdown-preview'])
   await expect(page.locator(selector)).toBeVisible();
 
  await page.reload();

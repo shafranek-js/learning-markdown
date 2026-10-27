@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
 
 // Release gate: visual edits must preserve the canonical Markdown source,
@@ -56,7 +57,7 @@ test('release UAT: keyboard table edit round-trips semantic sections and both ex
 test('release security UAT: malformed attributes stay source-only and unsafe HTML is removed from export',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><caption>Quarterly report</caption>'+
   '<thead><tr><th scope="col">Товар</th></tr></thead>'+
   '<tbody class="unsafe"><tr><td onclick="window.__attack=1">'+

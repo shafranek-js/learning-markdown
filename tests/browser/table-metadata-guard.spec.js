@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 // #57: Preserve structural metadata the HTML table serializer cannot model.
 // The raw Markdown source is the authority, even when Preview omits attributes.
@@ -7,7 +8,7 @@ for(const lang of localeCases){
  test('table metadata is read-only without source loss: '+lang,async({page})=>{
   if(lang==='ru')await page.setViewportSize({width:390,height:844});
   await page.goto('/');
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   const original='Intro\n\n<table data-report="annual">'+
    '<thead><tr><th scope="col">Product</th><th scope="col">Value</th></tr></thead>'+
    '<tbody><tr><td title="External identifier">A</td><td>10</td></tr></tbody>'+

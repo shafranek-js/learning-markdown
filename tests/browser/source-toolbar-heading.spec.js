@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('textarea H2 formats selected paragraphs, preserves blank separators and Undo/Redo',async({page})=>{
  await page.goto('/');
@@ -93,7 +94,7 @@ test('heading formatting rejects fenced blocks atomically in CodeMirror',async({
 test('mobile RU heading toolbar refuses indented code and preserves draft',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const input=page.locator('#markdown-input');
  const source='Текст\n    indented code';
  await input.fill(source);

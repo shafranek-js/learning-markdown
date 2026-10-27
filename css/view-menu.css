@@ -3,7 +3,7 @@
 @media (min-width:768px){
  .app-header-left{
   flex:0 0 auto;
-  width:clamp(470px,45vw,630px);
+  width:clamp(520px,48vw,690px);
   min-width:0;
   overflow-x:auto;
   scrollbar-width:none;
@@ -12,7 +12,7 @@
  .app-header-brand{flex:1 1 0;min-width:0;overflow:hidden}
  .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
  .app-header-actions>*{flex-shrink:0}
- .app-header-left #view-menu-trigger,.app-header-left #file-menu-trigger,.app-header-left #edit-menu-trigger,.app-header-left #help-menu-trigger{white-space:nowrap}
+ .app-header-left #view-menu-trigger,.app-header-left #file-menu-trigger,.app-header-left #edit-menu-trigger,.app-header-left #settings-menu-trigger,.app-header-left #help-menu-trigger{white-space:nowrap}
 }
 /* Compact Notepad-inspired application menu; independent of editor pane overflow. */
 .workspace-view-menu{
@@ -189,3 +189,53 @@
 .workspace-help-content td{padding:8px 4px;border-bottom:1px solid var(--border-ui)}
 .workspace-help-content td:last-child{text-align:right}
 .workspace-help-content kbd{font-family:ui-monospace,monospace;white-space:nowrap;font-size:11px}
+
+/* Settings is a non-modal preference popover, not a nested menu of fake actions. */
+.workspace-settings-panel{
+ width:min(290px,calc(100vw - 16px));
+ padding:12px;
+ gap:7px;
+}
+.workspace-settings-head{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ padding:0 0 8px;
+ margin-bottom:4px;
+ border-bottom:1px solid var(--border-ui);
+}
+.workspace-settings-head strong{font-size:13px}
+.workspace-settings-head button{
+ font-size:21px;
+ line-height:1;
+ padding:3px 8px;
+ border-radius:5px;
+ color:var(--text-ui);
+}
+.workspace-settings-head button:hover,.workspace-settings-head button:focus-visible{background:var(--accent-soft)}
+.workspace-settings-panel label{
+ font-size:11px;
+ font-weight:700;
+ color:var(--text-ui-muted);
+ margin-top:5px;
+}
+.workspace-settings-select{
+ width:100%;
+ min-height:36px;
+ padding:7px 9px;
+ font-size:12px;
+ color:var(--text-ui);
+ background:var(--bg-panel);
+ cursor:pointer;
+}
+.workspace-settings-select:focus-visible{
+ outline:2px solid var(--accent);
+ outline-offset:2px;
+}
+#settings-persistence-note{
+ margin-top:8px;
+ color:var(--text-ui-muted);
+ font-size:11px;
+ line-height:1.45;
+}

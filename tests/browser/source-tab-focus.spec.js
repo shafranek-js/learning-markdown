@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('native editor Ctrl+M lets Tab and Shift+Tab leave without changing Markdown',async({page})=>{
  await page.goto('/');
@@ -103,7 +104,7 @@ test('Tab focus mode is shared when switching textarea and CodeMirror engines',a
 test('Russian mobile status, keyboard traversal and IME guards are accessible',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const toggle=page.locator('#tab-focus-toggle');
  const input=page.locator('#markdown-input');
  await expect(toggle).toHaveText('Tab: Отступ');
@@ -177,7 +178,7 @@ test('Tab screen-reader description is never rendered as editor text or a flex i
 test('localized Tab announcement stays visually clipped on a narrow mobile pane',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const help=page.locator('#editor-tab-help');
  await expect(help).toContainText('Ctrl+M');
  await expect(help).toContainText('Tab добавляет отступ');

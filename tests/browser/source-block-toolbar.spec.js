@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const button=(page,kind)=>page.locator('.toolbar-btn[data-action="'+kind+'"]');
 const revealAdvanced=async page=>{
@@ -122,7 +123,7 @@ test('mixed fenced code selection refuses HR and Details atomically',async({page
 test('narrow Russian editor preserves selected text inside Details',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const input=page.locator('#markdown-input');
  await input.fill('Скрытый текст');
  await select(input,'Скрытый текст');

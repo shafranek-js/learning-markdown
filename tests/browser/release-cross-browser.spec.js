@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
 
 const {version}=JSON.parse(await readFile(new URL('../../package.json',import.meta.url),'utf8'));
@@ -53,7 +54,7 @@ test('release parity: unsafe HTML cannot execute or survive standalone export',a
 
 test('release parity: small-screen version visibility and language switching',async({page})=>{
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const versionLabel=page.locator('#app-version-status');
  await expect(versionLabel).toHaveAttribute('aria-label',/^Версия /);
  await page.setViewportSize({width:360,height:740});

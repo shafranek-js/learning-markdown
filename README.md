@@ -27,6 +27,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 - [View menu](#view-menu)
 - [File menu](#file-menu)
 - [Edit menu](#edit-menu)
+- [Settings menu](#settings-menu)
 - [Help menu](#help-menu)
 - [Learn Markdown](#learn-markdown)
 - [Editing and shortcuts](#editing-and-shortcuts)
@@ -108,7 +109,7 @@ renders as a formatted heading, quotation, checklist and link without changing t
 | **Beyond Markdown** and the two certificate buttons | Shown | Hidden |
 | **Contents** (course navigation) | Available | Hidden |
 | **Lesson Guide**, **View**, **AI Prompt Sandbox** and **Cheat Sheet** | Available | Available |
-| Theme, language, Markdown toolbar, editor, Preview and export tools | Available | Available |
+| **Settings** (theme, language), Markdown toolbar, editor, Preview and export tools | Available | Available |
 
 - Closing the guide also closes the guide panel and its resize handle; the editor/Preview can use the freed space. Reopen it with **View → Lesson Guide**. There is no duplicate Guide button in the header.
 - Your guide visibility preference survives a page reload. Course navigation, saved drafts and progress remain intact.
@@ -140,6 +141,14 @@ Use the mouse or keyboard: focus **View**, press **Arrow Down** to open, navigat
 - **Replace** edits the selected match; if no match is selected, it selects the next occurrence. **Replace All** edits all occurrences in one undoable operation.
 - The same Edit actions work in the standard textarea and the optional CodeMirror multi-cursor editor, without creating an extra document or bypassing either editor's history.
 - Keyboard focus supports the normal dropdown Arrow/Home/End/Escape navigation. Find/Replace opens as a compact overlay without shifting the resizable Split View.
+
+## Settings menu
+
+**Settings** groups the persistent **Theme** and **Language** preferences. These are the existing controls relocated from the crowded application header, not duplicate selectors or a second settings store. Six themes and five UI languages are available, and changes apply immediately and survive refresh.
+
+Open **Settings** and choose a theme or language; press **Escape** or the close button when finished. The popover is keyboard-accessible and stays within the viewport on mobile.
+
+Frequently used commands stay close to their work: **View** controls the layout, font size and line wrapping; **Edit** controls Multi-cursor and text operations; the Markdown-standard switch stays by the preview compatibility controls. Future persistent preferences can join Settings without creating duplicate options.
 
 ## Help menu
 

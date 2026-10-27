@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const fence='\x60\x60\x60';
 const codeBlock=page=>page.locator('.toolbar-btn[data-action="code-block"]');
@@ -87,7 +88,7 @@ test('Code Block refuses nested fencing atomically in either editor',async({page
 test('narrow Russian editor keeps selected text when creating a code block',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const input=page.locator('#markdown-input');
  const source='Пример кода';
  await input.fill(source);

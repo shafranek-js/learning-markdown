@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('issue #6 converts selected paragraphs and complete lists to numbered list without losing source',async({page})=>{
  await page.goto('/');
@@ -67,7 +68,7 @@ test('issue #6 convert complete ordered list into paragraphs preserves inline fo
 test('issue #6 Russian mobile refuses partially selected list conversion without changing draft',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><tr><td><p>Сначала</p><ul><li>Один</li>'+
   '<li>Два</li></ul><p>Потом</p></td></tr></table>';
  const input=page.locator('#markdown-input');
@@ -102,7 +103,7 @@ test('issue #6 convert-selection controls have labels in all five locales',async
   ru:['В абзацы','В маркеры','В нумерацию']
  };
  for(const [language,expected] of Object.entries(words)){
-  await page.locator('#lang-selector').selectOption(language);
+  await setAppLanguage(page,language);
   // Language changes reset the lesson sample; re-load the controlled fixture.
   await page.locator('#markdown-input').fill('<table><tr><td><p>Example</p></td></tr></table>');
   await page.locator('#markdown-preview td').first().click();
@@ -162,7 +163,7 @@ test('issue #6 nested list conversion changes only selected depth and keeps oute
 test('issue #6 Russian mobile prevents partial nested conversions and explains paragraph limitation',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><tr><td><ol type="i"><li>Родитель<ul>'+
   '<li>Первый</li><li>Второй</li><li>Третий</li></ul></li>'+
   '<li>Сосед</li></ol></td></tr></table>';

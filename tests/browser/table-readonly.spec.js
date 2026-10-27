@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('unsupported HTML table explains why visual editing is disabled, without changing source',async({page})=>{
  await page.goto('/');
@@ -43,7 +44,7 @@ test('adjacent table roots display a specific read-only notice, keyboard-accessi
 test('nested parent is read-only with Russian explanation; leaf remains editable on mobile',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const editor=page.locator('#markdown-input');
  const source='<table><tr><td>Снаружи<table><tr><td>Внутри</td></tr></table>Конец</td></tr></table>';
  await editor.fill(source);
@@ -73,7 +74,7 @@ for(const [lang,title] of Object.entries(localeTitles)){
  test('existing HTML source annotations remain untouched in visual table editing ('+lang+')',async({page})=>{
   if(lang==='ru')await page.setViewportSize({width:390,height:844});
   await page.goto('/');
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   const input=page.locator('#markdown-input');
   const original='<table><tr><td>First <!-- preserve author annotation --></td>'+
    '<td>Safe neighbor</td></tr></table>';

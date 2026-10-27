@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const longLine='A long Markdown paragraph with **bold words**, a link to [documentation](https://example.com), and many more words '.repeat(7);
 
@@ -44,14 +45,14 @@ test('Wrap preference survives reload, older stored states default on, and label
  await page.goto('/');
  const toggle=page.locator('#wrap-text-toggle');
  await toggle.click();
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(toggle).toContainText('Перенос: Выкл');
  await expect(toggle).toHaveAttribute('aria-pressed','false');
  await page.reload();
  await expect(toggle).toHaveAttribute('aria-pressed','false');
  await expect(page.locator('#markdown-input')).toHaveAttribute('wrap','off');
  await toggle.click();
- await page.locator('#lang-selector').selectOption('cs');
+ await setAppLanguage(page,'cs');
  await expect(toggle).toContainText('Zalomení: Zap');
  await page.reload();
  await expect(toggle).toHaveAttribute('aria-pressed','true');

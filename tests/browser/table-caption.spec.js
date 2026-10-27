@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 test('issue #6 table caption survives visual cell Save, row insertion, Undo and Redo',async({page})=>{
  await page.goto('/');
@@ -39,7 +40,7 @@ test('issue #6 table caption survives visual cell Save, row insertion, Undo and 
 test('issue #6 mobile rejects caption metadata that serializer cannot preserve',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><caption class="custom">Важная подпись</caption>'+
   '<tr><td>Первый</td><td>Второй</td></tr></table>';
  const input=page.locator('#markdown-input');

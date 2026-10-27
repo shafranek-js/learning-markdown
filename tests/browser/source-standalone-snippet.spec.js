@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 const select=async(input,needle)=>{
  await input.evaluate((el,text)=>{
@@ -85,7 +86,7 @@ test('Mermaid insertion keeps selected prose and creates a separate preview diag
 test('Russian mobile and fenced selection guard prevent source loss with templates',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await advanced(page);
  const input=page.locator('#markdown-input'),source='Текст\n~~~js\nconsole.log(1);\n~~~\nКонец';
  await input.fill(source);

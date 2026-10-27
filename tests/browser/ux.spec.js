@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {mermaidSnippet} from '../../js/data/mermaid-templates.js';
 import {readFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
@@ -52,8 +53,8 @@ test('standard switch changes rendering without rewriting Markdown',async({page}
 
 test('language, theme and chosen dialect survive a reload',async({page})=>{
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
- await page.locator('#theme-selector').selectOption('nord');
+ await setAppLanguage(page,'ru');
+ await setAppTheme(page,'nord');
  await page.locator('#dialect-selector').selectOption('commonmark');
  await page.reload();
  await expect(page.locator('#lang-selector')).toHaveValue('ru');
@@ -141,7 +142,7 @@ test('advanced semantic HTML survives preview sanitization without unsafe attrib
 });
 test('advanced HTML Lab is separate from course progress and localized',async({page})=>{
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#advanced-lab summary').click();
  await expect(page.locator('#advanced-lab-examples button')).toHaveCount(5);
  await expect(page.locator('#advanced-lab-examples button').first()).toContainText('Вставить');
@@ -208,7 +209,7 @@ test('Font family, size and layout presets render using allowlisted styles',asyn
 
 test('Advanced preset values persist and localize without changing regular progress',async({page})=>{
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#advanced-tools-toggle').click();
  const prior=await page.locator('#progress-label').innerText();
  await page.locator('#advanced-color').selectOption('purple');
@@ -290,7 +291,7 @@ test('rich HTML table templates render merged cells and preset decorations',asyn
 
 test('translated rich HTML lab offers all 14 examples and does not change course progress',async({page})=>{
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#advanced-lab summary').click();
  const items=page.locator('#advanced-rich-lab-examples button');
  await expect(items).toHaveCount(14);
@@ -460,7 +461,7 @@ test('All advanced lessons translate into Czech, Ukrainian, Romanian and Russian
  await page.goto('/');
  await page.locator('#advanced-course-btn').click();
  for(const [lang,title] of [['ru','HTML и совместимость'],['cs','HTML a přenositelnost'],['uk','HTML і сумісність'],['ro','HTML și compatibilitate']]){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await expect(page.locator('#lesson-title')).toHaveText(title);
   await expect(page.locator('#tasks-counter-badge')).toHaveText('0 / 3');
  }
@@ -678,7 +679,7 @@ test('picker restores the source caret and inserts table in the correct place',a
 test('manual sizes, Russian labels and accessible arrow-key navigation',async({page})=>{
  await page.goto('/');
  await page.locator('#markdown-input').fill('');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#table-picker-trigger').click();
  await expect(page.locator('#table-picker-title')).toHaveText('Вставить таблицу');
  await page.locator('#table-picker-columns').fill('12');
@@ -769,7 +770,7 @@ test('HTML table formatting preserves cells, sanitizer and downloaded HTML',asyn
 test('Existing table edit menu localizes and remains reachable on mobile',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#markdown-input').fill('| A | B |\n| --- | --- |\n| One | Two |');
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
  await page.locator('#markdown-preview tbody td').first().click();
@@ -825,7 +826,7 @@ test('editing a merged HTML cell retains rowspan/colspan and escapes entered HTM
 test('table cell content editor works in Russian mobile Preview',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#markdown-input').fill('| A |\n| --- |\n| Original |');
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
  await page.locator('#markdown-preview tbody td').click();
@@ -973,7 +974,7 @@ test('multi-cursor editor loads without network after service worker precache',a
 
 test('multi-cursor mode switch localizes before the optional engine loads',async({page})=>{
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(page.locator('#multi-cursor-toggle')).toHaveText('Мультикурсор');
  await page.locator('#multi-cursor-toggle').click();
  await expect(page.locator('#multi-cursor-toggle')).toHaveText('Мультикурсор: ВКЛ');
@@ -1352,7 +1353,7 @@ test('Escape collapses multiple selections without editing document',async({page
 
 test('new shortcut help is translated and includes line-end cursors',async({page})=>{
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const toggle=page.locator('#multi-cursor-toggle');
  await expect(toggle).toHaveAttribute('title',/Ctrl\+Shift\+L/);
  await expect(toggle).toHaveAttribute('title',/Shift\+Alt\+I/);
@@ -1533,10 +1534,10 @@ test('issue #9 six fenced languages are highlighted and safely exported',async({
  await expect(page.locator('#markdown-preview script')).toHaveCount(0);
  await expect(input).toHaveValue(source);
  for(const theme of ['codepen','midnight','daylight','dracula','nord','solarized']){
-  await page.locator('#theme-selector').selectOption(theme);
+  await setAppTheme(page,theme);
   await expect(blocks.first().locator('.hljs-keyword')).toHaveCount(1);
  }
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  // Language switching loads the corresponding per-language draft.
  await input.fill(source);
  await expect(page.locator('#markdown-preview pre').first()).toHaveAttribute('title',/Офлайн-подсветка/);
@@ -1614,7 +1615,7 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await page.locator('#sandbox-mode-btn').click();
  await expect(toggle).toHaveValue('on');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#extension-softbreaks-label')).toContainText('переносы');
  await expect(page.locator('#extension-matrix-title')).toHaveText('Матрица совместимости');
@@ -1708,7 +1709,7 @@ test('issue #11 footnote exercise and safe standalone HTML / print export',async
  await expect(page.locator('#markdown-preview .fn-ref')).toHaveCount(2);
  await expect(page.locator('#markdown-preview .fn-backref')).toHaveCount(2);
  await expect(page.locator('#extension-footnote-practice')).toContainText('Complete');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(page.locator('#extension-footnotes-label')).toContainText('Сноски');
  await expect(toggle).toHaveValue('off'); // separate language document
  await openCompatibility(page);
@@ -1991,7 +1992,7 @@ test('issue #14 definition lists are opted in and persist per document without a
  await page.locator('#dialect-selector').selectOption('gfm');
  await expect(toggle).toHaveValue('on');
  await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(toggle).toHaveValue('off');
  await expect(page.locator('#extension-definitions-label')).toContainText('Списки определений');
  await expect(page.locator('#extension-matrix-body tr')).toHaveCount(8);
@@ -2017,7 +2018,7 @@ test('issue #14 Advanced HTML definition template is semantic, reversible and av
   await page.locator('#dialect-selector').selectOption(dialect);
   await expect(page.locator('#markdown-preview dl')).toHaveCount(1);
  }
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(page.locator('#definition-html-insert')).toContainText('HTML-список');
 });
 
@@ -2091,7 +2092,7 @@ test('issue #15 Enter, Escape and keyboard search work in localized Unicode pale
  await page.goto('/');
  const input=page.locator('#markdown-input');
  await input.fill('');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#unicode-picker-trigger').click();
  await expect(page.locator('#unicode-picker-title')).toHaveText('Символы Unicode и emoji');
  await expect(page.locator('#unicode-categories')).toHaveAttribute('aria-label','Категории символов');
@@ -2146,7 +2147,7 @@ test('issue #15 opt-in shortcodes expand only in selected GFM documents',async({
  await expect(page.locator('#markdown-preview p').first()).toContainText('😂');
  await page.locator('#sandbox-mode-btn').click();
  await expect(toggle).toHaveValue('off');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await expect(page.locator('#extension-emoji-label')).toContainText('shortcodes');
  await expect(page.locator('#extension-matrix-body tr')).toHaveCount(8);
 });
@@ -2220,7 +2221,7 @@ test('issue #16 Practical Hacks are labeled, localized and undoable',async({page
  await expect(page.locator('#markdown-preview blockquote strong')).toContainText('Note:');
  await page.locator('#undo-btn').click();
  await expect(editor).toHaveValue(before);
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#cheatsheet-btn').click();
  await expect(page.locator('[data-hack-id="portable-callout"] h5')).toHaveText('Переносимое примечание');
  await expect(page.locator('[data-hack-id="table-pipe"] [data-portability]')).toHaveText('Только GFM');
@@ -2343,7 +2344,7 @@ test('issue #17 optional lab supports all five locales and keyboard Escape',asyn
   ['ro','Laborator de extensii și trucuri'],
   ['ru','Практикум Extensions & Hacks']
  ]){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await page.locator('#contents-toggle-btn').click();
   const launch=page.locator('#extensions-lab-open');
   await launch.click();
@@ -2445,7 +2446,7 @@ test('issue #17 second wave ignores fenced examples, strips scripts and keeps op
 test('issue #17 all exercises show localized titles and portability notes in five languages',async({page})=>{
  await page.goto('/');
  for(const language of ['en','cs','uk','ro','ru']){
-  await page.locator('#lang-selector').selectOption(language);
+  await setAppLanguage(page,language);
   await page.locator('#contents-toggle-btn').click();
   await page.locator('#extensions-lab-open').click();
   await expect(page.locator('#extensions-lab-select option')).toHaveCount(16);
@@ -2530,7 +2531,7 @@ test('issue #17 practical instructions are complete across five locales on mobil
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
  for(const lang of ['en','cs','uk','ro','ru']){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await page.locator('#contents-toggle-btn').click();
   await page.locator('#extensions-lab-open').click();
   await expect(page.locator('#extensions-lab-select option')).toHaveCount(16);
@@ -2603,7 +2604,7 @@ test('Mermaid Advanced insertion labels are localized in all five languages',asy
  await page.locator('#advanced-tools-toggle').click();
  const expected={en:'Diagrams',cs:'Diagramy',uk:'Діаграми',ro:'Diagrame',ru:'Диаграммы'};
  for(const [lang,label] of Object.entries(expected)){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await expect(page.locator('#mermaid-insert-controls')).toContainText(label);
   await expect(page.locator('#mermaid-template-choice option')).toHaveCount(9);
  }
@@ -2747,7 +2748,7 @@ test('issue #19 copy Mermaid source is accessible and localized',async({page,con
  await page.locator('#markdown-preview .mermaid-export-controls').getByRole('button',{name:'Copy source'}).click();
  expect(await page.evaluate(()=>navigator.clipboard.readText())).toContain('pie showData');
  await expect(page.locator('#markdown-preview .mermaid-export-status')).toContainText('copied');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  // Lessons have language-specific drafts: insert the same source into the RU draft.
  await page.locator('#markdown-input').fill(source);
  await expect(page.locator('#markdown-preview .mermaid-export-controls')).toBeVisible({timeout:20000});
@@ -2920,7 +2921,7 @@ test('issue #19 Mermaid exercise descriptions and results are localized on mobil
  await page.goto('/');
  const titles={en:'Mermaid',cs:'Mermaid',uk:'Mermaid',ro:'Mermaid',ru:'Mermaid'};
  for(const lang of Object.keys(titles)){
-  await page.locator('#lang-selector').selectOption(lang);
+  await setAppLanguage(page,lang);
   await page.locator('#contents-toggle-btn').click();
   await page.locator('#extensions-lab-open').click();
   await expect(page.locator('#extensions-lab-select option')).toHaveCount(16);
@@ -2994,7 +2995,7 @@ test('issue #6: merging right and down uses the edge of an existing merged cell'
 test('issue #6: span-aware table selection is localized on mobile',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#markdown-input').fill('<table><tr><td>A</td><td>B</td></tr>'+
   '<tr><td colspan="2">C</td></tr><tr><td>D</td><td>E</td></tr></table>');
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
@@ -3093,7 +3094,7 @@ test('issue #6: rich cell toolbar styles selected text and paste strips HTML',as
 test('issue #6: Russian mobile cell editor can retain rich formatting or choose plain text',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#markdown-input').fill('<table><tr><td><strong>Важное</strong> описание</td></tr></table>');
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
  await page.locator('#markdown-preview td').click();
@@ -3173,7 +3174,7 @@ test('issue #6 nested leaf merge and row insertion preserve outer table geometry
 test('issue #6 nested table editing remains accessible on mobile with locales',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><tr><td>Внешняя '+
   '<table><tr><td>Внутренняя</td></tr></table> конец</td></tr></table>';
  await page.locator('#markdown-input').fill(source);
@@ -3261,7 +3262,7 @@ test('issue #6 Blocks toolbar inserts paragraph, lists, quote and code, preservi
 test('issue #6 Blocks mode is localized on mobile and explicit Plain text save replaces markup',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  await page.locator('#markdown-input').fill('<table><tr><td><p>Первый абзац</p><ul><li>Пункт</li></ul></td></tr></table>');
  await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
  await page.locator('#markdown-preview td').click();
@@ -3366,7 +3367,7 @@ test('issue #6 image editor rejects unsafe URLs and cannot flatten multiple medi
 test('issue #6 Russian mobile image editing supports decorative alt and nested leaf tables',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const original='<table><tr><td>Снаружи <table><tr><td>'+
   '<p>Подпись <strong>важно</strong></p>'+
   '<img src="https://example.org/leaf.png" alt="Рисунок" width="250">'+
@@ -3499,7 +3500,7 @@ test('issue #6 image insertion refuses unsaved cell drafts and unsafe URL; cance
 test('issue #6 mobile nested table image insertion preserves parent and decorative alt',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><tr><td>Снаружи <table><tr><td><p>Внутри <strong>важно</strong></p>'+
  '</td></tr></table> После</td></tr></table>';
  const editor=page.locator('#markdown-input');
@@ -3630,7 +3631,7 @@ test('issue #6 Blocks Enter exits empty item, Backspace outdents nested and pres
 test('issue #6 Blocks Russian mobile help and Backspace at first list item',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const original='<table><tr><td><ol><li><strong>Первый</strong></li><li>Второй</li></ol></td></tr></table>';
  const input=page.locator('#markdown-input');
  await input.fill(original);
@@ -3698,7 +3699,7 @@ test('issue #6 multi-item outdent preserves trailing nested list order, formatti
 test('issue #6 mixed list/paragraph selection safely keeps focus and shows Russian guidance',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const source='<table><tr><td><p>Начало</p><ul><li>Один</li>'+
   '<li>Два</li></ul><p>Конец</p></td></tr></table>';
  const input=page.locator('#markdown-input');
