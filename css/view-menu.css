@@ -3,18 +3,16 @@
 @media (min-width:768px){
  .app-header-left{
   flex:0 0 auto;
-  width:clamp(350px,38vw,520px);
+  width:clamp(390px,38vw,540px);
   min-width:0;
   overflow-x:auto;
   scrollbar-width:none;
  }
  .app-header-left::-webkit-scrollbar,.app-header-actions::-webkit-scrollbar{display:none}
  .app-header-brand{flex:1 1 0;min-width:0;overflow:hidden}
- /* Secondary header actions can scroll when there is not enough horizontal space.
-    This keeps Course Progress and the app menu from overlapping on 1280px screens. */
  .app-header-actions{flex:1 1 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
  .app-header-actions>*{flex-shrink:0}
- .app-header-left #view-menu-trigger{white-space:nowrap}
+ .app-header-left #view-menu-trigger,.app-header-left #file-menu-trigger{white-space:nowrap}
 }
 /* Compact Notepad-inspired application menu; independent of editor pane overflow. */
 .workspace-view-menu{
@@ -74,3 +72,23 @@
  letter-spacing:.06em;
 }
 .workspace-menu-separator{height:1px;margin:5px 7px;background:var(--border-ui)}
+
+/* File menu uses the same placement, focus treatment and theme as View. */
+.workspace-file-current{
+ padding:7px 10px 8px;
+ margin:0 6px 4px;
+ border-bottom:1px solid var(--border-ui);
+ font-family:ui-monospace,monospace;
+ font-size:11px;
+ color:var(--text-ui-muted);
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.workspace-view-menu [role="menuitem"] kbd{
+ margin-left:auto;
+ font-size:10px;
+ line-height:1;
+ color:var(--text-ui-muted);
+ white-space:nowrap;
+}

@@ -35,6 +35,23 @@
                 <span data-i18n="guideBtn">Lesson Guide</span>
             </button>
 
+            <!-- Browser-safe File menu; downloads are labeled as downloads, not native disk saves. -->
+            <div class="shrink-0">
+                <button id="file-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="file-menu">File</button>
+                <div id="file-menu" class="workspace-view-menu" role="menu" aria-label="File" hidden>
+                    <div id="file-menu-current" class="workspace-file-current" aria-live="polite">Untitled.md</div>
+                    <button type="button" role="menuitem" tabindex="-1" data-file-action="new"><span data-file-label="new">New Markdown</span><kbd>Ctrl+N</kbd></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-file-action="open"><span data-file-label="open">Open Markdown…</span><kbd>Ctrl+O</kbd></button>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <button type="button" role="menuitem" tabindex="-1" data-file-action="save"><span data-file-label="save">Download Markdown</span><kbd>Ctrl+S</kbd></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-file-action="save-as"><span data-file-label="saveAs">Download As…</span></button>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <button type="button" role="menuitem" tabindex="-1" data-file-action="export-html"><span data-file-label="html">Export HTML</span></button>
+                    <button type="button" role="menuitem" tabindex="-1" data-file-action="print"><span data-file-label="print">Print / PDF</span><kbd>Ctrl+P</kbd></button>
+                </div>
+            </div>
+            <input id="file-menu-open-input" type="file" accept=".md,.markdown,.txt,text/plain,text/markdown" hidden tabindex="-1">
+
             <!-- Standard application View menu. Quick formatting remains in the editor toolbar. -->
             <div class="shrink-0">
                 <button id="view-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="view-menu">View</button>

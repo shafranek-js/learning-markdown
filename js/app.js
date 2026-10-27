@@ -19,6 +19,7 @@ import {updatePreview,currentHtml,initPreviewAnchors} from './ui/preview.js';
 import {initTOC,TOC_TEXT} from './ui/toc.js';
 import {initUtilityMenus,renderUtilityMenuLanguage} from './ui/utility-menus.js';
 import {initViewMenu,renderViewMenuLanguage} from './ui/view-menu.js';
+import {initFileMenu,renderFileMenuLanguage} from './ui/file-menu.js';
 import {standaloneHTML} from './core/export-html.js';
 import {renderMermaidExportImages} from './ui/mermaid-preview.js';
 import {renderPortability,portabilityStatus,portabilityLabels,initExtensionSettings} from './ui/compatibility.js';
@@ -96,7 +97,7 @@ function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();
  ro:['Deschide cuprinsul','Arată sau ascunde ghidul','Trageți pentru a redimensiona ghidul','Trageți separatorul; dublu clic pentru 50:50','Resetați lecția','Micșorați fontul','Măriți fontul'],
  ru:['Открыть содержание курса','Показать или скрыть гид урока','Перетащите, чтобы изменить ширину гида','Перетащите разделитель; двойной щелчок — 50:50','Сбросить урок','Уменьшить шрифт','Увеличить шрифт']};
  ['contents-toggle-btn','theory-pane-toggle-btn','resizer-guide-editor','resizer-editor-preview','reset-lesson-btn','font-dec-btn','font-inc-btn'].forEach((id,i)=>$(id).title=titles[state.lang][i]);
- renderCheats();renderExtensionsLabLanguage();renderDialectUI();renderUtilityMenuLanguage();renderViewMenuLanguage();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
+ renderCheats();renderExtensionsLabLanguage();renderDialectUI();renderUtilityMenuLanguage();renderViewMenuLanguage();renderFileMenuLanguage();renderAdvancedUI();renderFigureLanguage();renderUnicodePickerLanguage();renderTablePickerLanguage();renderTableEditorLanguage();renderPortability(area().value);
 }
 function selectLesson(index,{route=true,scroll=true}={}){
  if(index<-1||index>=LESSON_CORE.length+ADVANCED_IDS.length)return;state.currentLessonIndex=index;
@@ -181,13 +182,35 @@ async function exportDocument({print=false}={}){
   alert(labels.error);
  }
 }
+// File menu and existing Export action share the same portable-Markdown safety checks.
+function saveCurrentMarkdown(filenameOverride=null){
+ if(portabilityStatus()?.advanced&&!confirm(portabilityLabels(state.lang).mdWarning))return false;
+ if(portabilityStatus()?.extensionActive&&!confirm(extensionText(state.lang).warning))return false;
+ if(portabilityStatus()?.footnotesActive&&!confirm(footnoteText(state.lang).warning))return false;
+ if(portabilityStatus()?.customHeadingIdsActive&&!confirm((TOC_TEXT[state.lang]||TOC_TEXT.en).customWarning))return false;
+ if(portabilityStatus()?.definitionListsActive&&!confirm(definitionText(state.lang).warning))return false;
+ if(portabilityStatus()?.emojiShortcodesActive&&!confirm(paletteLabels(state.lang).warning))return false;
+ const defaultName=state.currentLessonIndex===-1?state.sandboxFileName:$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md';
+ download(area().value,filenameOverride||defaultName,'text/markdown;charset=utf-8');
+ return true;
+}
+// Course lessons and their drafts remain untouched by New/Open: both target Sandbox.
+function replaceSandboxDocument(text,filename,warning){
+ const existing=state.savedDrafts['sandbox_'+state.lang]||'';
+ if(existing!==text&&existing.length&&!confirm(warning))return false;
+ if(state.currentLessonIndex!==-1)selectLesson(-1);
+ setEditorContent(text);
+ state.sandboxFileName=filename;
+ save();
+ return true;
+}
 function setFromRoute(){const r=readRoute();let rerender=false;if(r.lang&&r.lang!==state.lang){state.lang=r.lang;rerender=true;}if(r.theme&&r.theme!==state.theme){state.theme=r.theme;document.documentElement.dataset.theme=state.theme;rerender=true;}
  if(r.dialect&&r.dialect!==state.dialect){state.dialect=r.dialect;rerender=true;}
  if(r.index!==null&&r.index!==state.currentLessonIndex){state.currentLessonIndex=r.index;rerender=true;}
  if(rerender){save();renderLocalization();selectLesson(state.currentLessonIndex,{route:false});}}
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu();initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu();initFileMenu({replaceSandbox:replaceSandboxDocument,saveMarkdown:saveCurrentMarkdown});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');
@@ -207,15 +230,7 @@ function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(r
  $('font-dec-btn').addEventListener('click',()=>{state.fontSize=Math.max(12,state.fontSize-1);document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);refreshEditor({notify:false});save();});
  $('font-inc-btn').addEventListener('click',()=>{state.fontSize=Math.min(22,state.fontSize+1);document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);refreshEditor({notify:false});save();});
  $('copy-md-btn').addEventListener('click',()=>copy(area().value));
- $('download-md-btn').addEventListener('click',()=>{
-  if(portabilityStatus()?.advanced && !confirm(portabilityLabels(state.lang).mdWarning))return;
-  if(portabilityStatus()?.extensionActive && !confirm(extensionText(state.lang).warning))return;
-  if(portabilityStatus()?.footnotesActive && !confirm(footnoteText(state.lang).warning))return;
-  if(portabilityStatus()?.customHeadingIdsActive && !confirm((TOC_TEXT[state.lang]||TOC_TEXT.en).customWarning))return;
-  if(portabilityStatus()?.definitionListsActive && !confirm(definitionText(state.lang).warning))return;
-  if(portabilityStatus()?.emojiShortcodesActive && !confirm(paletteLabels(state.lang).warning))return;
-  download(area().value,$('active-tab-title').textContent.replace(/\s+/g,'_')+'.md','text/markdown;charset=utf-8');
- });
+ $('download-md-btn').addEventListener('click',()=>saveCurrentMarkdown());
  $('download-html-btn').addEventListener('click',()=>exportDocument());
  $('print-document-btn').addEventListener('click',()=>exportDocument({print:true}));
  $('reset-course-btn').addEventListener('click',()=>{if(!confirm(t(state.lang,'confirmReset')))return;resetCourse();clearHistory();selectLesson(0,{route:false});syncRoute(state);toggleContents(false);});

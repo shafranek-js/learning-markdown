@@ -25,6 +25,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 - [A quick tour](#a-quick-tour)
 - [Lesson Guide and editor workspace](#lesson-guide-and-editor-workspace)
 - [View menu](#view-menu)
+- [File menu](#file-menu)
 - [Learn Markdown](#learn-markdown)
 - [Editing and shortcuts](#editing-and-shortcuts)
 - [Compatibility and export](#compatibility-and-export)
@@ -117,6 +118,16 @@ The **Lesson Guide** button switches between a learning-focused layout and a les
 The compact **View** menu provides the same actions as the existing editor controls: **Word Wrap**, **Lesson Guide**, **Split View / Preview Only / HTML Source**, **Decrease / Increase font size**, and **Reset split widths (50:50)**. The current checkmarks and radio selection reflect actual workspace state. Quick formatting tools remain in the Markdown toolbar; no file, editing, or course data is changed by opening the menu.
 
 Use the mouse or keyboard: focus **View**, press **Arrow Down** to open, navigate with **Up/Down/Home/End**, choose an item with **Enter** or **Space**, or press **Escape** to close and return focus. **Tab / Shift+Tab** leave the menu and continue normal keyboard navigation. The menu is available in English, Czech, Ukrainian, Romanian and Russian. Existing saved preferences are reused, including Word Wrap, Lesson Guide visibility, layout mode and editor font size.
+
+## File menu
+
+**File** offers browser-safe document commands: **New Markdown** (`Ctrl/Cmd+N`), **Open Markdown…** (`Ctrl/Cmd+O`), **Download Markdown** (`Ctrl/Cmd+S`), **Download As…**, **Export HTML** and **Print / PDF** (`Ctrl/Cmd+P`). Use Arrow keys, Home/End and Escape to navigate the dropdown by keyboard.
+
+- **New/Open** enter the free-form **AI Prompt Sandbox**. Existing lesson drafts stay untouched. Replacing an existing nonempty Sandbox draft requires confirmation and cancellation leaves the content unchanged.
+- **Open** accepts local UTF-8 `.md`, `.markdown` or `.txt` files up to 5 MB. Files are read in the browser and never uploaded to a server.
+- **Download** generates a new `.md` download using the existing portability warnings. **Download As…** asks for a filename and updates the remembered Sandbox filename after a successful download.
+- **Export HTML** and **Print / PDF** reuse their established Preview export functions, including Mermaid rendering safety.
+- **Save** on this website is a **download**, not silent overwriting of the imported disk file. Standard browser file pickers do not grant persistent disk-write permission. The current Sandbox text and filename are persisted locally across refreshes; they are not a replacement for backing up the downloaded file.
 
 ## Learn Markdown
 
