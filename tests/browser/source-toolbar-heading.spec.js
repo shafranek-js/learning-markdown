@@ -43,6 +43,16 @@ test('empty source line creates useful heading with caret after placeholder',asy
  expect(await input.evaluate(el=>el.selectionStart)).toBe('### Heading 3'.length);
 });
 
+test('single-caret heading formatting keeps the caret at end of the edited line',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('First\nSecond');
+ await input.evaluate(el=>{el.focus();el.setSelectionRange(2,2);});
+ await page.locator('.toolbar-btn[data-action="h1"]').click();
+ await expect(input).toHaveValue('# First\nSecond');
+ expect(await input.evaluate(el=>el.selectionStart)).toBe('# First'.length);
+});
+
 test('CodeMirror transforms multiline selected headings atomically and Undo restores exact source',async({page})=>{
  await page.goto('/');
  const input=page.locator('#markdown-input');
