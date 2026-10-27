@@ -106,6 +106,13 @@ test('line-number gutter remains fixed across 3-digit line counts, wrapping and 
  await input.fill(source);
  // Keep the first line in the viewport when the CodeMirror editor receives focus.
  await input.evaluate(el=>{el.setSelectionRange(0,0);el.scrollTop=0;});
+ // The textarea mirrors its viewport into the syntax backdrop and gutter in
+ // requestAnimationFrame. Do not measure the source before those layers catch
+ // up: the textarea may be at line 1 while its gutter still shows line 115.
+ await expect.poll(async()=>page.locator('#line-gutter').evaluate(el=>el.scrollTop),
+  {timeout:3000}).toBe(0);
+ await expect.poll(async()=>page.locator('#editor-highlight-backdrop').evaluate(el=>el.scrollTop),
+  {timeout:3000}).toBe(0);
  const off=await geometry(page);
  await toggle.click();
  await expectSettledGeometry(off,page);
