@@ -1,6 +1,6 @@
 import {state} from '../core/state.js';
 import {markdownToHTML} from './preview.js';
-import {BUILTIN_PROMPTS,PROMPT_CATEGORIES,LIBRARY_STORAGE_KEY,parsePromptLibrary,placeholders,fillPrompt,createPersonalTemplate} from '../core/prompt-library.js';
+import {BUILTIN_PROMPTS,PROMPT_CATEGORIES,LIBRARY_STORAGE_KEY,parsePromptLibrary,placeholders,fillPrompt,createPersonalTemplate,searchPromptTemplates} from '../core/prompt-library.js';
 
 const $=id=>document.getElementById(id);
 const I18N={
@@ -10,6 +10,14 @@ const I18N={
  ro:{preview:'Previzualizare Markdown',title:'Biblioteca de prompturi',subtitle:'Șabloane Markdown offline. Fără conexiune AI.',search:'Caută șabloane',category:'Categorie',all:'Toate',favorites:'Favorite',mine:'Șabloanele mele',new:'Șablon nou',favorite:'Favorit',unfavorite:'Elimină favorit',append:'Adaugă în Sandbox',replace:'Înlocuiește Sandbox',copy:'Copiază',download:'Descarcă .md',close:'Închide',output:'Prompt Markdown pregătit',safety:'Textul rămâne în browser; nimic nu este trimis către AI.',tip:'De ce această structură?',empty:'Niciun șablon găsit',count:' șabloane',edit:'Editează șablonul',delete:'Șterge șablonul',editTitle:'Șablonul meu',name:'Titlu',description:'Descriere',body:'Șablon Markdown (folosiți {{variable}})',save:'Salvează șablonul',cancel:'Anulează',variable:'Introduceți ',invalid:'Introduceți titlul și textul (max. 12 variabile).',limit:'Maximum 50 de șabloane personale.',storage:'Nu se pot salva șabloanele.',removeConfirm:'Ștergeți acest șablon?',unsaved:'Renunțați la modificările nesalvate?',copied:'Prompt copiat.',copyFail:'Clipboard indisponibil; copiați manual textul.',replaceConfirm:'Înlocuiți ciorna Sandbox?',allCategories:'Toate categoriile',ownType:'Șablonul meu',noSelection:'Selectați un șablon.'},
  ru:{preview:'Предпросмотр Markdown',title:'Библиотека промптов',subtitle:'Офлайн-шаблоны Markdown. AI-модель не подключена.',search:'Поиск шаблонов',category:'Категория',all:'Все',favorites:'Избранное',mine:'Мои шаблоны',new:'Новый шаблон',favorite:'В избранное',unfavorite:'Убрать из избранного',append:'Добавить в Sandbox',replace:'Заменить Sandbox',copy:'Копировать',download:'Скачать .md',close:'Закрыть',output:'Подготовленный Markdown-промпт',safety:'Текст остаётся в браузере и не отправляется AI-сервисам.',tip:'Зачем такая структура?',empty:'Шаблоны не найдены',count:' шаблонов',edit:'Изменить мой шаблон',delete:'Удалить мой шаблон',editTitle:'Мой шаблон',name:'Название',description:'Описание',body:'Шаблон Markdown (используйте {{variable}})',save:'Сохранить шаблон',cancel:'Отмена',variable:'Введите ',invalid:'Укажите название и текст (не более 12 переменных).',limit:'Максимум 50 личных шаблонов.',storage:'Не удалось сохранить шаблоны в браузере.',removeConfirm:'Удалить этот шаблон?',unsaved:'Отменить несохранённые изменения?',copied:'Промпт скопирован.',copyFail:'Буфер обмена недоступен; выделите и скопируйте текст вручную.',replaceConfirm:'Заменить существующий черновик Sandbox?',allCategories:'Все категории',ownType:'Мой шаблон',noSelection:'Сначала выберите шаблон.'}
 };
+const CATEGORY_LABELS={
+ en:{Writing:'Writing',Coding:'Coding',Analysis:'Analysis',Learning:'Learning',Work:'Work',Research:'Research','Design & UX':'Design & UX',Career:'Career',Marketing:'Marketing',Productivity:'Productivity'},
+ cs:{Writing:'Psaní',Coding:'Programování',Analysis:'Analýza',Learning:'Vzdělávání',Work:'Práce',Research:'Výzkum','Design & UX':'Design a UX',Career:'Kariéra',Marketing:'Marketing',Productivity:'Produktivita'},
+ uk:{Writing:'Написання текстів',Coding:'Програмування',Analysis:'Аналіз',Learning:'Навчання',Work:'Робота',Research:'Дослідження','Design & UX':'Дизайн та UX',Career:"Кар'єра",Marketing:'Маркетинг',Productivity:'Продуктивність'},
+ ro:{Writing:'Redactare',Coding:'Programare',Analysis:'Analiză',Learning:'Învățare',Work:'Muncă',Research:'Cercetare','Design & UX':'Design și UX',Career:'Carieră',Marketing:'Marketing',Productivity:'Productivitate'},
+ ru:{Writing:'Тексты',Coding:'Программирование',Analysis:'Аналитика',Learning:'Обучение',Work:'Работа',Research:'Исследования','Design & UX':'Дизайн и UX',Career:'Карьера',Marketing:'Маркетинг',Productivity:'Продуктивность'}
+};
+const categoryName=category=>(CATEGORY_LABELS[state.lang]||CATEGORY_LABELS.en)[category]||category;
 const labels=()=>I18N[state.lang]||I18N.en;
 let data=parsePromptLibrary(null),selectedId=null,collection='all',editingId=null,dirty=false;
 let values=Object.create(null),onUsePrompt=()=>false,lastFocus=null;
@@ -24,14 +32,32 @@ function store(next){
 function clearStatus(){$('prompt-library-count').textContent='';}
 function button(id,text){const node=$('prompt-library-'+id);node.textContent=text;return node;}
 function setText(id,text){$(id).textContent=text;}
-function matchFilter(t){
- const query=$('prompt-library-search').value.trim().toLocaleLowerCase();
- const category=$('prompt-library-category').value;
- return (category==='all'||t.category===category)
- &&(collection==='all'||collection==='mine'&&mine(t)||collection==='favorites'&&data.favorites.includes(t.id))
- &&(!query||[t.title,t.description,t.category,t.body].some(x=>x.toLocaleLowerCase().includes(query)));
+function inCollection(t){
+ return collection==='all'||collection==='mine'&&mine(t)
+  ||collection==='favorites'&&data.favorites.includes(t.id);
 }
-function visible(){return allTemplates().filter(matchFilter);}
+function visible(){
+ return searchPromptTemplates(allTemplates().filter(inCollection),{
+  query:$('prompt-library-search').value,
+  category:$('prompt-library-category').value
+ });
+}
+function makeOption(id,label){
+ const node=document.createElement('option');node.value=id;node.textContent=label;
+ return node;
+}
+function refreshCategoryOptions(){
+ const select=$('prompt-library-category');
+ const previous=select.value||'all';
+ const templates=allTemplates().filter(inCollection);
+ select.replaceChildren();
+ select.append(makeOption('all',labels().allCategories+' ('+templates.length+')'));
+ for(const category of PROMPT_CATEGORIES){
+  const count=templates.filter(t=>t.category===category).length;
+  select.append(makeOption(category,categoryName(category)+' ('+count+')'));
+ }
+ select.value=[...select.options].some(option=>option.value===previous)?previous:'all';
+}
 function choose(id){
  const focusInList=Boolean(document.activeElement?.closest('#prompt-library-list'));
  if(id!==selectedId){selectedId=id;values=Object.create(null);}
@@ -53,7 +79,7 @@ function renderList(){
   item.setAttribute('aria-selected',String(template.id===selectedId));
   item.dataset.promptId=template.id;
   const name=document.createElement('strong');name.textContent=template.title;
-  const subtitle=document.createElement('small');subtitle.textContent=template.category+(data.favorites.includes(template.id)?' · ★':'');
+  const subtitle=document.createElement('small');subtitle.textContent=categoryName(template.category)+(data.favorites.includes(template.id)?' · ★':'');
   item.append(name,subtitle);item.addEventListener('click',()=>choose(template.id));
   root.append(item);
  }
@@ -71,7 +97,7 @@ function renderSelected(){
  $('prompt-library-view').hidden=false;
  setText('prompt-library-selected-title',template.title);
  setText('prompt-library-description',template.description);
- setText('prompt-library-type',template.category+(mine(template)?' · '+labels().ownType:''));
+ setText('prompt-library-type',categoryName(template.category)+(mine(template)?' · '+labels().ownType:''));
  setText('prompt-library-tip',mine(template)?'':labels().tip+' '+template.tip);
  const starred=data.favorites.includes(template.id);
  $('prompt-library-star').setAttribute('aria-pressed',String(starred));
@@ -98,6 +124,7 @@ function renderOutput(){
  $('prompt-library-rendered').innerHTML=markdownToHTML(output,state.dialect,{extensions:false});
 }
 function refresh(){
+ refreshCategoryOptions();
  const shown=visible();
  if(!shown.some(x=>x.id===selectedId)){selectedId=shown[0]?.id||null;values=Object.create(null);}
  renderList();renderSelected();
@@ -144,12 +171,11 @@ export function renderPromptLibraryLanguage(){
  button('download',w.download);button('edit',w.edit);button('delete',w.delete);
  $('prompt-own-save').textContent=w.save;$('prompt-own-cancel').textContent=w.cancel;
  $('prompt-library-close').setAttribute('aria-label',w.close);
- const cat=$('prompt-library-category'),personalCat=$('prompt-own-category');
- const previous=cat.value;cat.replaceChildren();personalCat.replaceChildren();
- const make=(id,label)=>{const node=document.createElement('option');node.value=id;node.textContent=label;return node;};
- cat.append(make('all',w.allCategories));
- for(const c of PROMPT_CATEGORIES){cat.append(make(c,c));personalCat.append(make(c,c));}
- cat.value=previous||'all';
+ const personalCat=$('prompt-own-category'),priorPersonal=personalCat.value;
+ personalCat.replaceChildren();
+ for(const category of PROMPT_CATEGORIES)personalCat.append(makeOption(category,categoryName(category)));
+ personalCat.value=priorPersonal||PROMPT_CATEGORIES[0];
+ refreshCategoryOptions();
  if(active())refresh();
 }
 export function initPromptLibrary({usePrompt}){
