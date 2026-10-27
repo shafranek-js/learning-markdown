@@ -101,3 +101,62 @@ test('Russian mobile editor keeps source unchanged when inline formatting touche
  await handled;
  await expect(input).toHaveValue(source);
 });
+
+
+test('textarea toggles alternative strong/italic delimiters without nested markers',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ for(const [action,original,expected] of [
+  ['bold','__Strong__','Strong'],
+  ['italic','*Emphasis*','Emphasis']
+ ]){
+  await input.fill(original);
+  await input.evaluate(el=>{el.focus();el.setSelectionRange(0,el.value.length);});
+  await page.locator('.toolbar-btn[data-action="'+action+'"]').click();
+  await expect(input).toHaveValue(expected);
+  await page.locator('#undo-btn').click();
+  await expect(input).toHaveValue(original);
+ }
+});
+
+test('italic toolbar preserves strong underscores and formats inside identifiers',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('__Strong__');
+ await input.evaluate(el=>{el.focus();el.setSelectionRange(2,8);});
+ await page.locator('.toolbar-btn[data-action="italic"]').click();
+ await expect(input).toHaveValue('__*Strong*__');
+ await page.locator('.toolbar-btn[data-action="italic"]').click();
+ await expect(input).toHaveValue('__Strong__');
+ await input.fill('some_file_name');
+ await input.evaluate(el=>{
+  el.focus();
+  const start=el.value.indexOf('file');
+  el.setSelectionRange(start,start+4);
+ });
+ await page.locator('.toolbar-btn[data-action="italic"]').click();
+ await expect(input).toHaveValue('some_*file*_name');
+ await page.locator('.toolbar-btn[data-action="italic"]').click();
+ await expect(input).toHaveValue('some_file_name');
+});
+
+test('CodeMirror bold recognizes alternate double-underscore markers at several cursors',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const original='__Alpha__\n__Alpha__\n__Alpha__';
+ await input.fill(original);
+ await page.locator('#multi-cursor-toggle').click();
+ const editor=page.locator('#codemirror-mount .cm-content');
+ await expect(editor).toBeVisible();
+ await editor.click();
+ await page.keyboard.press('Control+Home');
+ await page.keyboard.press('Shift+End');
+ await page.keyboard.press('Control+Shift+l');
+ await expect(page.locator('#multi-cursor-count')).toContainText('3');
+ await page.locator('.toolbar-btn[data-action="bold"]').click();
+ await expect(input).toHaveValue('Alpha\nAlpha\nAlpha');
+ await page.locator('#undo-btn').click();
+ await expect(input).toHaveValue(original);
+ await page.locator('#redo-btn').click();
+ await expect(input).toHaveValue('Alpha\nAlpha\nAlpha');
+});
