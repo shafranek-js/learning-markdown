@@ -87,6 +87,8 @@ test('line-number gutter remains fixed across 3-digit line counts, wrapping and 
  const toggle=page.locator('#multi-cursor-toggle');
  const source=Array.from({length:115},(_,i)=>'Line '+(i+1)).join('\n');
  await input.fill(source);
+ // Keep the first line in the viewport when the CodeMirror editor receives focus.
+ await input.evaluate(el=>{el.setSelectionRange(0,0);el.scrollTop=0;});
  const off=await geometry(page);
  await toggle.click();
  sameGeometry(off,await geometry(page));
