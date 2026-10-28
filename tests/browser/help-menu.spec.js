@@ -1,3 +1,4 @@
+import {toggleSandbox} from './support/help-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 const help=page=>page.locator('#help-menu-trigger');
@@ -43,13 +44,13 @@ test('Help About displays actual running build and repository link',async({page}
 
 test('Help course action restores course access from Sandbox',async({page})=>{
  await page.goto('/');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await page.locator('#markdown-input').fill('# My Sandbox note');
  await choose(page,'guide');
  await expect(page.locator('#contents-drawer')).not.toHaveClass(/-translate-x-full/);
  await expect(page.locator('#theory-panel')).toBeVisible();
  await page.locator('#close-contents-btn').click();
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await expect(page.locator('#markdown-input')).toHaveValue('# My Sandbox note');
 });
 
@@ -86,6 +87,42 @@ test('Mobile header retains access to all four menus and right-side actions',asy
  const actions=await page.locator('.app-header-actions').boundingBox();
  expect(actions.x).toBeGreaterThanOrEqual(0);
  expect(actions.x+actions.width).toBeLessThanOrEqual(361);
- await page.locator('#sandbox-mode-btn').scrollIntoViewIfNeeded();
- await expect(page.locator('#sandbox-mode-btn')).toBeVisible();
+ await help(page).click();
+ for(const item of ['sandbox','library','cheats'])await expect(action(page,item)).toBeVisible();
+ await expect(page.locator('.app-header-actions #sandbox-mode-btn')).toHaveCount(0);
+ await expect(page.locator('.app-header-actions #prompt-library-trigger')).toHaveCount(0);
+ await expect(page.locator('.app-header-actions #cheatsheet-btn')).toHaveCount(0);
+});
+
+test('Workspace tools in Help open their original functions and restore focus',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('.app-header-actions #sandbox-mode-btn')).toHaveCount(0);
+ await expect(page.locator('.app-header-actions #prompt-library-trigger')).toHaveCount(0);
+ await expect(page.locator('.app-header-actions #cheatsheet-btn')).toHaveCount(0);
+ await choose(page,'library');
+ await expect(page.locator('#prompt-library-dialog')).toBeVisible();
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#prompt-library-dialog')).toBeHidden();
+ await expect(help(page)).toBeFocused();
+ await choose(page,'cheats');
+ await expect(page.locator('#cheatsheet-modal')).toBeVisible();
+ await page.locator('#close-cheatsheet-btn').click();
+ await choose(page,'sandbox');
+ await expect(page.locator('#document-tabs')).toBeVisible();
+ await choose(page,'sandbox');
+ await expect(page.locator('#document-tabs')).toBeHidden();
+});
+
+test('All moved actions are localized in Help without duplicates',async({page})=>{
+ await page.goto('/');
+ for(const lang of ['en','cs','uk','ro','ru']){
+  await setAppLanguage(page,lang);
+  await help(page).click();
+  for(const key of ['sandbox','library','cheats']){
+   await expect(action(page,key)).toBeVisible();
+   await expect(action(page,key)).not.toBeEmpty();
+  }
+  await expect(action(page,'cheats')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+ }
 });
