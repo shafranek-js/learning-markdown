@@ -58,7 +58,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 
 - Complete **eight core lessons** with interactive checks and a separate optional **seven-lesson Beyond Markdown** track.
 - Practice with insertable examples, an optional Deep Practice section and the Extensions & Hacks Lab.
-- Use the **AI Prompt Sandbox** for free-form prompts and documents; this is a writing workspace, not a connected AI chatbot.
+- Open **Help → AI Prompt Sandbox** for free-form prompts and documents; this is a writing workspace, not a connected AI chatbot.
 - Show **Lesson Guide** while learning, or hide it to reclaim editing space and remove lesson-only header controls; your choice is saved for the next visit.
 - Read the Markdown guide and Cheat Sheet when you need syntax reminders.
 
@@ -79,7 +79,7 @@ Your document drafts and learning progress stay in your browser. No account, ser
 ## A quick tour
 
 1. Open the [live app](https://shafranek-js.github.io/learning-markdown/).
-2. Select **AI Prompt Sandbox** for free-form writing, or **Contents** (when Lesson Guide is enabled) for guided lessons.
+2. Select **Help → AI Prompt Sandbox** for free-form writing, or **Contents** (when Lesson Guide is enabled) for guided lessons.
 3. Write Markdown on the left and inspect **Live Preview** on the right. Drag the divider to change their widths. Use **View → Lesson Guide** to show or hide course instructions, alongside Word Wrap, layout modes, editor font sizing and the 50:50 reset.
 4. Use **Wrap text** for long lines, or **Multi-cursor** to insert/edit at several positions at once.
 5. Choose **Export** above Preview to download Markdown or HTML, or print to PDF.
@@ -110,12 +110,12 @@ renders as a formatted heading, quotation, checklist and link without changing t
 | Course title, subtitle and progress indicator | Shown (where screen width permits) | Hidden |
 | **Beyond Markdown** and the two certificate buttons | Shown | Hidden |
 | **Contents** (course navigation) | Available | Hidden |
-| **Lesson Guide**, **View**, **AI Prompt Sandbox** and **Cheat Sheet** | Available | Available |
+| Text-only **File**, **Edit**, **View**, **Settings**, **Help** menu bar | Available | Available |
 | **Settings** (theme, language), Markdown toolbar, editor, Preview and export tools | Available | Available |
 
 - Closing the guide also closes the guide panel and its resize handle; the editor/Preview can use the freed space. Reopen it with **View → Lesson Guide**. There is no duplicate Guide button in the header.
 - Your guide visibility preference survives a page reload. Course navigation, saved drafts and progress remain intact.
-- **AI Prompt Sandbox** is a dedicated free-form writing view. It hides the lesson-specific header and guide; **View → Lesson Guide** returns to the course.
+- **Help → AI Prompt Sandbox** opens a dedicated free-form writing view. It hides the lesson-specific header and guide; **View → Lesson Guide** returns to the course.
 - **Contents** is hidden while Lesson Guide is off. Re-enable Lesson Guide to restore course navigation; the **View** menu offers that switch even on small screens.
 
 ## View menu
@@ -154,10 +154,12 @@ Frequently used commands stay close to their work: **View** controls the layout,
 
 ## Help menu
 
-**Help** groups existing course navigation and reference tools without adding permanent toolbar controls:
+**Help** groups course navigation, Sandbox and reference tools. The application menu bar uses compact text labels (**File**, **Edit**, **View**, **Settings**, **Help**) without outlined buttons, like a desktop editor:
 
 - **Course Contents** reopens Lesson Guide (if needed) and the lesson list. Returning from Sandbox keeps the saved Sandbox draft.
-- **Markdown Cheat Sheet** opens the same existing syntax reference as the header button.
+- **AI Prompt Sandbox** switches between guided lessons and the free-form document workspace without deleting drafts.
+- **Prompt Library** opens the reusable prompt template catalog and builder.
+- **Markdown Cheat Sheet** opens the existing syntax reference, now without a duplicate header button.
 - **Keyboard Shortcuts** shows a keyboard-accessible quick reference covering common File/Edit actions, text formatting and multi-cursor.
 - **About Learning Markdown** shows the actual running build string (package version and commit revision) plus the project repository.
 
@@ -165,7 +167,7 @@ The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewpor
 
 ## Multi-document Sandbox tabs
 
-**AI Prompt Sandbox** supports multiple independent Markdown documents in Notepad-style tabs above the formatting toolbar. This is a writing workspace, not a second form of lesson navigation. The Lesson Guide and its exercises remain separate.
+Open **Help → AI Prompt Sandbox** to use multiple independent Markdown documents in Notepad-style tabs above the formatting toolbar. This is a writing workspace, not a second form of lesson navigation. The Lesson Guide and its exercises remain separate.
 
 - Choose **File → New Markdown**, the **+** button on the tab strip, or **Ctrl/Cmd+N** to create a blank document. **File → Open Markdown** opens an imported Markdown or text file in a new tab instead of overwriting the current draft.
 - Click a tab to switch documents. **Double-click the tab title** or press **F2** while its title has focus to rename it; **File → Download As…** also renames the active tab after successfully downloading a copy.
@@ -196,7 +198,7 @@ The original 20 templates and their IDs remain unchanged. The catalog now includ
 | Marketing | 4 | Positioning, segmentation, landing page, launch plan |
 | Productivity | 4 | Weekly planning, breakdown, prioritization, retrospective |
 
-1. Open **Prompt Library** next to **AI Prompt Sandbox**. Search by multiple words (all terms must match), with the most relevant title and description matches first. Filter by category; the options show the number of templates in the current collection.
+1. Open **Help → Prompt Library**. Search by multiple words (all terms must match), with the most relevant title and description matches first. Filter by category; the options show the number of templates in the current collection.
 2. Choose a template. Fill in fields generated from placeholders such as `{{topic}}` or `{{context}}`. The **Prepared Markdown prompt** updates immediately; empty fields remain visible as placeholders.
 3. Choose **Add to Sandbox** to append the prepared prompt to any existing Sandbox draft, or **Replace Sandbox** (explicit confirmation if there is existing text). Course lesson drafts are not overwritten. Undo works with the editor history.
 4. **Copy** the prepared Markdown or **Download .md**. You remain responsible for pasting it into an AI service of your choice, if needed.
