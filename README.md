@@ -169,7 +169,7 @@ The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewpor
 
 Open **Help → AI Prompt Sandbox** to use multiple independent Markdown documents in Notepad-style tabs **in the same top row as File, Edit, View, Settings and Help**. The separate tab strip is gone, leaving more vertical room for the editor. This is a writing workspace, not a second form of lesson navigation. The Lesson Guide and its exercises remain separate.
 
-- Choose **File → New Markdown**, the **+** button beside the tabs in the top menu row, or **Ctrl/Cmd+N** to create a blank document. **File → Open Markdown** opens an imported Markdown or text file in a new tab instead of overwriting the current draft.
+- Choose **File → New Markdown**, the **+** button immediately after the last document tab in the top menu row, or **Ctrl/Cmd+N** to create a blank document. **File → Open Markdown** opens an imported Markdown or text file in a new tab instead of overwriting the current draft.
 - Click a tab to switch documents. **Double-click the tab title** or press **F2** while its title has focus to rename it; **File → Download As…** also renames the active tab after successfully downloading a copy.
 - Select the **⋯** menu on any tab (or right-click its title / press **Shift+F10** when focused) for **Rename**, **Duplicate**, and **Close**. Duplication creates a separate copy next to the original, including its Markdown formatting options but with its own editing history. Use Escape to dismiss the menu; the tab regains focus.
 - Use the **×** on a tab to close it. A nonempty browser-local draft requires explicit confirmation before deletion; cancel keeps it intact. Closing the last document creates a fresh blank document.

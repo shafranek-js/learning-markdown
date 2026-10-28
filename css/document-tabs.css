@@ -32,7 +32,8 @@
  align-items:stretch;
  gap:3px;
  min-width:0;
- flex:1 1 0;
+ /* Fit the actual tabs instead of filling the entire header; shrink only when overflowing. */
+ flex:0 1 auto;
  overflow-x:auto;
  scrollbar-width:thin;
  overscroll-behavior-x:contain;

@@ -208,6 +208,38 @@ test('File New on mobile reveals the editor after reading the lesson guide',asyn
 });
 
 
+test('New Markdown + sits directly after the last tab as documents are created and closed',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ const strip=page.locator('#document-tabs');
+ const add=page.locator('#document-new-tab');
+ const checkAdjacent=async()=>{
+  const [lastRect,addRect,stripRect]=await Promise.all([
+   page.locator('#document-tab-list .document-tab-item').last().boundingBox(),
+   add.boundingBox(),strip.boundingBox()
+  ]);
+  const gap=addRect.x-(lastRect.x+lastRect.width);
+  expect(gap).toBeGreaterThanOrEqual(-1);
+  expect(gap).toBeLessThanOrEqual(9);
+  expect(addRect.x+addRect.width).toBeLessThan(stripRect.x+stripRect.width-50);
+ };
+ await checkAdjacent();
+ await newTab(page);
+ await expect(tabs(page)).toHaveCount(2);
+ await checkAdjacent();
+ await newTab(page);
+ await expect(tabs(page)).toHaveCount(3);
+ await checkAdjacent();
+ await page.locator('#document-tab-list .document-tab-item').last().locator('.document-tab-close').click();
+ await expect(tabs(page)).toHaveCount(2);
+ await checkAdjacent();
+ await page.reload();
+ await expect(tabs(page)).toHaveCount(2);
+ await checkAdjacent();
+});
+
 test('Sandbox places menu and document tabs in one compact header row',async({page})=>{
  await page.setViewportSize({width:1440,height:900});
  await page.goto('/');
@@ -229,6 +261,11 @@ test('Sandbox places menu and document tabs in one compact header row',async({pa
  expect(Math.abs(menuRect.y+menuRect.height/2-(tabsRect.y+tabsRect.height/2))).toBeLessThan(12);
  expect(headerRect.height).toBeLessThanOrEqual(45);
  expect(tabsRect.x).toBeGreaterThan(menuRect.x+menuRect.width);
+ // No empty reserved menu space after Help: the first tab should follow immediately.
+ const helpRect=await page.locator('#help-menu-trigger').boundingBox();
+ const gapAfterHelp=tabsRect.x-(helpRect.x+helpRect.width);
+ expect(gapAfterHelp).toBeGreaterThanOrEqual(-1);
+ expect(gapAfterHelp).toBeLessThanOrEqual(20);
  expect(tabsRect.x+tabsRect.width).toBeLessThanOrEqual(1440);
  expect(toolbarRect.y).toBeGreaterThanOrEqual(headerRect.y+headerRect.height);
  expect(toolbarRect.y).toBeLessThan(headerRect.y+headerRect.height+48);
