@@ -1,3 +1,4 @@
+import {toggleSandbox} from './support/help-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -25,7 +26,7 @@ test('File menu imports UTF-8 Markdown into Sandbox and preserves course draft',
 
 test('New Markdown opens another tab without overwriting existing Sandbox text',async({page})=>{
  await page.goto('/');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  const source=page.locator('#markdown-input');
  await source.fill('Keep this **draft**');
  const first=await page.locator('#document-tab-list [data-document-id]').first().getAttribute('data-document-id');
@@ -40,7 +41,7 @@ test('New Markdown opens another tab without overwriting existing Sandbox text',
 
 test('File downloads Markdown via existing export handler and supports a new filename',async({page})=>{
  await page.goto('/');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  const source=page.locator('#markdown-input');
  await source.fill('# Download\n\nUnicode čeština, українська.');
  let downloadEvent=page.waitForEvent('download');
@@ -64,7 +65,7 @@ test('File downloads Markdown via existing export handler and supports a new fil
 
 test('File Open rejects invalid type and oversized files without replacing Markdown',async({page})=>{
  await page.goto('/');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  const source=page.locator('#markdown-input');
  await source.fill('Unchanged content');
  page.once('dialog',dialog=>dialog.accept());
