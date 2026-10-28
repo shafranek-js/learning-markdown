@@ -1,11 +1,11 @@
 import {state} from '../core/state.js';
 const $=id=>document.getElementById(id);
 const STRINGS={
- en:{help:'Help',guide:'Course Contents',cheats:'Markdown Cheat Sheet',shortcuts:'Keyboard Shortcuts',about:'About Learning Markdown',close:'Close dialog',intro:'A free, installable interactive Markdown course and writing studio. Drafts and settings stay in your browser.',version:'Running build',source:'Open-source project',shortcutsTitle:'Editor and file shortcuts',os:'Use Command instead of Ctrl on macOS for compatible shortcuts.',rows:['New Markdown','Open Markdown','Download Markdown','Print / PDF','Find Markdown source','Replace Markdown source','Undo / Redo','Bold / Italic','Select next occurrence (Multi-cursor)','Toggle Tab focus mode']},
- cs:{help:'Nápověda',guide:'Obsah kurzu',cheats:'Tahák Markdown',shortcuts:'Klávesové zkratky',about:'O aplikaci Learning Markdown',close:'Zavřít dialog',intro:'Bezplatný interaktivní kurz Markdownu a editor. Koncepty a nastavení zůstávají v prohlížeči.',version:'Aktuální sestavení',source:'Otevřený projekt',shortcutsTitle:'Zkratky editoru a souborů',os:'V systému macOS použijte u podporovaných zkratek Command místo Ctrl.',rows:['Nový Markdown','Otevřít Markdown','Stáhnout Markdown','Tisk / PDF','Najít ve zdroji Markdown','Nahradit ve zdroji Markdown','Zpět / Znovu','Tučné / Kurzíva','Další výskyt (více kurzorů)','Přepnout Tab na přesun fokusu']},
- uk:{help:'Довідка',guide:'Зміст курсу',cheats:'Шпаргалка Markdown',shortcuts:'Гарячі клавіші',about:'Про Learning Markdown',close:'Закрити вікно',intro:'Безкоштовний інтерактивний курс і редактор Markdown. Чернетки й налаштування зберігаються у браузері.',version:'Поточна версія',source:'Відкритий проєкт',shortcutsTitle:'Скорочення редактора й файлів',os:'У macOS використовуйте Command замість Ctrl, де це підтримується.',rows:['Новий Markdown','Відкрити Markdown','Завантажити Markdown','Друк / PDF','Знайти в Markdown','Замінити в Markdown','Скасувати / Повторити','Жирний / Курсив','Наступний збіг (кілька курсорів)','Переключити Tab на фокус']},
- ro:{help:'Ajutor',guide:'Cuprinsul cursului',cheats:'Ghid rapid Markdown',shortcuts:'Comenzi rapide',about:'Despre Learning Markdown',close:'Închide dialogul',intro:'Curs interactiv gratuit și editor Markdown. Ciornele și setările rămân în browser.',version:'Versiunea curentă',source:'Proiect open source',shortcutsTitle:'Comenzi rapide pentru editor și fișiere',os:'Pe macOS, folosiți Command în loc de Ctrl acolo unde este acceptat.',rows:['Markdown nou','Deschide Markdown','Descarcă Markdown','Tipărire / PDF','Caută în Markdown','Înlocuiește în Markdown','Anulare / Refacere','Aldin / Cursiv','Apariția următoare (cursoare multiple)','Tab pentru navigare prin focus']},
- ru:{help:'Справка',guide:'Содержание курса',cheats:'Шпаргалка Markdown',shortcuts:'Горячие клавиши',about:'О Learning Markdown',close:'Закрыть окно',intro:'Бесплатный интерактивный курс и редактор Markdown. Черновики и настройки сохраняются в браузере.',version:'Текущая сборка',source:'Открытый проект',shortcutsTitle:'Горячие клавиши редактора и файлов',os:'В macOS для поддерживаемых сочетаний используется Command вместо Ctrl.',rows:['Новый Markdown','Открыть Markdown','Скачать Markdown','Печать / PDF','Поиск по Markdown','Замена в Markdown','Отменить / Повторить','Жирный / Курсив','Следующее совпадение (мультикурсор)','Переключить Tab на навигацию']}
+ en:{help:'Help',guide:'Course Contents',cheats:'Markdown Cheat Sheet',prompts:'Prompt Library',shortcuts:'Keyboard Shortcuts',about:'About Learning Markdown',close:'Close dialog',intro:'A free, installable interactive Markdown course and writing studio. Drafts and settings stay in your browser.',version:'Running build',source:'Open-source project',shortcutsTitle:'Editor and file shortcuts',os:'Use Command instead of Ctrl on macOS for compatible shortcuts.',rows:['New Markdown','Open Markdown','Download Markdown','Print / PDF','Find Markdown source','Replace Markdown source','Undo / Redo','Bold / Italic','Select next occurrence (Multi-cursor)','Toggle Tab focus mode']},
+ cs:{help:'Nápověda',guide:'Obsah kurzu',cheats:'Tahák Markdown',prompts:'Knihovna promptů',shortcuts:'Klávesové zkratky',about:'O aplikaci Learning Markdown',close:'Zavřít dialog',intro:'Bezplatný interaktivní kurz Markdownu a editor. Koncepty a nastavení zůstávají v prohlížeči.',version:'Aktuální sestavení',source:'Otevřený projekt',shortcutsTitle:'Zkratky editoru a souborů',os:'V systému macOS použijte u podporovaných zkratek Command místo Ctrl.',rows:['Nový Markdown','Otevřít Markdown','Stáhnout Markdown','Tisk / PDF','Najít ve zdroji Markdown','Nahradit ve zdroji Markdown','Zpět / Znovu','Tučné / Kurzíva','Další výskyt (více kurzorů)','Přepnout Tab na přesun fokusu']},
+ uk:{help:'Довідка',guide:'Зміст курсу',cheats:'Шпаргалка Markdown',prompts:'Бібліотека промптів',shortcuts:'Гарячі клавіші',about:'Про Learning Markdown',close:'Закрити вікно',intro:'Безкоштовний інтерактивний курс і редактор Markdown. Чернетки й налаштування зберігаються у браузері.',version:'Поточна версія',source:'Відкритий проєкт',shortcutsTitle:'Скорочення редактора й файлів',os:'У macOS використовуйте Command замість Ctrl, де це підтримується.',rows:['Новий Markdown','Відкрити Markdown','Завантажити Markdown','Друк / PDF','Знайти в Markdown','Замінити в Markdown','Скасувати / Повторити','Жирний / Курсив','Наступний збіг (кілька курсорів)','Переключити Tab на фокус']},
+ ro:{help:'Ajutor',guide:'Cuprinsul cursului',cheats:'Ghid rapid Markdown',prompts:'Biblioteca de prompturi',shortcuts:'Comenzi rapide',about:'Despre Learning Markdown',close:'Închide dialogul',intro:'Curs interactiv gratuit și editor Markdown. Ciornele și setările rămân în browser.',version:'Versiunea curentă',source:'Proiect open source',shortcutsTitle:'Comenzi rapide pentru editor și fișiere',os:'Pe macOS, folosiți Command în loc de Ctrl acolo unde este acceptat.',rows:['Markdown nou','Deschide Markdown','Descarcă Markdown','Tipărire / PDF','Caută în Markdown','Înlocuiește în Markdown','Anulare / Refacere','Aldin / Cursiv','Apariția următoare (cursoare multiple)','Tab pentru navigare prin focus']},
+ ru:{help:'Справка',guide:'Содержание курса',cheats:'Шпаргалка Markdown',prompts:'Библиотека промптов',shortcuts:'Горячие клавиши',about:'О Learning Markdown',close:'Закрыть окно',intro:'Бесплатный интерактивный курс и редактор Markdown. Черновики и настройки сохраняются в браузере.',version:'Текущая сборка',source:'Открытый проект',shortcutsTitle:'Горячие клавиши редактора и файлов',os:'В macOS для поддерживаемых сочетаний используется Command вместо Ctrl.',rows:['Новый Markdown','Открыть Markdown','Скачать Markdown','Печать / PDF','Поиск по Markdown','Замена в Markdown','Отменить / Повторить','Жирный / Курсив','Следующее совпадение (мультикурсор)','Переключить Tab на навигацию']}
 };
 const shortcuts=['Ctrl+N','Ctrl+O','Ctrl+S','Ctrl+P','Ctrl+F','Ctrl+H','Ctrl+Z / Ctrl+Y','Ctrl+B / Ctrl+I','Ctrl+D','Ctrl+M'];
 const w=()=>STRINGS[state.lang]||STRINGS.en;
@@ -62,9 +62,8 @@ function openDialog(kind){
 }
 let openCourseContents=()=>{};
 function run(command){
- if(command==='cheats')$('cheatsheet-btn').click();
- else if(command==='guide')openCourseContents();
- else openDialog(command);
+ if(command==='guide')openCourseContents();
+ else if(command==='shortcuts'||command==='about')openDialog(command);
 }
 export function renderHelpMenuLanguage(){
  const labels=w();
@@ -83,11 +82,15 @@ export function initHelpMenu({onOpenCourseContents}={}){
   if(!['ArrowDown','ArrowUp'].includes(event.key))return;
   event.preventDefault();openMenu({last:event.key==='ArrowUp'});
  });
+ // Capture before the original buttons' own handlers run. Closing the menu first
+ // gives Prompt Library a visible focus-return target and keeps existing actions intact.
  menu.addEventListener('click',event=>{
   const item=event.target.closest('[data-help-action]');
   if(!item)return;
-  closeMenu({focus:true});run(item.dataset.helpAction);
- });
+  const command=item.dataset.helpAction;
+  closeMenu({focus:true});
+  if(!['sandbox','prompts','cheats'].includes(command))run(command);
+ },true);
  menu.addEventListener('keydown',event=>{
   const items=actions(),i=items.indexOf(document.activeElement);let next=null;
   if(event.key==='ArrowDown')next=items[(i+1)%items.length];
@@ -95,7 +98,14 @@ export function initHelpMenu({onOpenCourseContents}={}){
   if(event.key==='Home')next=items[0];
   if(event.key==='End')next=items.at(-1);
   if(next){event.preventDefault();next.focus();}
-  if(event.key==='Tab'){event.preventDefault();closeMenu();(event.shiftKey?$('settings-menu-trigger'):$('sandbox-mode-btn')).focus();}
+  if(event.key==='Tab'){
+   event.preventDefault();
+   closeMenu();
+   const next=event.shiftKey?$('settings-menu-trigger'):
+    Array.from(document.querySelectorAll('.app-header-actions button, #document-new-tab, #markdown-input'))
+     .find(el=>el.getClientRects().length&&el.getAttribute('aria-hidden')!=='true');
+   (next||trigger).focus();
+  }
  });
  $('help-info-close').addEventListener('click',closeDialog);
  dialog.addEventListener('pointerdown',event=>{if(event.target===dialog)closeDialog();});
