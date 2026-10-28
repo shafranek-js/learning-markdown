@@ -51,7 +51,11 @@ export function updateCertificate(){const done=state.completedLessons.length===8
 }
 export function initModals(){
  $('contents-toggle-btn').addEventListener('click',()=>toggleContents(true));$('close-contents-btn').addEventListener('click',()=>toggleContents(false));$('contents-backdrop').addEventListener('click',()=>toggleContents(false));
- for(const [button,modal] of [['cheatsheet-btn','cheatsheet-modal'],['certificate-btn','certificate-modal']])$(button).addEventListener('click',()=>{if(modal==='certificate-modal')updateCertificate();else renderCheats();toggleModal(modal,true);});
+ for(const [button,modal] of [['cheatsheet-btn','cheatsheet-modal'],['certificate-btn','certificate-modal']])$(button).addEventListener('click',()=>{
+  if(modal==='certificate-modal')updateCertificate();else renderCheats();
+  toggleModal(modal,true);
+  if(modal==='cheatsheet-modal')$('close-cheatsheet-btn').focus();
+ });
  const closeCheatSheet=()=>{
   toggleModal('cheatsheet-modal',false);
   // Cheat Sheet is opened from Help now; return focus to its visible launcher.
