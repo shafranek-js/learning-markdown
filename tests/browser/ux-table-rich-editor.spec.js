@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -23,9 +24,9 @@ test('issue #6: merging a rectangle crossing a colspan expands its visual select
  const raw=await editor.inputValue();
  expect(raw).toContain('rowspan="3"');
  expect(raw).toContain('colspan="2"');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td[rowspan="3"][colspan="2"]')).toHaveCount(1);
  const downloadPromise=page.waitForEvent('download');
  await closeCompatibility(page);
@@ -47,7 +48,7 @@ test('issue #6: merging right and down uses the edge of an existing merged cell'
  await page.locator('#markdown-preview td[colspan="2"]').click();
  await page.locator('#table-edit-merge').selectOption('merge-right');
  await expect(page.locator('#markdown-preview td[colspan="3"]')).toHaveText('TopRight');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
  await page.locator('#markdown-preview td[colspan="2"]').click();
  await page.locator('#table-edit-merge').selectOption('merge-down');
@@ -106,9 +107,9 @@ test('issue #6: rich cell editing preserves emphasis, links, spans and undo hist
  expect(updated).toContain('af-cell-mint');
  expect(updated).toContain('Before');
  expect(updated).toContain('After');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td[colspan="2"]')).toContainText('addition');
  const filePromise=page.waitForEvent('download');
  await closeCompatibility(page);
@@ -202,9 +203,9 @@ test('issue #6 nested leaf table edits remain scoped and undoable',async({page})
  expect(changed).toContain('After</td>');
  expect(changed).toContain('class="af-table-outline"');
  expect(changed).toContain('class="af-table-borderless"');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview table table td').first()).toHaveText('Nested revised');
  const downloading=page.waitForEvent('download');
  await closeCompatibility(page);

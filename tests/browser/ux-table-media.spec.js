@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -30,9 +31,9 @@ test('issue #6 Blocks mode preserves paragraphs, nested lists, quote, code and e
  expect(changed).toContain('rowspan="2"');
  expect(changed).toContain('Neighbor');
  expect(changed).toContain('Bottom');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview > table td[rowspan="2"]')).toContainText('Updated Alpha');
  const dl=page.waitForEvent('download');
  await closeCompatibility(page);
@@ -136,9 +137,9 @@ test('issue #6 image properties preserve mixed cell content, Undo and standalone
   'alt="Updated diagram"','width="620"','Before','After'])expect(changed).toContain(token);
  expect(changed).not.toContain('height="150"');
  await expect(page.locator('#markdown-preview img')).toHaveAttribute('alt','Updated diagram');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(source).toHaveValue(src);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview img')).toHaveAttribute('width','620');
  const downloaded=page.waitForEvent('download');
  await closeCompatibility(page);
@@ -240,9 +241,9 @@ test('issue #6 insert HTML cell image without changing surrounding rich blocks, 
   expect(changed).toContain(token);
  await expect(page.locator('#markdown-preview td[rowspan="2"] img')).toHaveAttribute('alt','Artwork diagram');
  await expect(page.locator('#table-edit-image-add')).toBeHidden();
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td[rowspan="2"] img')).toHaveAttribute('width','380');
  const downloadPromise=page.waitForEvent('download');
  await closeCompatibility(page);
@@ -276,7 +277,7 @@ test('issue #6 insert portable Markdown image without converting a GFM table to 
  expect(updated).toContain('Completed');
  expect(updated).not.toContain('<table');
  await expect(page.locator('#markdown-preview table tbody tr td img')).toHaveAttribute('alt','Preview');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
 });
 
@@ -327,7 +328,7 @@ test('issue #6 mobile nested table image insertion preserves parent and decorati
  for(const text of ['Снаружи','После','Внутри','<strong>важно</strong>',
   'src="https://example.org/leaf.png"','alt=""'])expect(changed).toContain(text);
  await expect(page.locator('#markdown-preview table table img')).toHaveAttribute('alt','');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
 });
 

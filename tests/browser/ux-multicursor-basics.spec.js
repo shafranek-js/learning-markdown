@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 
@@ -16,9 +17,9 @@ test('multi-cursor mode adds vertical cursors, edits lines together and uses nat
  await page.keyboard.insertText('!');
  await expect(textarea).toHaveValue('!alpha\n!beta\ngamma');
  await expect(page.locator('#markdown-preview')).toContainText('!alpha');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(textarea).toHaveValue('alpha\nbeta\ngamma');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(textarea).toHaveValue('!alpha\n!beta\ngamma');
  await page.locator('#multi-cursor-toggle').click();
  await expect(textarea).toBeVisible();
@@ -115,10 +116,10 @@ test('Advanced inline presets apply to every CodeMirror selection with one Undo/
  const after=await src.inputValue();
  expect(after).toContain('<span class="af-color-blue">Alpha</span>');
  expect(after).toContain('Unchanged');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(src).toHaveValue('Alpha\n\nAlpha\n\nUnchanged');
  await expect(page.locator('#markdown-preview .af-color-blue')).toHaveCount(0);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview .af-color-blue')).toHaveCount(2);
 });
 
@@ -133,9 +134,9 @@ test('Advanced paragraph formatting and H1–H6 act on all CodeMirror cursors',a
  await page.keyboard.press('Control+Alt+ArrowDown');
  await page.locator('[data-action="h2"]').click();
  await expect(input).toHaveValue('## First\n## Second\nThird');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('First\nSecond\nThird');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('## First\n## Second\nThird');
  await page.locator('#advanced-tools-toggle').click();
  await page.locator('#multi-cursor-toggle').click();
@@ -157,7 +158,7 @@ test('Advanced rich callouts apply to both selected occurrences atomically',asyn
  await page.locator('[data-rich-apply="blocks"]').click();
  await expect(page.locator('#markdown-preview .af-callout-warning')).toHaveCount(2);
  expect((await input.inputValue()).match(/af-callout-warning/g)).toHaveLength(2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Safety\n\nSafety');
 });
 
@@ -181,7 +182,7 @@ test('multiple internal anchor insertions get distinct IDs and valid links',asyn
  await expect(page.locator('#markdown-preview #advanced-section-2')).toHaveCount(1);
  await expect(page.locator('#markdown-preview a[href="#advanced-section"]')).toHaveCount(1);
  await expect(page.locator('#markdown-preview a[href="#advanced-section-2"]')).toHaveCount(1);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Topic\n\nTopic');
 });
 
@@ -200,7 +201,7 @@ test('multi-cursor rich numbered lists keep selected text and HTML safety',async
  await page.locator('[data-rich-apply="numbering"]').click();
  await expect(page.locator('#markdown-preview ol.af-list-lower-alpha')).toHaveCount(2);
  await expect(page.locator('#markdown-preview ol li')).toHaveCount(2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Entry\n\nEntry');
 });
 
@@ -215,9 +216,9 @@ test('multi-cursor list tools format selected lines and undo atomically',async({
  await page.keyboard.press('Control+Alt+ArrowDown');
  await page.locator('[data-action="task"]').click();
  await expect(input).toHaveValue('- [ ] Apple\n- [ ] Banana\nCherry');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Apple\nBanana\nCherry');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('- [ ] Apple\n- [ ] Banana\nCherry');
 });
 

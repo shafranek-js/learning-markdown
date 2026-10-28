@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -28,10 +29,10 @@ test('issue #13 advanced image builder creates accessible responsive figures wit
  await expect(picture.locator('img')).toHaveAttribute('height','340');
  await expect(picture.locator('figcaption')).toHaveText('Figure 1: A & B < C');
  expect(await picture.locator('img').evaluate(el=>getComputedStyle(el).objectFit)).toBe('contain');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('A short introduction.');
  await expect(page.locator('#markdown-preview figure')).toHaveCount(0);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(picture).toHaveCount(1);
 });
 
@@ -161,9 +162,9 @@ test('issue #14 Advanced HTML definition template is semantic, reversible and av
  await expect(page.locator('#markdown-preview dl strong')).toHaveText('definition');
  await expect(input).toHaveValue(/<dl>/);
  const source=await input.inputValue();
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(page.locator('#markdown-preview dl')).toHaveCount(0);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(source);
  for(const dialect of ['commonmark','original','gfm']){
   await page.locator('#dialect-selector').selectOption(dialect);
@@ -232,9 +233,9 @@ test('issue #15 Unicode picker searches offline and inserts at caret with Undo/R
  await page.locator('#unicode-results button[data-item-id="euro"]').click();
  await expect(page.locator('#unicode-picker-dialog')).not.toBeVisible();
  await expect(input).toHaveValue('Price: €');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Price: ');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('Price: €');
  await expect(page.locator('#markdown-preview')).toContainText('Price: €');
 });
@@ -372,7 +373,7 @@ test('issue #16 Practical Hacks are labeled, localized and undoable',async({page
  await expect(page.locator('#cheatsheet-modal')).toHaveClass(/hidden/);
  await expect(editor).toHaveValue(/Keep the original Markdown source/);
  await expect(page.locator('#markdown-preview blockquote strong')).toContainText('Note:');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(before);
  await setAppLanguage(page,'ru');
  await page.locator('#help-menu-trigger').click();

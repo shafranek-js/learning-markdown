@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 
@@ -84,10 +85,10 @@ test('100 line toolbar formatting retains carets across undo and redo',async({pa
  await page.locator('[data-action="h2"]').click();
  await expect(input).toHaveValue(headed);
  await expect(page.locator('#multi-cursor-count')).toContainText('100');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
  await expect(page.locator('#multi-cursor-count')).toContainText('100');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(headed);
  await expect(page.locator('#multi-cursor-count')).toContainText('100');
  await page.keyboard.type('!');
@@ -109,13 +110,13 @@ test('separate multi-cursor formatting actions have separate undo steps',async({
  await expect(input).toHaveValue(headings);
  await page.locator('[data-action="ol"]').click();
  await expect(input).toHaveValue(numbered);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(headings);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(headings);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(numbered);
  await expect(page.locator('#multi-cursor-count')).toContainText('3');
 });
@@ -136,7 +137,7 @@ test('switching to the textarea and back keeps unchanged multi-cursor session',a
  await expect(page.locator('#multi-cursor-count')).toContainText('2');
  await page.keyboard.insertText('!');
  await expect(input).toHaveValue('!First\n!Second\nThird');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('First\nSecond\nThird');
 });
 
@@ -155,7 +156,9 @@ test('textarea edits invalidate stale CodeMirror history when switching back',as
  await toggle.click();
  await expect(input).toHaveValue('New content');
  await expect(page.locator('#multi-cursor-count')).toContainText('1');
- await expect(page.locator('#undo-btn')).toBeDisabled();
+ await page.locator('#edit-menu-trigger').click();
+ await expect(page.locator('#edit-menu [data-edit-action="undo"]')).toBeDisabled();
+ await page.keyboard.press('Escape');
 });
 
 test('Shift+Tab removes real leading tab characters on multiple lines',async({page})=>{
@@ -169,7 +172,7 @@ test('Shift+Tab removes real leading tab characters on multiple lines',async({pa
  await page.keyboard.press('Shift+Tab');
  await expect(input).toHaveValue('Alpha\nBeta\nGamma');
  await expect(page.locator('#multi-cursor-count')).toContainText('2');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('\tAlpha\n\tBeta\nGamma');
 });
 
@@ -188,9 +191,9 @@ test('100 simultaneous inline Markdown wraps undo as one operation',async({page}
  await expect(input).toHaveValue(lines.map(line=>line+'**bold text**').join('\n'));
  await expect(page.locator('#markdown-preview strong')).toHaveCount(100);
  await expect(page.locator('#multi-cursor-count')).toContainText('100');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(lines.join('\n'));
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(lines.map(line=>line+'**bold text**').join('\n'));
 });
 
@@ -208,9 +211,9 @@ test('Ctrl+Shift+L selects all 100 occurrences for one replacement',async({page}
  await expect(page.locator('#multi-cursor-count')).toContainText('100');
  await page.keyboard.insertText('label');
  await expect(input).toHaveValue(source.replaceAll('tag','label'));
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(source.replaceAll('tag','label'));
 });
 
@@ -286,13 +289,13 @@ test('multi-cursor line transformations preserve cursor count through sequential
  await page.locator('[data-action="ul"]').click();
  await expect(input).toHaveValue('- ## One\n- ## Two\n- ## Three\n- ## Four');
  await expect(page.locator('#multi-cursor-count')).toContainText('4');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('## One\n## Two\n## Three\n## Four');
  await expect(page.locator('#multi-cursor-count')).toContainText('4');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('One\nTwo\nThree\nFour');
- await page.locator('#redo-btn').click();
- await page.locator('#redo-btn').click();
+ await redo(page);
+ await redo(page);
  await expect(input).toHaveValue('- ## One\n- ## Two\n- ## Three\n- ## Four');
  await expect(page.locator('#multi-cursor-count')).toContainText('4');
 });
@@ -325,7 +328,7 @@ test('numbering restarts for independently selected nonadjacent lines',async({pa
  await expect(page.locator('#multi-cursor-count')).toContainText('2');
  await page.locator('[data-action="ol"]').click();
  await expect(input).toHaveValue('1. Same\nMiddle\n1. Same');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Same\nMiddle\nSame');
 });
 
