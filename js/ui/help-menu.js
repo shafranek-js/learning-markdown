@@ -1,15 +1,15 @@
 import {state} from '../core/state.js';
+import {helpShortcutSections,HELP_SHORTCUT_TEXT} from './help-shortcuts.js';
 const $=id=>document.getElementById(id);
 const STRINGS={
- en:{help:'Help',guide:'Course Contents',cheats:'Markdown Cheat Sheet',prompts:'Prompt Library',shortcuts:'Keyboard Shortcuts',about:'About Learning Markdown',close:'Close dialog',intro:'A free, installable interactive Markdown course and writing studio. Drafts and settings stay in your browser.',version:'Running build',source:'Open-source project',shortcutsTitle:'Editor and file shortcuts',os:'Use Command instead of Ctrl on macOS for compatible shortcuts.',rows:['New Markdown','Open Markdown','Download Markdown','Print / PDF','Find Markdown source','Replace Markdown source','Undo / Redo','Bold / Italic','Select next occurrence (Multi-cursor)','Toggle Tab focus mode']},
- cs:{help:'Nápověda',guide:'Obsah kurzu',cheats:'Tahák Markdown',prompts:'Knihovna promptů',shortcuts:'Klávesové zkratky',about:'O aplikaci Learning Markdown',close:'Zavřít dialog',intro:'Bezplatný interaktivní kurz Markdownu a editor. Koncepty a nastavení zůstávají v prohlížeči.',version:'Aktuální sestavení',source:'Otevřený projekt',shortcutsTitle:'Zkratky editoru a souborů',os:'V systému macOS použijte u podporovaných zkratek Command místo Ctrl.',rows:['Nový Markdown','Otevřít Markdown','Stáhnout Markdown','Tisk / PDF','Najít ve zdroji Markdown','Nahradit ve zdroji Markdown','Zpět / Znovu','Tučné / Kurzíva','Další výskyt (více kurzorů)','Přepnout Tab na přesun fokusu']},
- uk:{help:'Довідка',guide:'Зміст курсу',cheats:'Шпаргалка Markdown',prompts:'Бібліотека промптів',shortcuts:'Гарячі клавіші',about:'Про Learning Markdown',close:'Закрити вікно',intro:'Безкоштовний інтерактивний курс і редактор Markdown. Чернетки й налаштування зберігаються у браузері.',version:'Поточна версія',source:'Відкритий проєкт',shortcutsTitle:'Скорочення редактора й файлів',os:'У macOS використовуйте Command замість Ctrl, де це підтримується.',rows:['Новий Markdown','Відкрити Markdown','Завантажити Markdown','Друк / PDF','Знайти в Markdown','Замінити в Markdown','Скасувати / Повторити','Жирний / Курсив','Наступний збіг (кілька курсорів)','Переключити Tab на фокус']},
- ro:{help:'Ajutor',guide:'Cuprinsul cursului',cheats:'Ghid rapid Markdown',prompts:'Biblioteca de prompturi',shortcuts:'Comenzi rapide',about:'Despre Learning Markdown',close:'Închide dialogul',intro:'Curs interactiv gratuit și editor Markdown. Ciornele și setările rămân în browser.',version:'Versiunea curentă',source:'Proiect open source',shortcutsTitle:'Comenzi rapide pentru editor și fișiere',os:'Pe macOS, folosiți Command în loc de Ctrl acolo unde este acceptat.',rows:['Markdown nou','Deschide Markdown','Descarcă Markdown','Tipărire / PDF','Caută în Markdown','Înlocuiește în Markdown','Anulare / Refacere','Aldin / Cursiv','Apariția următoare (cursoare multiple)','Tab pentru navigare prin focus']},
- ru:{help:'Справка',guide:'Содержание курса',cheats:'Шпаргалка Markdown',prompts:'Библиотека промптов',shortcuts:'Горячие клавиши',about:'О Learning Markdown',close:'Закрыть окно',intro:'Бесплатный интерактивный курс и редактор Markdown. Черновики и настройки сохраняются в браузере.',version:'Текущая сборка',source:'Открытый проект',shortcutsTitle:'Горячие клавиши редактора и файлов',os:'В macOS для поддерживаемых сочетаний используется Command вместо Ctrl.',rows:['Новый Markdown','Открыть Markdown','Скачать Markdown','Печать / PDF','Поиск по Markdown','Замена в Markdown','Отменить / Повторить','Жирный / Курсив','Следующее совпадение (мультикурсор)','Переключить Tab на навигацию']}
+ en:{help:'Help',guide:'Course Contents',cheats:'Markdown Cheat Sheet',prompts:'Prompt Library',shortcuts:'Keyboard Shortcuts',about:'About Learning Markdown',close:'Close dialog',intro:'A free, installable interactive Markdown course and writing studio. Drafts and settings stay in your browser.',version:'Running build',source:'Open-source project',shortcutsTitle:'Editor and file shortcuts'},
+ cs:{help:'Nápověda',guide:'Obsah kurzu',cheats:'Tahák Markdown',prompts:'Knihovna promptů',shortcuts:'Klávesové zkratky',about:'O aplikaci Learning Markdown',close:'Zavřít dialog',intro:'Bezplatný interaktivní kurz Markdownu a editor. Koncepty a nastavení zůstávají v prohlížeči.',version:'Aktuální sestavení',source:'Otevřený projekt',shortcutsTitle:'Zkratky editoru a souborů'},
+ uk:{help:'Довідка',guide:'Зміст курсу',cheats:'Шпаргалка Markdown',prompts:'Бібліотека промптів',shortcuts:'Гарячі клавіші',about:'Про Learning Markdown',close:'Закрити вікно',intro:'Безкоштовний інтерактивний курс і редактор Markdown. Чернетки й налаштування зберігаються у браузері.',version:'Поточна версія',source:'Відкритий проєкт',shortcutsTitle:'Скорочення редактора й файлів'},
+ ro:{help:'Ajutor',guide:'Cuprinsul cursului',cheats:'Ghid rapid Markdown',prompts:'Biblioteca de prompturi',shortcuts:'Comenzi rapide',about:'Despre Learning Markdown',close:'Închide dialogul',intro:'Curs interactiv gratuit și editor Markdown. Ciornele și setările rămân în browser.',version:'Versiunea curentă',source:'Proiect open source',shortcutsTitle:'Comenzi rapide pentru editor și fișiere'},
+ ru:{help:'Справка',guide:'Содержание курса',cheats:'Шпаргалка Markdown',prompts:'Библиотека промптов',shortcuts:'Горячие клавиши',about:'О Learning Markdown',close:'Закрыть окно',intro:'Бесплатный интерактивный курс и редактор Markdown. Черновики и настройки сохраняются в браузере.',version:'Текущая сборка',source:'Открытый проект',shortcutsTitle:'Горячие клавиши редактора и файлов'}
 };
 const CONTACT_HEADING={en:'Contact',cs:'Kontakt',uk:'Контакти',ro:'Contact',ru:'Контакты'};
 const GITHUB_LABELS={en:'Learning Markdown on GitHub',cs:'Learning Markdown na GitHubu',uk:'Learning Markdown на GitHub',ro:'Learning Markdown pe GitHub',ru:'Learning Markdown на GitHub'};
-const shortcuts=['Ctrl+N','Ctrl+O','Ctrl+S','Ctrl+P','Ctrl+F','Ctrl+H','Ctrl+Z / Ctrl+Y','Ctrl+B / Ctrl+I','Ctrl+D','Ctrl+M'];
 const w=()=>STRINGS[state.lang]||STRINGS.en;
 const isOpen=()=>!$('help-menu').hidden;
 const actions=()=>Array.from($('help-menu').querySelectorAll('[role="menuitem"]'));
@@ -38,16 +38,29 @@ function openDialog(kind){
  body.replaceChildren();
  $('help-info-title').textContent=labels[kind];
  if(kind==='shortcuts'){
-  const note=document.createElement('p');
-  note.textContent=labels.os;
-  const table=document.createElement('table');
-  for(let i=0;i<shortcuts.length;i++){
-   const tr=document.createElement('tr'),left=document.createElement('td'),right=document.createElement('td');
-   left.textContent=labels.rows[i];
-   const kbd=document.createElement('kbd');kbd.textContent=shortcuts[i];
-   right.append(kbd);tr.append(left,right);table.append(tr);
+  const t=HELP_SHORTCUT_TEXT[state.lang]||HELP_SHORTCUT_TEXT.en;
+  const note=document.createElement('p');note.textContent=t.note;
+  const os=document.createElement('p');os.textContent=t.os;
+  body.append(note,os);
+  for(const section of helpShortcutSections(state.lang)){
+   const heading=document.createElement('h3');heading.textContent=section.title;
+   const hint=document.createElement('p');
+   hint.className='workspace-shortcut-hint';hint.textContent=section.hint;
+   const table=document.createElement('table');
+   table.className='workspace-shortcuts-table';
+   table.setAttribute('aria-label',section.title);
+   for(const command of section.rows){
+    const tr=document.createElement('tr');tr.dataset.shortcutId=command.id;
+    const name=document.createElement('th');name.scope='row';name.textContent=command.label;
+    const value=document.createElement('td');
+    const keys=document.createElement('span');keys.className='workspace-shortcut-keys';
+    for(const key of command.keys){
+     const kbd=document.createElement('kbd');kbd.textContent=key;keys.append(kbd);
+    }
+    value.append(keys);tr.append(name,value);table.append(tr);
+   }
+   body.append(heading,hint,table);
   }
-  body.append(note,table);
  }else{
   const info=document.createElement('p');info.textContent=labels.intro;
   const version=document.createElement('p');

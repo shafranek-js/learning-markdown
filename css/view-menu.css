@@ -167,6 +167,10 @@
  box-shadow:0 18px 50px rgba(0,0,0,.44);
 }
 .workspace-help-header{
+ position:sticky;
+ top:0;
+ z-index:1;
+ background:var(--bg-panel);
  display:flex;
  align-items:center;
  justify-content:space-between;
@@ -189,6 +193,19 @@
 .workspace-help-content td{padding:8px 4px;border-bottom:1px solid var(--border-ui)}
 .workspace-help-content td:last-child{text-align:right}
 .workspace-help-content kbd{font-family:ui-monospace,monospace;white-space:nowrap;font-size:11px}
+.workspace-help-content .workspace-shortcut-hint{color:var(--text-ui-muted);margin:0 0 6px}
+.workspace-help-content .workspace-shortcuts-table{margin-bottom:14px;table-layout:fixed}
+.workspace-shortcuts-table th{
+ width:57%;
+ padding:8px 10px 8px 4px;
+ border-bottom:1px solid var(--border-ui);
+ font-weight:400;
+ text-align:left;
+ vertical-align:top;
+ overflow-wrap:anywhere;
+}
+.workspace-shortcuts-table td{width:43%;vertical-align:top}
+.workspace-shortcut-keys{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 
 /* Settings is a non-modal preference popover, not a nested menu of fake actions. */
 .workspace-settings-panel{

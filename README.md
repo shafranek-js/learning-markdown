@@ -160,7 +160,7 @@ Frequently used commands stay close to their work: **View** controls the layout,
 - **AI Prompt Sandbox** switches between guided lessons and the free-form document workspace without deleting drafts.
 - **Prompt Library** opens the reusable prompt template catalog and builder.
 - **Markdown Cheat Sheet** opens the existing syntax reference, now without a duplicate header button.
-- **Keyboard Shortcuts** shows a keyboard-accessible quick reference covering common File/Edit actions, text formatting and multi-cursor.
+- **Keyboard Shortcuts** is a complete, grouped reference for the application's own key bindings and mouse-plus-key gestures: File, Edit, source editing, Multi-cursor, Sandbox tabs, Find/Replace, visual table Blocks, the Unicode picker and menu navigation. Each entry shows its context, in all five languages, including the Control-only `Ctrl+M` exception on macOS. Native browser and CodeMirror editing keys are intentionally distinguished from application-defined bindings.
 - **About Learning Markdown** shows the actual running build string (package version and commit revision), the project repository and clickable contact links: [email](mailto:pavel.p.popovic@gmail.com) and [Telegram](https://t.me/jsx_xsj).
 
 The GitHub Octicon at the far right of the application header opens the [source repository](https://github.com/shafranek-js/learning-markdown) in a new tab in both Course and Sandbox modes. The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewport, Escape dismissal and focus return. Opening Help does not alter Markdown source or progress.
