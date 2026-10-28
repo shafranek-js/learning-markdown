@@ -4,12 +4,13 @@
 const TARGETS=new Set(['p','ul','ol']);
 const SAFE_INLINE=new Set('a strong b em i u del s strike sup sub mark code span br'.split(' '));
 // Changing a block wrapper discards its attributes. Allow only the ordered
-// list numbering attributes whose loss is an intentional type conversion.
+// list numbering attributes when actually changing an ordered list's type;
+// merging an existing OL into another OL would otherwise lose its numbering.
 // Reject unknown semantic, accessibility, style and author metadata *before*
 // moving any nodes; the original Markdown must remain untouched.
 const ORDERED_NUMBERING=new Set(['type','start']);
-function hasProtectedWrapperAttributes(element){
- const allowed=element.tagName==='OL'?ORDERED_NUMBERING:null;
+function hasProtectedWrapperAttributes(element,target){
+ const allowed=element.tagName==='OL'&&target!=='ol'?ORDERED_NUMBERING:null;
  return [...element.attributes].some(attribute=>!allowed?.has(attribute.name));
 }
 function topBlock(editor,node){
@@ -57,7 +58,7 @@ function convertNestedList(editor,target,selection,range){
  if(target==='p')return {ok:false,reason:'nested-to-paragraph'};
  if(list.tagName.toLowerCase()===target)
   return {ok:false,reason:'already-formatted'};
- if(hasProtectedWrapperAttributes(list))
+ if(hasProtectedWrapperAttributes(list,target))
   return {ok:false,reason:'protected-metadata'};
  const aIndex=items.indexOf(a),bIndex=items.indexOf(b);
  if(aIndex<0||bIndex<0)return {ok:false,reason:'partial-or-nested-list'};
@@ -122,7 +123,7 @@ export function convertBlockSelection(editor,target,selection=window.getSelectio
  // Paragraphs keep their own wrapper when converting to paragraphs. Every
  // other selected wrapper is reconstructed and would lose its attributes.
  if(blocks.some(block=>(block.tagName!=='P'||target!=='p')&&
-   hasProtectedWrapperAttributes(block)))
+   hasProtectedWrapperAttributes(block,target)))
   return {ok:false,reason:'protected-metadata'};
  // Remember the insertion boundary BEFORE any selected paragraph is moved.
  // Otherwise a trailing paragraph would become detached and lose nextSibling.
