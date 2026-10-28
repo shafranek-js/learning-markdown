@@ -274,7 +274,7 @@ On macOS, corresponding shortcuts use Command/Option where available. Some combi
 
 ## Compatibility and export
 
-**Export Word (.docx):** choose **File → Export Word (.docx)** to download an editable native Microsoft Word document generated locally from the *sanitized Live Preview*. Word receives structured headings H1–H6, paragraphs, inline emphasis, hyperlinks, lists, task items, blockquotes, code and supported GFM/HTML tables. The active Sandbox document name is reused for the `.docx` filename. Original Markdown and other tabs are not modified.
+**Export Word (.docx):** choose **File → Export Word (.docx)** to download an editable native Microsoft Word document generated locally from the *sanitized Live Preview*. Word receives structured headings H1–H6, paragraphs, inline emphasis, hyperlinks, lists, task items (checked/unchecked states as visible editable ☑ / ☐ marks), blockquotes, code and supported GFM/HTML tables. The active Sandbox document name is reused for the `.docx` filename. Original Markdown and other tabs are not modified.
 
 External HTTPS images are embedded only when the browser can retrieve supported image bytes under CORS and size limits. If an image cannot be embedded, the exported document contains a readable image label and link instead, with an export warning. Mermaid source is retained as a code block; diagram rendering and advanced browser-only CSS/layout effects are **not guaranteed** to match Word. Word controls its own pagination, fonts and line wrapping. Export runs locally without uploading documents to any conversion service; the Word generator is loaded on demand.
 
