@@ -319,6 +319,22 @@ function selectedHTMLTable(entry){
  }
  return {doc,target,root:tables[0],model:modelFromHTML(target.outerHTML),sourceRange};
 }
+// Rowspans crossing thead/tbody/tfoot boundaries are structurally unsafe
+// for visual serialization. Keep them source-only and explain the precise reason.
+function crossesTableRowGroup(table){
+ for(const group of table.children){
+  if(!['THEAD','TBODY','TFOOT'].includes(group.tagName))continue;
+  const rows=[...group.children].filter(child=>child.tagName==='TR');
+  for(let row=0;row<rows.length;row++){
+   for(const cell of rows[row].children){
+    if(!['TH','TD'].includes(cell.tagName))continue;
+    const rowspan=cell.getAttribute('rowspan');
+    if(rowspan!==null&&Number(rowspan)>rows.length-row)return true;
+   }
+  }
+ }
+ return false;
+}
 // Reason codes are UI-neutral. The Preview explains why this table is
 // read-only instead of silently dropping the user's cell selection.
 export function getTableReadOnlyReason(source,index){
@@ -333,7 +349,8 @@ export function getTableReadOnlyReason(source,index){
  if(!target)return 'unmapped';
  if(target.querySelector('table'))return 'container';
  if(unmodeledRichMetadata(entry))return 'unsupported';
- return selectedHTMLTable(entry)?.model?null:'invalid-grid';
+ if(selectedHTMLTable(entry)?.model)return null;
+ return crossesTableRowGroup(target)?'cross-section-span':'invalid-grid';
 }
 function replaceSelectedTable(entry,resolved,updated){
  if(!updated)return null;
@@ -614,7 +631,7 @@ export function setTableCellHTML(source,index,row,col,value){
 
 // Block cell editing is a separate explicit mode: inline-only operations must
 // never flatten paragraphs, lists, quotations or preformatted text.
-const CELL_BLOCK_TAGS=new Set('p div ul ol li blockquote pre h2 h3 h4'.split(' '));
+const CELL_BLOCK_TAGS=new Set('p div ul ol li blockquote pre h1 h2 h3 h4 h5 h6'.split(' '));
 const CELL_SAFE_TAGS=new Set([...CELL_INLINE_TAGS,...CELL_BLOCK_TAGS]);
 export function sanitizeBlockCellHTML(value){
  if(typeof value!=='string'||value.length>20000)return null;
@@ -790,7 +807,7 @@ export function insertTableCellImage(source,index,row,col,options={}){
   if(w!=='')image.setAttribute('width',String(w));
   if(h!=='')image.setAttribute('height',String(h));
   const hasContent=Boolean(owner.html.trim());
-  const hasBlocks=Boolean(parsed.body.querySelector('p,div,ul,ol,blockquote,pre,h2,h3,h4,figure'));
+  const hasBlocks=Boolean(parsed.body.querySelector('p,div,ul,ol,blockquote,pre,h1,h2,h3,h4,h5,h6,figure'));
   if(hasBlocks){
    const container=parsed.createElement('p');container.append(image);parsed.body.append(container);
   }else{

@@ -187,6 +187,20 @@ for(const invalidSections of [
  assert.notEqual(getTableReadOnlyReason(invalidSections,0),null,'invalid semantic topology must stay read-only');
  assert.equal(apply(invalidSections,'cell-blue',select(0,0)),null);
 }
+// #57: identify a rowspan that escapes its semantic row-group, rather than
+// giving the generic invalid-grid notice. Never attempt a lossy rewrite.
+const crossingSection='Before\n\n<table><thead><tr><th rowspan="2">Header</th></tr></thead>'+
+ '<tbody><tr><td>Body</td></tr></tbody></table>\n\nAfter';
+assert.equal(getTableReadOnlyReason(crossingSection,0),'cross-section-span');
+assert.equal(editTableAt(crossingSection,0,'cell-blue',select(0,0)),null);
+assert.equal(setTableCellText(crossingSection,0,0,0,'Altered'),null);
+const sameGroupSpan='<table><tbody><tr><td rowspan="2">Item</td><td>A</td></tr>'+
+ '<tr><td>B</td></tr></tbody></table>';
+assert.equal(getTableReadOnlyReason(sameGroupSpan,0),null,
+ 'row spans confined to a section remain editable');
+const sameGroupEdit=setTableCellText(sameGroupSpan,0,1,1,'Updated');
+assert(sameGroupEdit?.text.includes('rowspan="2"'));
+assert(sameGroupEdit.text.includes('Updated'));
 const customSection='<table><tbody class="important"><tr><td>Value</td></tr></tbody></table>';
 assert.equal(apply(customSection,'cell-blue',select(0,0)),null,
  'unmodeled section metadata must be preserved by declining visual editing');
@@ -506,6 +520,39 @@ assert(nestedBlockChange.text.includes('Safe</strong> leaf'));
 assert.equal(findEditableTables(nestedBlockChange.text).length,2);
 
 
+
+// #57: All six heading levels are safe block content. They must not be
+// flattened into plain cell text, and HTML list/media guards still apply.
+const headingSource='Before\n\n<table class="af-table-outline"><tr><td>'+
+ '<h1>Main title</h1><p>Body text</p><h5>Detail title</h5>'+
+ '<h6>Fine print</h6></td><td>Unchanged</td></tr></table>\n\nAfter';
+const headingBlocks=getTableCellBlocks(headingSource,0,0,0);
+assert(headingBlocks?.includes('<h1>Main title</h1>'));
+assert(headingBlocks?.includes('<h5>Detail title</h5>'));
+assert(headingBlocks?.includes('<h6>Fine print</h6>'));
+assert.equal(getTableCellHTML(headingSource,0,0,0),null);
+const updatedHeadings=setTableCellBlocks(headingSource,0,0,0,
+ headingBlocks.replace('Detail title','Revised heading'));
+assert(updatedHeadings?.text.includes('<h1>Main title</h1>'));
+assert(updatedHeadings.text.includes('<h5>Revised heading</h5>'));
+assert(updatedHeadings.text.includes('<h6>Fine print</h6>'));
+assert(updatedHeadings.text.includes('<td>Unchanged</td>'));
+assert(updatedHeadings.text.startsWith('Before\n\n'));
+assert(updatedHeadings.text.endsWith('\n\nAfter'));
+assert.equal(getTableCellBlocks(updatedHeadings.text,0,0,0).includes('Revised heading'),true);
+for(const heading of ['h1','h2','h3','h4','h5','h6']){
+ assert(sanitizeBlockCellHTML('<'+heading+'>Safe heading</'+heading+'>')?.includes('Safe heading'));
+}
+assert.equal(sanitizeBlockCellHTML('<h1>Safe</h1><script>alert(1)</script>'),null);
+assert.equal(setTableCellHTML(headingSource,0,0,0,'<p>Unsafe replacement</p>'),null);
+const headingImageSource='<table><tr><td><h5>Product</h5></td></tr></table>';
+const headingImage=insertTableCellImage(headingImageSource,0,0,0,{
+ url:'https://example.org/product.png',alt:'Product image',decorative:false,width:'',height:''
+});
+assert(headingImage?.text.includes('<h5>Product</h5>'));
+assert(headingImage.text.includes('<p><img'));
+assert(!headingImage.text.includes('<h5>Product</h5><br>'));
+assert.equal(getTableCellImage(headingImage.text,0,0,0).alt,'Product image');
 
 // #6: Image properties are edited in place without flattening mixed content.
 const pictureSrc='Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
