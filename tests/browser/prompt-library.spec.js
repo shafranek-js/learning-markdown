@@ -54,12 +54,14 @@ test('Replacement can be cancelled without switching course or damaging Sandbox 
  await page.locator('#prompt-library-replace').click();
  await expect(modal(page)).toBeVisible();
  await expect(editor).toHaveValue('# Lesson draft');
- await expect(page.locator('#active-tab-title')).not.toContainText('Sandbox');
+ await expect(page.locator('#lesson-context-badge')).toBeVisible();
+ await expect(page.locator('#document-tabs')).toBeHidden();
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('#prompt-library-replace').click();
  await expect(modal(page)).toBeHidden();
  await expect(editor).toHaveValue(/# Role/);
- await expect(page.locator('#active-tab-title')).toContainText('Sandbox');
+ await expect(page.locator('#lesson-context-badge')).toBeHidden();
+ await expect(page.locator('#document-tab-list [role="tab"][aria-selected="true"]')).toBeVisible();
  await page.reload();
  await expect(editor).toHaveValue(/# Role/);
 });
