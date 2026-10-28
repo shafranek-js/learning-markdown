@@ -44,6 +44,27 @@ test('Lesson Guide hides course-only controls but preserves editor tools and set
  for(const selector of courseControls)await expect(page.locator(selector)).toBeVisible();
 });
 
+test('Only lessons show lesson identifier; Sandbox uses the document tab title',async({page})=>{
+ await page.goto('/');
+ const badge=page.locator('#lesson-context-badge');
+ await expect(badge).toBeVisible();
+ await expect(page.locator('#active-tab-title')).toContainText('01_01');
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ await expect(badge).toBeHidden();
+ await expect(page.locator('#document-tabs')).toBeVisible();
+ await expect(page.locator('#document-tab-list [role="tab"][aria-selected="true"]')).toBeVisible();
+ await expect(page.locator('#undo-btn')).toBeAttached();
+ await page.reload();
+ await expect(badge).toBeHidden();
+ await expect(page.locator('#document-tabs')).toBeVisible();
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ await expect(badge).toBeVisible();
+ await expect(page.locator('#active-tab-title')).toContainText('01_01');
+ await expect(page.locator('#document-tabs')).toBeHidden();
+});
+
 test('Sandbox hides course header and View restores Lesson Guide',async({page})=>{
  await page.goto('/');
  await page.locator('#help-menu-trigger').click();
