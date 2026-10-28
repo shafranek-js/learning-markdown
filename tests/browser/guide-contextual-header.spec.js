@@ -28,8 +28,12 @@ test('Lesson Guide hides course-only controls but preserves editor tools and set
  await expectGuideSelection(page,false);
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
- for(const selector of ['#sandbox-mode-btn','#cheatsheet-btn','#settings-menu-trigger','#markdown-input','#markdown-preview'])
+ for(const selector of ['#help-menu-trigger','#settings-menu-trigger','#markdown-input','#markdown-preview'])
   await expect(page.locator(selector)).toBeVisible();
+ await page.locator('#help-menu-trigger').click();
+ await expect(page.locator('#sandbox-mode-btn')).toBeVisible();
+ await expect(page.locator('#cheatsheet-btn')).toBeVisible();
+ await page.keyboard.press('Escape');
 
  await page.reload();
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
@@ -42,10 +46,11 @@ test('Lesson Guide hides course-only controls but preserves editor tools and set
 
 test('Sandbox hides course header and View restores Lesson Guide',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  await expect(page.locator('#theory-panel')).toBeHidden();
  for(const selector of courseControls)await expect(page.locator(selector)).toBeHidden();
- await expect(page.locator('#sandbox-mode-btn')).toBeVisible();
+ await expect(page.locator('#help-menu-trigger')).toBeVisible();
  await expect(page.locator('#contents-toggle-btn')).toBeHidden();
  await setGuide(page);
  await expect(page.locator('#theory-panel')).toBeVisible();
