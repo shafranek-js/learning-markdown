@@ -1,9 +1,10 @@
+import {toggleSandbox,openPromptLibrary} from './support/help-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
 const modal=page=>page.locator('#prompt-library-dialog');
 async function openLibrary(page){
- await page.locator('#prompt-library-trigger').click();
+ await openPromptLibrary(page);
  await expect(modal(page)).toBeVisible();
 }
 async function chooseTemplate(page,id){
@@ -11,7 +12,7 @@ async function chooseTemplate(page,id){
 }
 test('Template variable filling, Markdown export, safe append and Undo',async({page})=>{
  await page.goto('/');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  const editor=page.locator('#markdown-input');
  await editor.fill('# Existing work');
  await openLibrary(page);
@@ -38,10 +39,10 @@ test('Template variable filling, Markdown export, safe append and Undo',async({p
 
 test('Replacement can be cancelled without switching course or damaging Sandbox draft',async({page})=>{
  await page.goto('/');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  const editor=page.locator('#markdown-input');
  await editor.fill('Sandbox data to keep');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await editor.fill('# Lesson draft');
  await openLibrary(page);
  await chooseTemplate(page,'analysis-document');
@@ -116,7 +117,7 @@ test('Search, locale and accessible mobile dialog',async({page})=>{
  expect(box.x+box.width).toBeLessThanOrEqual(391);
  await page.keyboard.press('Escape');
  await expect(modal(page)).toBeHidden();
- await expect(page.locator('#prompt-library-trigger')).toBeFocused();
+ await expect(page.locator('#help-menu-trigger')).toBeFocused();
 });
 
 test('Prompt preview sanitizes user-controlled HTML while preserving raw Markdown',async({page})=>{
