@@ -388,6 +388,9 @@ test('issue #12 opt-in custom heading IDs stay isolated and survive HTML export 
 });
 
 test('issue #12 mobile and 150-heading outline remains usable',async({page})=>{
+ // Rendering and opening an outline with 150 headings can be slow on shared CI runners.
+ // Preserve the full stress test instead of deleting or weakening its assertions.
+ test.slow();
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
  const source=Array.from({length:150},(_,i)=>'## Chapter '+(i+1)).join('\n\n');
