@@ -65,3 +65,35 @@ test('Fenced Markdown and composition keydown are not rewritten as lists',async(
  expect(composed.prevented).toBe(false);
  expect(composed.text).toBe('~~~markdown\n- literal\n');
 });
+
+
+test('Native Enter continues quoted numbered lists and exits empty quoted items with Undo/Redo',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ await editor.fill('> 9. Quoted');
+ await editor.press('End');
+ await editor.press('Enter');
+ await expect(editor).toHaveValue('> 9. Quoted\n> 10. ');
+ await undo(page);
+ await expect(editor).toHaveValue('> 9. Quoted');
+ await redo(page);
+ await expect(editor).toHaveValue('> 9. Quoted\n> 10. ');
+ await editor.fill('> - ');
+ await editor.press('End');
+ await editor.press('Enter');
+ await expect(editor).toHaveValue('> ');
+ await editor.fill('> ~~~markdown\n> - literal');
+ await editor.press('End');
+ await editor.press('Enter');
+ await expect(editor).toHaveValue('> ~~~markdown\n> - literal\n');
+});
+
+test('Quoted fenced code with extra > prefixes stays code in the native editor',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ const original='> ~~~md\n> > nested-looking source\n> - literal';
+ await input.fill(original);
+ await input.press('End');
+ await input.press('Enter');
+ await expect(input).toHaveValue(original+'\n');
+});
