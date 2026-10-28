@@ -145,7 +145,15 @@ test('Sandbox mobile header does not keep an empty actions lane',async({page})=>
  await expect(page.locator('.app-header-actions')).toBeHidden();
  const menu=page.locator('.app-header-left');
  const viewport=await menu.boundingBox();
- expect(viewport.width).toBeGreaterThan(300);
+ // The menu now shares the same header row with Sandbox document tabs.
+ // Its own scroll lane must stay usable without consuming the tabs' space.
+ expect(viewport.width).toBeGreaterThan(110);
+ expect(viewport.x+viewport.width).toBeLessThanOrEqual(361);
+ const tabsBar=page.locator('#document-tabs');
+ await expect(tabsBar).toBeVisible();
+ const tabsRect=await tabsBar.boundingBox();
+ expect(tabsRect.x).toBeGreaterThanOrEqual(viewport.x+viewport.width-1);
+ await expect(page.locator('#document-new-tab')).toBeVisible();
  await help(page).scrollIntoViewIfNeeded();
  await expect(help(page)).toBeVisible();
 });
