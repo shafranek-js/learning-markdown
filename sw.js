@@ -1,5 +1,5 @@
 // Offline-first application shell, versioned caches for GitHub Pages subpaths.
-const VERSION='learning-markdown-v1.0.8';
+const VERSION='learning-markdown-v1.0.9';
 const ROOT=new URL('./',self.registration.scope);
 const urls=[
  './','./index.html','./manifest.json','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png',
