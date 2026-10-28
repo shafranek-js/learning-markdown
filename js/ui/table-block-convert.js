@@ -3,6 +3,15 @@
 // Never split a list or silently reinterpret a nested list as a paragraph.
 const TARGETS=new Set(['p','ul','ol']);
 const SAFE_INLINE=new Set('a strong b em i u del s strike sup sub mark code span br'.split(' '));
+// Changing a block wrapper discards its attributes. Allow only the ordered
+// list numbering attributes whose loss is an intentional type conversion.
+// Reject unknown semantic, accessibility, style and author metadata *before*
+// moving any nodes; the original Markdown must remain untouched.
+const ORDERED_NUMBERING=new Set(['type','start']);
+function hasProtectedWrapperAttributes(element){
+ const allowed=element.tagName==='OL'?ORDERED_NUMBERING:null;
+ return [...element.attributes].some(attribute=>!allowed?.has(attribute.name));
+}
 function topBlock(editor,node){
  const element=node?.nodeType===1?node:node?.parentElement;
  if(!element||!editor.contains(element))return null;
@@ -48,6 +57,8 @@ function convertNestedList(editor,target,selection,range){
  if(target==='p')return {ok:false,reason:'nested-to-paragraph'};
  if(list.tagName.toLowerCase()===target)
   return {ok:false,reason:'already-formatted'};
+ if(hasProtectedWrapperAttributes(list))
+  return {ok:false,reason:'protected-metadata'};
  const aIndex=items.indexOf(a),bIndex=items.indexOf(b);
  if(aIndex<0||bIndex<0)return {ok:false,reason:'partial-or-nested-list'};
  // A caret retains the previous whole-list conversion behavior.
@@ -108,6 +119,11 @@ export function convertBlockSelection(editor,target,selection=window.getSelectio
  }
  if(blocks.every(block=>block.tagName.toLowerCase()===target))
   return {ok:false,reason:'already-formatted'};
+ // Paragraphs keep their own wrapper when converting to paragraphs. Every
+ // other selected wrapper is reconstructed and would lose its attributes.
+ if(blocks.some(block=>(block.tagName!=='P'||target!=='p')&&
+   hasProtectedWrapperAttributes(block)))
+  return {ok:false,reason:'protected-metadata'};
  // Remember the insertion boundary BEFORE any selected paragraph is moved.
  // Otherwise a trailing paragraph would become detached and lose nextSibling.
  const after=blocks.at(-1).nextSibling;
