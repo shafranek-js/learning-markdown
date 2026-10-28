@@ -208,6 +208,38 @@ test('File New on mobile reveals the editor after reading the lesson guide',asyn
 });
 
 
+test('New Markdown + sits directly after the last tab as documents are created and closed',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ const strip=page.locator('#document-tabs');
+ const add=page.locator('#document-new-tab');
+ const checkAdjacent=async()=>{
+  const [lastRect,addRect,stripRect]=await Promise.all([
+   page.locator('#document-tab-list .document-tab-item').last().boundingBox(),
+   add.boundingBox(),strip.boundingBox()
+  ]);
+  const gap=addRect.x-(lastRect.x+lastRect.width);
+  expect(gap).toBeGreaterThanOrEqual(-1);
+  expect(gap).toBeLessThanOrEqual(9);
+  expect(addRect.x+addRect.width).toBeLessThan(stripRect.x+stripRect.width-50);
+ };
+ await checkAdjacent();
+ await newTab(page);
+ await expect(tabs(page)).toHaveCount(2);
+ await checkAdjacent();
+ await newTab(page);
+ await expect(tabs(page)).toHaveCount(3);
+ await checkAdjacent();
+ await page.locator('#document-tab-list .document-tab-item').last().locator('.document-tab-close').click();
+ await expect(tabs(page)).toHaveCount(2);
+ await checkAdjacent();
+ await page.reload();
+ await expect(tabs(page)).toHaveCount(2);
+ await checkAdjacent();
+});
+
 test('Sandbox places menu and document tabs in one compact header row',async({page})=>{
  await page.setViewportSize({width:1440,height:900});
  await page.goto('/');
