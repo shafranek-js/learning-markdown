@@ -3,15 +3,22 @@
 // Never split a list or silently reinterpret a nested list as a paragraph.
 const TARGETS=new Set(['p','ul','ol']);
 const SAFE_INLINE=new Set('a strong b em i u del s strike sup sub mark code span br'.split(' '));
-// Changing a block wrapper discards its attributes. Allow only the ordered
-// list numbering attributes when actually changing an ordered list's type;
-// merging an existing OL into another OL would otherwise lose its numbering.
-// Reject unknown semantic, accessibility, style and author metadata *before*
-// moving any nodes; the original Markdown must remain untouched.
+// Changing a block wrapper discards its attributes. When an ordered list
+// changes to bullets or paragraphs, losing numbering is deliberate. The HTML
+// sanitizer also generates one redundant af-list-* class from the OL type.
+// Allow only that exact derived class, never an author's arbitrary class,
+// accessibility attribute, or metadata on an otherwise unchanged list.
 const ORDERED_NUMBERING=new Set(['type','start']);
+const ORDERED_TYPE_CLASS={
+ '1':'af-list-decimal',a:'af-list-lower-alpha',A:'af-list-upper-alpha',
+ i:'af-list-lower-roman',I:'af-list-upper-roman'
+};
 function hasProtectedWrapperAttributes(element,target){
- const allowed=element.tagName==='OL'&&target!=='ol'?ORDERED_NUMBERING:null;
- return [...element.attributes].some(attribute=>!allowed?.has(attribute.name));
+ if(element.tagName!=='OL'||target==='ol')return element.attributes.length>0;
+ const generatedClass=ORDERED_TYPE_CLASS[element.getAttribute('type')];
+ return [...element.attributes].some(attribute=>
+  !ORDERED_NUMBERING.has(attribute.name)&&
+  !(attribute.name==='class'&&generatedClass&&attribute.value===generatedClass));
 }
 function topBlock(editor,node){
  const element=node?.nodeType===1?node:node?.parentElement;
