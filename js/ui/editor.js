@@ -117,6 +117,8 @@ export function highlightMarkdown(raw){return raw.split('\n').map((line,index,li
   if(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line))return `<span class="tok-hr">${escapeHTML(line)}</span>`;
   return tokenize(line);
  }).join('\n')+(raw.endsWith('\n')?' ':'');}
+// One source of truth for keyboard history and the Edit menu in both editor modes.
+export const historyStatus=()=>multiActive()?multi.multiCursorStatus():status(docKey());
 export function refreshEditor({notify=true}={}){
  const a=area(),text=a.value;
  const lines=text.split('\n');
@@ -125,7 +127,7 @@ export function refreshEditor({notify=true}={}){
  const l=text.slice(0,a.selectionStart).split('\n');
  el('editor-stats').textContent=`Lines: ${lines.length} • Words: ${words} • Chars: ${[...text].length}`;
  el('cursor-position').textContent=`Ln ${l.length}, Col ${[...l.at(-1)].length+1}`;
- const h=multiActive()?multi.multiCursorStatus():status(docKey());el('undo-btn').disabled=!h.canUndo;el('redo-btn').disabled=!h.canRedo;
+ const h=historyStatus();
  el('history-status').textContent=`History: ${h.pointer}/${h.total}`;
  // Selection-only changes must not synchronously rewrite localStorage.
  // Multi-cursor navigation can produce hundreds of selection transactions.
