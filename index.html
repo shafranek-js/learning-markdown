@@ -215,9 +215,9 @@
 
     <!-- ==================== SUB-BAR: LESSON TAB & RICH FORMATTING TOOLBAR ==================== -->
     <div class="h-10 w-full shrink-0 border-b theme-panel px-3 flex items-center justify-between gap-2 overflow-x-auto z-20">
-        <!-- Left: Active Lesson Tab Badge (CodePen Tab style) -->
+        <!-- Course lesson context only; Sandbox has real document tabs in the top menu row. -->
         <div class="flex items-center gap-2 shrink-0">
-            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md theme-panel-alt border theme-border text-xs font-mono font-bold">
+            <div id="lesson-context-badge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md theme-panel-alt border theme-border text-xs font-mono font-bold">
                 <span class="w-2 h-2 rounded-full" style="background-color: var(--accent)"></span>
                 <span id="active-tab-title">01_01 Headings</span>
             </div>
