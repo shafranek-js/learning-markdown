@@ -7,6 +7,8 @@ const STRINGS={
  ro:{help:'Ajutor',guide:'Cuprinsul cursului',cheats:'Ghid rapid Markdown',prompts:'Biblioteca de prompturi',shortcuts:'Comenzi rapide',about:'Despre Learning Markdown',close:'Închide dialogul',intro:'Curs interactiv gratuit și editor Markdown. Ciornele și setările rămân în browser.',version:'Versiunea curentă',source:'Proiect open source',shortcutsTitle:'Comenzi rapide pentru editor și fișiere',os:'Pe macOS, folosiți Command în loc de Ctrl acolo unde este acceptat.',rows:['Markdown nou','Deschide Markdown','Descarcă Markdown','Tipărire / PDF','Caută în Markdown','Înlocuiește în Markdown','Anulare / Refacere','Aldin / Cursiv','Apariția următoare (cursoare multiple)','Tab pentru navigare prin focus']},
  ru:{help:'Справка',guide:'Содержание курса',cheats:'Шпаргалка Markdown',prompts:'Библиотека промптов',shortcuts:'Горячие клавиши',about:'О Learning Markdown',close:'Закрыть окно',intro:'Бесплатный интерактивный курс и редактор Markdown. Черновики и настройки сохраняются в браузере.',version:'Текущая сборка',source:'Открытый проект',shortcutsTitle:'Горячие клавиши редактора и файлов',os:'В macOS для поддерживаемых сочетаний используется Command вместо Ctrl.',rows:['Новый Markdown','Открыть Markdown','Скачать Markdown','Печать / PDF','Поиск по Markdown','Замена в Markdown','Отменить / Повторить','Жирный / Курсив','Следующее совпадение (мультикурсор)','Переключить Tab на навигацию']}
 };
+const CONTACT_HEADING={en:'Contact',cs:'Kontakt',uk:'Контакти',ro:'Contact',ru:'Контакты'};
+const GITHUB_LABELS={en:'Learning Markdown on GitHub',cs:'Learning Markdown na GitHubu',uk:'Learning Markdown на GitHub',ro:'Learning Markdown pe GitHub',ru:'Learning Markdown на GitHub'};
 const shortcuts=['Ctrl+N','Ctrl+O','Ctrl+S','Ctrl+P','Ctrl+F','Ctrl+H','Ctrl+Z / Ctrl+Y','Ctrl+B / Ctrl+I','Ctrl+D','Ctrl+M'];
 const w=()=>STRINGS[state.lang]||STRINGS.en;
 const isOpen=()=>!$('help-menu').hidden;
@@ -55,7 +57,19 @@ function openDialog(kind){
   repo.href='https://github.com/shafranek-js/learning-markdown';
   repo.target='_blank';repo.rel='noopener noreferrer';
   repo.textContent=labels.source;
-  body.append(info,version,repo);
+  const contactsTitle=document.createElement('h3');
+  contactsTitle.textContent=CONTACT_HEADING[state.lang]||CONTACT_HEADING.en;
+  const contacts=document.createElement('div');
+  contacts.className='workspace-help-contacts';
+  const email=document.createElement('a');
+  email.href='mailto:pavel.p.popovic@gmail.com';
+  email.textContent='pavel.p.popovic@gmail.com';
+  const telegram=document.createElement('a');
+  telegram.href='https://t.me/jsx_xsj';
+  telegram.target='_blank';telegram.rel='noopener noreferrer';
+  telegram.textContent='t.me/jsx_xsj';
+  contacts.append(email,telegram);
+  body.append(info,version,repo,contactsTitle,contacts);
  }
  $('help-info-dialog').hidden=false;
  $('help-info-close').focus();
@@ -67,6 +81,9 @@ function run(command){
 }
 export function renderHelpMenuLanguage(){
  const labels=w();
+ const github=$('github-repository-link');
+ if(github){const name=GITHUB_LABELS[state.lang]||GITHUB_LABELS.en;
+  github.setAttribute('aria-label',name);github.title=name;}
  $('help-menu-trigger').textContent=labels.help;
  $('help-menu-trigger').setAttribute('aria-label',labels.help);
  $('help-menu').setAttribute('aria-label',labels.help);

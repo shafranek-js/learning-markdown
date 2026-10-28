@@ -38,7 +38,12 @@ test('Help About displays actual running build and repository link',async({page}
  const version=(await page.locator('#app-version-status').innerText()).trim();
  await choose(page,'about');
  await expect(page.locator('#help-info-content')).toContainText(version);
- await expect(page.locator('#help-info-content a')).toHaveAttribute('href','https://github.com/shafranek-js/learning-markdown');
+ await expect(page.locator('#help-info-content a[href="https://github.com/shafranek-js/learning-markdown"]')).toBeVisible();
+ await expect(page.locator('#help-info-content a[href="mailto:pavel.p.popovic@gmail.com"]')).toHaveText('pavel.p.popovic@gmail.com');
+ const telegram=page.locator('#help-info-content a[href="https://t.me/jsx_xsj"]');
+ await expect(telegram).toHaveText('t.me/jsx_xsj');
+ await expect(telegram).toHaveAttribute('target','_blank');
+ await expect(telegram).toHaveAttribute('rel',/noopener noreferrer/);
 });
 
 test('Help course action restores course access from Sandbox',async({page})=>{
@@ -156,4 +161,58 @@ test('Sandbox mobile header does not keep an empty actions lane',async({page})=>
  await expect(page.locator('#document-new-tab')).toBeVisible();
  await help(page).scrollIntoViewIfNeeded();
  await expect(help(page)).toBeVisible();
+});
+
+test('GitHub Octicon stays at right of header in course and Sandbox on desktop and mobile',async({page})=>{
+ for(const width of [1440,360]){
+  await page.setViewportSize({width,height:800});
+  await page.goto('/');
+  const github=page.locator('#github-repository-link');
+  await expect(github).toBeVisible();
+  await expect(github).toHaveAttribute('href','https://github.com/shafranek-js/learning-markdown');
+  await expect(github).toHaveAttribute('target','_blank');
+  await expect(github).toHaveAttribute('rel',/noopener noreferrer/);
+  await expect(github.locator('svg path')).toHaveCount(1);
+  const checkRight=async()=>{
+   const [headerRect,iconRect]=await Promise.all([
+    page.locator('.app-header').boundingBox(),github.boundingBox()
+   ]);
+   expect(iconRect.x+iconRect.width).toBeLessThanOrEqual(headerRect.x+headerRect.width+1);
+   expect(headerRect.x+headerRect.width-(iconRect.x+iconRect.width)).toBeLessThanOrEqual(26);
+   expect(iconRect.x).toBeGreaterThanOrEqual(0);
+  };
+  await checkRight();
+  await page.locator('#help-menu-trigger').scrollIntoViewIfNeeded();
+  await page.locator('#help-menu-trigger').click();
+  await page.locator('#sandbox-mode-btn').click();
+  await expect(page.locator('#document-tabs')).toBeVisible();
+  await checkRight();
+  const [plusRect,iconRect]=await Promise.all([
+   page.locator('#document-new-tab').boundingBox(),github.boundingBox()
+  ]);
+  expect(plusRect.x+plusRect.width).toBeLessThanOrEqual(iconRect.x+1);
+  await github.focus();
+  await expect(github).toBeFocused();
+ }
+});
+
+test('About contacts are localized and keyboard accessible without changing Markdown',async({page})=>{
+ await page.goto('/');
+ const source='# Source unchanged';
+ await page.locator('#markdown-input').fill(source);
+ for(const [lang,heading] of [['en','Contact'],['cs','Kontakt'],['uk','Контакти'],['ro','Contact'],['ru','Контакты']]){
+  await setAppLanguage(page,lang);
+  await choose(page,'about');
+  const content=page.locator('#help-info-content');
+  await expect(content.locator('h3')).toHaveText(heading);
+  const email=content.locator('a[href="mailto:pavel.p.popovic@gmail.com"]');
+  const telegram=content.locator('a[href="https://t.me/jsx_xsj"]');
+  await expect(email).toBeVisible();
+  await expect(telegram).toBeVisible();
+  await email.focus();
+  await expect(email).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#help-info-dialog')).toBeHidden();
+  await expect(page.locator('#markdown-input')).toHaveValue(source);
+ }
 });

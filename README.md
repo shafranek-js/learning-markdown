@@ -161,9 +161,9 @@ Frequently used commands stay close to their work: **View** controls the layout,
 - **Prompt Library** opens the reusable prompt template catalog and builder.
 - **Markdown Cheat Sheet** opens the existing syntax reference, now without a duplicate header button.
 - **Keyboard Shortcuts** shows a keyboard-accessible quick reference covering common File/Edit actions, text formatting and multi-cursor.
-- **About Learning Markdown** shows the actual running build string (package version and commit revision) plus the project repository.
+- **About Learning Markdown** shows the actual running build string (package version and commit revision), the project repository and clickable contact links: [email](mailto:pavel.p.popovic@gmail.com) and [Telegram](https://t.me/jsx_xsj).
 
-The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewport, Escape dismissal and focus return. Opening Help does not alter Markdown source or progress.
+The GitHub Octicon at the far right of the application header opens the [source repository](https://github.com/shafranek-js/learning-markdown) in a new tab in both Course and Sandbox modes. The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewport, Escape dismissal and focus return. Opening Help does not alter Markdown source or progress.
 
 ## Multi-document Sandbox tabs
 
