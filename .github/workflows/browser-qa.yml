@@ -1,7 +1,10 @@
 name: Markdown browser UX QA
 on:
   workflow_dispatch:
+  # Pull requests are covered by browser-tests.yml; avoid rerunning
+  # the same full suite on every feature-branch push.
   push:
+    branches: [main]
     paths:
       - 'index.html'
       - 'js/**'
@@ -13,6 +16,9 @@ on:
       - '.github/workflows/browser-qa.yml'
 permissions:
   contents: read
+concurrency:
+  group: markdown-browser-qa-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   chromium-ui:
     runs-on: ubuntu-latest

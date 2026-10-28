@@ -1,17 +1,60 @@
-/* Notepad-style tabs appear only in Sandbox, above the shared Markdown toolbar. */
+/* Sandbox documents share the application header with File/Edit/View/Settings/Help.
+   Separate scroll lanes keep the menu and new-tab action reachable on narrow screens. */
 .document-tabs-strip[hidden]{display:none!important}
-.document-tabs-strip{display:flex;align-items:stretch;height:37px;min-width:0;width:100%;padding:0 8px;gap:4px;flex-shrink:0}
-.document-tabs-list{display:flex;align-items:stretch;gap:3px;min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:thin;overscroll-behavior-x:contain}
-.document-tab-item{display:flex;align-items:center;gap:2px;max-width:210px;min-width:105px;flex:0 0 auto;padding:3px 5px 3px 9px;border:1px solid transparent;border-bottom:2px solid transparent;border-radius:7px 7px 0 0;background:var(--bg-panel-alt);color:var(--text-ui-muted);margin-top:3px}
+.app-header:has(.document-tabs-strip:not([hidden])){
+ height:44px;
+ min-height:44px;
+ column-gap:8px;
+ padding-right:8px;
+}
+.app-header:has(.document-tabs-strip:not([hidden])) .app-header-left{
+ flex:0 1 auto;
+ width:auto;
+ max-width:min(390px,46vw);
+ min-width:0;
+ overflow-x:auto;
+ overscroll-behavior-x:contain;
+ scrollbar-width:none;
+}
+.document-tabs-strip{
+ display:flex;
+ flex:1 1 0;
+ align-items:stretch;
+ align-self:stretch;
+ width:auto;
+ min-width:0;
+ padding:0;
+ gap:4px;
+ background:transparent;
+}
+.document-tabs-list{
+ display:flex;
+ align-items:stretch;
+ gap:3px;
+ min-width:0;
+ flex:1 1 0;
+ overflow-x:auto;
+ scrollbar-width:thin;
+ overscroll-behavior-x:contain;
+}
+.document-tab-item{display:flex;align-items:center;gap:2px;max-width:210px;min-width:105px;flex:0 0 auto;padding:3px 5px 3px 9px;border:1px solid transparent;border-bottom:2px solid transparent;border-radius:7px 7px 0 0;background:var(--bg-panel-alt);color:var(--text-ui-muted);margin-top:5px}
 .document-tab-item.is-active{background:var(--bg-editor);border-color:var(--border-ui);border-bottom-color:var(--accent);color:var(--text-ui)}
 .document-tab-title{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;flex:1;min-width:35px;height:26px}
 .document-tab-title:focus-visible,.document-tab-close:focus-visible,.document-new-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .document-tab-close{font-size:17px;line-height:1;flex:0 0 23px;height:24px;border-radius:4px;opacity:.65}
 .document-tab-close:hover{opacity:1;background:var(--accent-soft)}
-.document-new-tab{flex:0 0 32px;height:29px;margin-top:4px;border:1px solid var(--border-ui);border-radius:5px;font-size:18px;background:var(--bg-panel-alt);color:var(--text-ui)}
+.document-new-tab{flex:0 0 32px;align-self:center;height:29px;border:1px solid var(--border-ui);border-radius:5px;font-size:18px;background:var(--bg-panel-alt);color:var(--text-ui)}
 .document-new-tab:hover{background:var(--accent-soft)}
 .document-new-tab:disabled{opacity:.4;cursor:not-allowed}
-@media(max-width:650px){.document-tabs-strip{height:37px;padding:0 5px}.document-tab-item{min-width:100px;max-width:170px}}
+@media(max-width:650px){
+ .app-header:has(.document-tabs-strip:not([hidden])){column-gap:6px;padding-inline:8px}
+ .app-header:has(.document-tabs-strip:not([hidden])) .app-header-left{
+  flex:0 1 45%;
+  max-width:45%;
+ }
+ .document-tab-item{min-width:100px;max-width:170px}
+ .document-tabs-strip{gap:3px}
+}
 
 /* Actions menu must escape the horizontally scrollable tab strip. */
 .document-tab-actions[hidden]{display:none!important}

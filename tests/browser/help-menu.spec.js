@@ -70,17 +70,17 @@ test('Help menu fits on narrow screens and supports standard keyboard navigation
  expect(rect.x+rect.width).toBeLessThanOrEqual(390);
 });
 
-test('Mobile header retains access to all four menus and right-side actions',async({page})=>{
+test('Mobile header keeps all five menus and course actions accessible',async({page})=>{
  await page.setViewportSize({width:360,height:780});
  await page.goto('/');
- for(const type of ['file','edit','view','help']){
+ for(const type of ['file','edit','view','settings','help']){
   const trigger=page.locator('#'+type+'-menu-trigger');
   await trigger.scrollIntoViewIfNeeded();
   const rect=await trigger.boundingBox();
   expect(rect.x).toBeGreaterThanOrEqual(-1);
   expect(rect.x+rect.width).toBeLessThanOrEqual(361);
   await trigger.click();
-  await expect(page.locator('#'+type+'-menu')).toBeVisible();
+  await expect(page.locator(type==='settings'?'#settings-panel':'#'+type+'-menu')).toBeVisible();
   await page.keyboard.press('Escape');
  }
  const actions=await page.locator('.app-header-actions').boundingBox();
@@ -145,7 +145,15 @@ test('Sandbox mobile header does not keep an empty actions lane',async({page})=>
  await expect(page.locator('.app-header-actions')).toBeHidden();
  const menu=page.locator('.app-header-left');
  const viewport=await menu.boundingBox();
- expect(viewport.width).toBeGreaterThan(300);
+ // The menu now shares the same header row with Sandbox document tabs.
+ // Its own scroll lane must stay usable without consuming the tabs' space.
+ expect(viewport.width).toBeGreaterThan(110);
+ expect(viewport.x+viewport.width).toBeLessThanOrEqual(361);
+ const tabsBar=page.locator('#document-tabs');
+ await expect(tabsBar).toBeVisible();
+ const tabsRect=await tabsBar.boundingBox();
+ expect(tabsRect.x).toBeGreaterThanOrEqual(viewport.x+viewport.width-1);
+ await expect(page.locator('#document-new-tab')).toBeVisible();
  await help(page).scrollIntoViewIfNeeded();
  await expect(help(page)).toBeVisible();
 });
