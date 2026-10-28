@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -28,9 +29,9 @@ test('release parity: source-backed visual table edit, undo and redo',async({pag
  const changed=await input.inputValue();
  expect(changed).toContain('Capsule');
  await expect(cell).toHaveText('Capsule');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(changed);
 });
 

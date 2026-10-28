@@ -54,7 +54,7 @@ test('Only lessons show lesson identifier; Sandbox uses the document tab title',
  await expect(badge).toBeHidden();
  await expect(page.locator('#document-tabs')).toBeVisible();
  await expect(page.locator('#document-tab-list [role="tab"][aria-selected="true"]')).toBeVisible();
- await expect(page.locator('#undo-btn')).toBeAttached();
+ await expect(page.locator('#edit-menu-trigger')).toBeVisible();
  await page.reload();
  await expect(badge).toBeHidden();
  await expect(page.locator('#document-tabs')).toBeVisible();

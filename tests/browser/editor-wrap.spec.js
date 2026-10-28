@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -92,8 +93,8 @@ test('CodeMirror wraps by default; toggling preserves cursors, Markdown and undo
  await cm.focus();
  await page.keyboard.insertText('!');
  await expect(input).toHaveValue('!'+longLine+'\n!'+longLine);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('!'+longLine+'\n!'+longLine);
 });

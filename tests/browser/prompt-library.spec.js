@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -34,7 +35,7 @@ test('Template variable filling, Markdown export, safe append and Undo',async({p
  await expect(modal(page)).toBeHidden();
  await expect(editor).toHaveValue(/# Existing work/);
  await expect(editor).toHaveValue(/const answer = 42;/);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue('# Existing work');
 });
 

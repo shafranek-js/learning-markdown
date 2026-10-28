@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 
 async function activateWithCursorsAtLineEnds(page,source,count){
@@ -20,9 +21,9 @@ test('Multi-cursor Enter continues each bullet in one undoable edit',async({page
  const updated='- First\n- \n- Second\n- \n- Third\n- ';
  await expect(input).toHaveValue(updated);
  await expect(page.locator('#multi-cursor-count')).toContainText('3');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('- First\n- Second\n- Third');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 });
 
@@ -31,7 +32,7 @@ test('Multi-cursor Enter increments ordered lists and resets checked tasks',asyn
  let input=await activateWithCursorsAtLineEnds(page,'1. Alpha\n9. Beta',2);
  await page.keyboard.press('Enter');
  await expect(input).toHaveValue('1. Alpha\n2. \n9. Beta\n10. ');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('1. Alpha\n9. Beta');
  await page.locator('#multi-cursor-toggle').click();
  input=page.locator('#markdown-input');
@@ -51,7 +52,7 @@ test('Multi-cursor Enter exits empty list items without rewriting neighboring so
  const input=await activateWithCursorsAtLineEnds(page,original,2);
  await page.keyboard.press('Enter');
  await expect(input).toHaveValue('- Content\n- \n');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
 });
 
@@ -65,7 +66,7 @@ test('Multi-cursor Enter delegates mixed list and prose cursors to native CodeMi
  expect(result).toContain('- List item');
  expect(result).toContain('Plain paragraph');
  expect(result).not.toBe('- List item\nPlain paragraph');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('- List item\nPlain paragraph');
 });
 
@@ -97,9 +98,9 @@ test('CodeMirror single-caret Tab indents Markdown list at line start and preser
  await expect(input).toHaveValue('  - One');
  await page.keyboard.insertText('!');
  await expect(input).toHaveValue('  - O!ne');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('  - One');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('- One');
 });
 
@@ -115,6 +116,6 @@ test('CodeMirror Tab in ordinary prose still inserts two spaces at the caret',as
  await page.keyboard.press('ArrowRight');
  await page.keyboard.press('Tab');
  await expect(input).toHaveValue('Pl  ain');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Plain');
 });
