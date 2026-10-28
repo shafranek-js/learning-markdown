@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -32,9 +33,9 @@ test('issue #6 converts selected paragraphs and complete lists to numbered list 
  expect(updated).toContain('Before');
  expect(updated).toContain('After');
  await expect(page.locator('#markdown-preview td').first().locator('ol > li')).toHaveCount(4);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td').first().locator('ol > li')).toHaveCount(4);
 });
 
@@ -61,7 +62,7 @@ test('issue #6 convert complete ordered list into paragraphs preserves inline fo
  const modified=await input.inputValue();
  expect(modified).toContain('<p><strong>Two</strong></p>');
  expect(modified).not.toContain('<ol');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
 });
 
@@ -154,9 +155,9 @@ test('issue #6 nested list conversion changes only selected depth and keeps oute
  expect(updated).toContain('Before');
  expect(updated).toContain('After');
  await expect(page.locator('#markdown-preview td').first().locator('ol > li > ol > li')).toHaveCount(2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td').first().locator('ol > li > ol > li')).toHaveCount(2);
 });
 
@@ -242,9 +243,9 @@ test('issue #6 partial nested roman list converts only middle items and preserve
   expect(saved).toContain(token);
  await expect(page.locator('#markdown-preview td').first().locator('ol[start="8"] > li'))
   .toHaveText(['Delta','Echo']);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td').first().locator('ol[start="8"] > li'))
   .toHaveText(['Delta','Echo']);
 });

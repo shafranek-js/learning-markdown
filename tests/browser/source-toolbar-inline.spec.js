@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -13,9 +14,9 @@ test('textarea Bold/Italic/Strikethrough toggle existing source markers with Und
   await input.evaluate(el=>{el.focus();el.setSelectionRange(0,el.value.length);});
   await page.locator('.toolbar-btn[data-action="'+action+'"]').click();
   await expect(input).toHaveValue(plain);
-  await page.locator('#undo-btn').click();
+  await undo(page);
   await expect(input).toHaveValue(marked);
-  await page.locator('#redo-btn').click();
+  await redo(page);
   await expect(input).toHaveValue(plain);
  }
 });
@@ -33,9 +34,9 @@ test('textarea wraps new bold selection once and selects its original text',asyn
  expect(await input.evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd))).toBe('Alpha');
  await page.locator('.toolbar-btn[data-action="bold"]').click();
  await expect(input).toHaveValue('Before Alpha After');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Before **Alpha** After');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('Before Alpha After');
 });
 
@@ -54,9 +55,9 @@ test('CodeMirror native multi-range Bold toggle is one Undo step',async({page})=
  await expect(page.locator('#multi-cursor-count')).toContainText('3');
  await page.locator('.toolbar-btn[data-action="bold"]').click();
  await expect(input).toHaveValue('Alpha\nAlpha\nAlpha');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('Alpha\nAlpha\nAlpha');
 });
 
@@ -115,7 +116,7 @@ test('textarea toggles alternative strong/italic delimiters without nested marke
   await input.evaluate(el=>{el.focus();el.setSelectionRange(0,el.value.length);});
   await page.locator('.toolbar-btn[data-action="'+action+'"]').click();
   await expect(input).toHaveValue(expected);
-  await page.locator('#undo-btn').click();
+  await undo(page);
   await expect(input).toHaveValue(original);
  }
 });
@@ -156,8 +157,8 @@ test('CodeMirror bold recognizes alternate double-underscore markers at several 
  await expect(page.locator('#multi-cursor-count')).toContainText('3');
  await page.locator('.toolbar-btn[data-action="bold"]').click();
  await expect(input).toHaveValue('Alpha\nAlpha\nAlpha');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('Alpha\nAlpha\nAlpha');
 });

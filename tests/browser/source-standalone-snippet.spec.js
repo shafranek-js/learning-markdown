@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -24,9 +25,9 @@ test('advanced HTML example adds a standalone block after selected source withou
  expect(updated).toContain('Before selected After\n\n');
  expect(updated).toContain('<u>Underlined text</u>');
  expect(updated).toContain('<u>Underlined text</u>\n');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 });
 
@@ -40,7 +41,7 @@ test('definition HTML template preserves selected Markdown and one native Undo s
  expect(result).toContain('Before important text After\n\n<dl>');
  expect(result).toContain('</dl>\n');
  expect(result).toContain('First <strong>definition</strong>');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
 });
 
@@ -61,9 +62,9 @@ test('CodeMirror HTML template inserts after all selections atomically',async({p
  const updated=await input.inputValue();
  expect((updated.match(/Alpha/g)||[]).length).toBe(3);
  expect((updated.match(/<dl>/g)||[]).length).toBe(3);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 });
 
@@ -79,7 +80,7 @@ test('Mermaid insertion keeps selected prose and creates a separate preview diag
  expect(result).toContain('\x60\x60\x60mermaid');
  expect(result).toContain('\x60\x60\x60\n');
  await expect(page.locator('#markdown-preview figure.mermaid-diagram')).toHaveCount(1,{timeout:20000});
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
 });
 

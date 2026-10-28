@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -13,9 +14,9 @@ test('textarea H2 formats selected paragraphs, preserves blank separators and Un
  await page.locator('.toolbar-btn[data-action="h2"]').click();
  const updated='Before\n\n## First\n\n## Second\n\nAfter';
  await expect(input).toHaveValue(updated);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 });
 
@@ -28,9 +29,9 @@ test('H1–H6 source buttons toggle headings without losing existing text',async
  await expect(input).toHaveValue('Existing');
  await page.locator('.toolbar-btn[data-action="h6"]').click();
  await expect(input).toHaveValue('###### Existing');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Existing');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('## Existing');
 });
 
@@ -67,9 +68,9 @@ test('CodeMirror transforms multiline selected headings atomically and Undo rest
  await page.locator('.toolbar-btn[data-action="h3"]').click();
  const updated='### Alpha\n\n### Beta\n### Gamma';
  await expect(input).toHaveValue(updated);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 });
 
