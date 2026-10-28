@@ -136,3 +136,16 @@ test('Help workspace tools preserve localized menu labels',async({page})=>{
   await page.keyboard.press('Escape');
  }
 });
+
+
+test('Sandbox mobile header does not keep an empty actions lane',async({page})=>{
+ await page.setViewportSize({width:360,height:780});
+ await page.goto('/');
+ await choose(page,'sandbox');
+ await expect(page.locator('.app-header-actions')).toBeHidden();
+ const menu=page.locator('.app-header-left');
+ const viewport=await menu.boundingBox();
+ expect(viewport.width).toBeGreaterThan(300);
+ await help(page).scrollIntoViewIfNeeded();
+ await expect(help(page)).toBeVisible();
+});
