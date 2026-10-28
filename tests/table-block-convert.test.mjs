@@ -288,6 +288,17 @@ function select(selection,a,ao,b,bo){
  assert.equal(editor.innerHTML,html);
 }
 {
+ // Merging an already ordered list with a neighboring paragraph would drop
+ // start/type metadata even if the result is also an OL; refuse that too.
+ const html='<p>Intro</p><ol type="i" start="5"><li>Five</li></ol>';
+ const {editor,selection}=setup(html);
+ select(selection,editor.querySelector('p').firstChild,0,
+  editor.querySelector('li').firstChild,4);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),
+  {ok:false,reason:'protected-metadata'});
+ assert.equal(editor.innerHTML,html);
+}
+{
  // No-op conversion should report already-formatted without modifying the
  // metadata-bearing block.
  const html='<p aria-label="Original paragraph">One</p>';
