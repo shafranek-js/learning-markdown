@@ -206,3 +206,66 @@ test('File New on mobile reveals the editor after reading the lesson guide',asyn
  await expect(page.locator('#document-tabs')).toBeVisible();
  await expect(page.locator('#markdown-input')).toBeVisible();
 });
+
+
+test('Sandbox places menu and document tabs in one compact header row',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ const originalToolbar=await page.locator('#document-tabs').boundingBox();
+ expect(originalToolbar).toBeNull();
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ const header=page.locator('.app-header');
+ const tabsBar=page.locator('#document-tabs');
+ await expect(tabsBar).toBeVisible();
+ await expect(tabsBar.locator('#document-tab-list [role="tab"]')).toHaveCount(1);
+ expect(await tabsBar.evaluate(el=>el.parentElement?.tagName)).toBe('HEADER');
+ const [menuRect,tabsRect,headerRect,toolbarRect]=await Promise.all([
+  page.locator('#file-menu-trigger').boundingBox(),
+  tabsBar.boundingBox(),
+  header.boundingBox(),
+  page.locator('#undo-btn').boundingBox()
+ ]);
+ expect(Math.abs(menuRect.y+menuRect.height/2-(tabsRect.y+tabsRect.height/2))).toBeLessThan(12);
+ expect(headerRect.height).toBeLessThanOrEqual(45);
+ expect(tabsRect.x).toBeGreaterThan(menuRect.x+menuRect.width);
+ expect(tabsRect.x+tabsRect.width).toBeLessThanOrEqual(1440);
+ expect(toolbarRect.y).toBeGreaterThanOrEqual(headerRect.y+headerRect.height);
+ expect(toolbarRect.y).toBeLessThan(headerRect.y+headerRect.height+48);
+ await page.locator('#document-new-tab').click();
+ await expect(page.locator('#document-tab-list [role="tab"]')).toHaveCount(2);
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ await expect(tabsBar).toBeHidden();
+ await expect(page.locator('#theory-panel')).toBeVisible();
+});
+
+test('One-row menu and tabs remain independently reachable at 360px',async({page})=>{
+ await page.setViewportSize({width:360,height:780});
+ await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ const header=page.locator('.app-header');
+ const tabsBar=page.locator('#document-tabs');
+ for(let i=0;i<9;i++)await page.locator('#document-new-tab').click();
+ await expect(page.locator('#document-tab-list [role="tab"]')).toHaveCount(10);
+ const [headRect,tabsRect,addRect]=await Promise.all([
+  header.boundingBox(),tabsBar.boundingBox(),page.locator('#document-new-tab').boundingBox()
+ ]);
+ expect(headRect.height).toBeLessThanOrEqual(45);
+ expect(tabsRect.x).toBeGreaterThanOrEqual(0);
+ expect(tabsRect.x+tabsRect.width).toBeLessThanOrEqual(361);
+ expect(addRect.x).toBeGreaterThanOrEqual(tabsRect.x);
+ expect(addRect.x+addRect.width).toBeLessThanOrEqual(361);
+ const list=page.locator('#document-tab-list');
+ expect(await list.evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(true);
+ await page.locator('#file-menu-trigger').scrollIntoViewIfNeeded();
+ await page.locator('#file-menu-trigger').click();
+ await expect(page.locator('#file-menu')).toBeVisible();
+ await page.keyboard.press('Escape');
+ await page.locator('#help-menu-trigger').scrollIntoViewIfNeeded();
+ await page.locator('#help-menu-trigger').click();
+ await expect(page.locator('#help-menu')).toBeVisible();
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#document-new-tab')).toBeVisible();
+});
