@@ -190,6 +190,31 @@ async function exportDocument({print=false}={}){
   alert(labels.error);
  }
 }
+const WORD_EXPORT_MESSAGES={
+ en:{error:'Unable to export Word document.',warning:'Word export completed, but some images, Mermaid diagrams or advanced formatting could not be reproduced exactly. See the document for preserved source or image links.'},
+ cs:{error:'Dokument Word se nepodařilo exportovat.',warning:'Export Word byl dokončen, ale některé obrázky, diagramy Mermaid nebo pokročilé formátování se nemusely převést přesně. Zdroj nebo odkazy na obrázky zůstaly zachovány.'},
+ uk:{error:'Не вдалося експортувати документ Word.',warning:'Експорт Word завершено, але деякі зображення, діаграми Mermaid або складне форматування могли відрізнятися. Вихідний код і посилання на зображення збережено.'},
+ ro:{error:'Nu s-a putut exporta documentul Word.',warning:'Exportul Word s-a încheiat, dar unele imagini, diagrame Mermaid sau formatări avansate pot fi diferite. Codul sau linkurile imaginilor au fost păstrate.'},
+ ru:{error:'Не удалось экспортировать документ Word.',warning:'Экспорт Word завершён, но некоторые изображения, диаграммы Mermaid или сложное форматирование могли отличаться. Исходный код и ссылки на изображения сохранены.'}
+};
+async function exportWordDocument(){
+ const lang=state.lang,labels=WORD_EXPORT_MESSAGES[lang]||WORD_EXPORT_MESSAGES.en;
+ const originalName=state.currentLessonIndex===-1
+  ?activeSandboxTab().name
+  :($('active-tab-title').textContent||'Lesson').replace(/\s+/g,'_')+'.md';
+ const filename=(originalName||'Document.md').replace(/\.(?:md|markdown|txt)$/i,'').slice(0,100)+'.docx';
+ const snapshot=currentHtml();
+ try{
+  // Lazy-loaded: no Word generator in the editor's initial bundle.
+  const {createWordDocument,WORD_MIME}=await import('./core/export-docx.js');
+  const {blob,warnings}=await createWordDocument(snapshot,{title:filename.replace(/\.docx$/i,'')});
+  download(blob,filename,WORD_MIME);
+  if(warnings.length)alert(labels.warning);
+ }catch(error){
+  console.error('Word export failed',error);
+  alert(labels.error);
+ }
+}
 // File menu and existing Export action share the same portable-Markdown safety checks.
 function saveCurrentMarkdown(filenameOverride=null){
  if(portabilityStatus()?.advanced&&!confirm(portabilityLabels(state.lang).mdWarning))return false;
@@ -230,7 +255,7 @@ function usePromptInSandbox(markdown,mode,warning){
 }
 function init(){const route=readRoute();if(route.lang)state.lang=route.lang;if(route.theme)state.theme=route.theme;if(route.dialect)state.dialect=route.dialect;if(route.index!==null)state.currentLessonIndex=route.index;
  document.documentElement.dataset.theme=state.theme;document.documentElement.style.setProperty('--editor-font-size',`${state.fontSize}px`);
- initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertStandaloneSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu({onGuideToggle:toggleGuide});initDocumentTabs({onActivate:()=>{selectLesson(-1,{route:state.currentLessonIndex!==-1,scroll:false});if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');}});initFileMenu({createDocument:createSandboxTab,renameDocument:renameSandboxTab,saveMarkdown:saveCurrentMarkdown});initEditMenu();initHelpMenu({onOpenCourseContents:openCourseContents});initSettingsMenu();initPromptLibrary({usePrompt:usePromptInSandbox});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
+ initEditor(evaluate);initToolbar();initUnicodePicker({insertSnippet});initTablePicker();initTableEditor();initResizers();initModals();initInstallApp(()=>state.lang);initExtensionsLab({closeContents:()=>toggleContents(false)});initAdvancedCertificate();initPreviewAnchors();initAdvancedUI();initFigureDialog({insertStandaloneSnippet});initTOC({insertMarkdown:insertSnippet});initUtilityMenus();initViewMenu({onGuideToggle:toggleGuide});initDocumentTabs({onActivate:()=>{selectLesson(-1,{route:state.currentLessonIndex!==-1,scroll:false});if(window.matchMedia('(max-width:767px)').matches)setMobileTab('editor');}});initFileMenu({createDocument:createSandboxTab,renameDocument:renameSandboxTab,saveMarkdown:saveCurrentMarkdown,exportWord:exportWordDocument});initEditMenu();initHelpMenu({onOpenCourseContents:openCourseContents});initSettingsMenu();initPromptLibrary({usePrompt:usePromptInSandbox});initExtensionSettings(()=>evaluate(area().value),()=>insertSnippet('\nA documented claim[^source], repeated here[^source].\n\n[^source]: Add your source here.\n'),()=>insertSnippet('\n\nTerm A\n: First **definition**.\n: Another *definition*.\n\nTerm B\n: More information.\n\n'));
  $('deep-practice').open=Boolean(state.deepPracticeExpanded);
  $('deep-practice').addEventListener('toggle',event=>{state.deepPracticeExpanded=event.target.open;save();});
  renderLocalization();setLayoutMode(state.layoutMode);setMobileTab(state.mobileTab||'editor');

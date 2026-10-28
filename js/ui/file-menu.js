@@ -2,11 +2,11 @@ import {state,save,subscribe} from '../core/state.js';
 
 const $=id=>document.getElementById(id);
 const STRINGS={
- en:{file:'File',new:'New Markdown',open:'Open Markdown…',save:'Download Markdown',saveAs:'Download As…',html:'Export HTML',print:'Print / PDF',replace:'Replace your existing Sandbox draft? The previous draft will be overwritten.',invalid:'Enter a valid Markdown filename.',readError:'Unable to read the selected file.',sizeError:'File exceeds the 5 MB limit.',typeError:'Choose a .md, .markdown or .txt file.',as:'Download as Markdown filename:'},
- cs:{file:'Soubor',new:'Nový Markdown',open:'Otevřít Markdown…',save:'Stáhnout Markdown',saveAs:'Stáhnout jako…',html:'Exportovat HTML',print:'Tisk / PDF',replace:'Nahradit aktuální koncept v Sandboxu? Předchozí obsah bude přepsán.',invalid:'Zadejte platný název souboru Markdown.',readError:'Vybraný soubor nelze přečíst.',sizeError:'Soubor přesahuje limit 5 MB.',typeError:'Vyberte soubor .md, .markdown nebo .txt.',as:'Název souboru Markdown pro stažení:'},
- uk:{file:'Файл',new:'Новий Markdown',open:'Відкрити Markdown…',save:'Завантажити Markdown',saveAs:'Завантажити як…',html:'Експорт HTML',print:'Друк / PDF',replace:'Замінити поточну чернетку Sandbox? Попередній вміст буде перезаписано.',invalid:'Уведіть правильну назву файлу Markdown.',readError:'Не вдалося прочитати файл.',sizeError:'Файл перевищує обмеження 5 МБ.',typeError:'Виберіть файл .md, .markdown або .txt.',as:'Назва файлу Markdown для завантаження:'},
- ro:{file:'Fișier',new:'Markdown nou',open:'Deschide Markdown…',save:'Descarcă Markdown',saveAs:'Descarcă ca…',html:'Exportă HTML',print:'Tipărire / PDF',replace:'Înlocuiți ciorna actuală din Sandbox? Conținutul anterior va fi suprascris.',invalid:'Introduceți un nume de fișier Markdown valid.',readError:'Fișierul selectat nu poate fi citit.',sizeError:'Fișierul depășește limita de 5 MB.',typeError:'Selectați un fișier .md, .markdown sau .txt.',as:'Nume de fișier Markdown pentru descărcare:'},
- ru:{file:'Файл',new:'Новый Markdown',open:'Открыть Markdown…',save:'Скачать Markdown',saveAs:'Скачать как…',html:'Экспорт HTML',print:'Печать / PDF',replace:'Заменить текущий черновик Sandbox? Предыдущее содержимое будет перезаписано.',invalid:'Введите допустимое имя Markdown-файла.',readError:'Не удалось прочитать выбранный файл.',sizeError:'Файл превышает ограничение 5 МБ.',typeError:'Выберите файл .md, .markdown или .txt.',as:'Имя Markdown-файла для скачивания:'}
+ en:{file:'File',new:'New Markdown',open:'Open Markdown…',save:'Download Markdown',saveAs:'Download As…',html:'Export HTML',word:'Export Word (.docx)',print:'Print / PDF',replace:'Replace your existing Sandbox draft? The previous draft will be overwritten.',invalid:'Enter a valid Markdown filename.',readError:'Unable to read the selected file.',sizeError:'File exceeds the 5 MB limit.',typeError:'Choose a .md, .markdown or .txt file.',as:'Download as Markdown filename:'},
+ cs:{file:'Soubor',new:'Nový Markdown',open:'Otevřít Markdown…',save:'Stáhnout Markdown',saveAs:'Stáhnout jako…',html:'Exportovat HTML',word:'Exportovat Word (.docx)',print:'Tisk / PDF',replace:'Nahradit aktuální koncept v Sandboxu? Předchozí obsah bude přepsán.',invalid:'Zadejte platný název souboru Markdown.',readError:'Vybraný soubor nelze přečíst.',sizeError:'Soubor přesahuje limit 5 MB.',typeError:'Vyberte soubor .md, .markdown nebo .txt.',as:'Název souboru Markdown pro stažení:'},
+ uk:{file:'Файл',new:'Новий Markdown',open:'Відкрити Markdown…',save:'Завантажити Markdown',saveAs:'Завантажити як…',html:'Експорт HTML',word:'Експорт Word (.docx)',print:'Друк / PDF',replace:'Замінити поточну чернетку Sandbox? Попередній вміст буде перезаписано.',invalid:'Уведіть правильну назву файлу Markdown.',readError:'Не вдалося прочитати файл.',sizeError:'Файл перевищує обмеження 5 МБ.',typeError:'Виберіть файл .md, .markdown або .txt.',as:'Назва файлу Markdown для завантаження:'},
+ ro:{file:'Fișier',new:'Markdown nou',open:'Deschide Markdown…',save:'Descarcă Markdown',saveAs:'Descarcă ca…',html:'Exportă HTML',word:'Exportă Word (.docx)',print:'Tipărire / PDF',replace:'Înlocuiți ciorna actuală din Sandbox? Conținutul anterior va fi suprascris.',invalid:'Introduceți un nume de fișier Markdown valid.',readError:'Fișierul selectat nu poate fi citit.',sizeError:'Fișierul depășește limita de 5 MB.',typeError:'Selectați un fișier .md, .markdown sau .txt.',as:'Nume de fișier Markdown pentru descărcare:'},
+ ru:{file:'Файл',new:'Новый Markdown',open:'Открыть Markdown…',save:'Скачать Markdown',saveAs:'Скачать как…',html:'Экспорт HTML',word:'Экспорт Word (.docx)',print:'Печать / PDF',replace:'Заменить текущий черновик Sandbox? Предыдущее содержимое будет перезаписано.',invalid:'Введите допустимое имя Markdown-файла.',readError:'Не удалось прочитать выбранный файл.',sizeError:'Файл превышает ограничение 5 МБ.',typeError:'Выберите файл .md, .markdown или .txt.',as:'Имя Markdown-файла для скачивания:'}
 };
 const words=()=>STRINGS[state.lang]||STRINGS.en;
 const items=()=>Array.from($('file-menu').querySelectorAll('[role="menuitem"]'));
@@ -54,7 +54,7 @@ function openMenu({last=false}={}){
  position();
  (last?items().at(-1):items()[0])?.focus();
 }
-export function initFileMenu({createDocument,renameDocument,saveMarkdown}){
+export function initFileMenu({createDocument,renameDocument,saveMarkdown,exportWord}){
  const trigger=$('file-menu-trigger'),menu=$('file-menu'),input=$('file-menu-open-input');
  function openPicker(){input.value='';input.click();}
  function saveAs(){
@@ -83,6 +83,7 @@ export function initFileMenu({createDocument,renameDocument,saveMarkdown}){
   save:()=>saveMarkdown(),
   'save-as':saveAs,
   'export-html':()=>$('download-html-btn').click(),
+  'export-word':()=>void exportWord(),
   print:()=>$('print-document-btn').click()
  };
  trigger.addEventListener('click',()=>opened()?closeMenu({focus:true}):openMenu());
