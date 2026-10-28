@@ -182,9 +182,13 @@ test('GitHub Octicon stays at right of header in course and Sandbox on desktop a
    expect(iconRect.x).toBeGreaterThanOrEqual(0);
   };
   await checkRight();
-  await page.locator('#help-menu-trigger').scrollIntoViewIfNeeded();
-  await page.locator('#help-menu-trigger').click();
-  await page.locator('#sandbox-mode-btn').click();
+  // The same context retains Sandbox mode across page.goto() and viewport changes.
+  // Only enter Sandbox when it is not already active; Help is a toggle.
+  if(!(await page.locator('#document-tabs').isVisible())){
+   await page.locator('#help-menu-trigger').scrollIntoViewIfNeeded();
+   await page.locator('#help-menu-trigger').click();
+   await page.locator('#sandbox-mode-btn').click();
+  }
   await expect(page.locator('#document-tabs')).toBeVisible();
   await checkRight();
   const [plusRect,iconRect]=await Promise.all([
@@ -198,10 +202,12 @@ test('GitHub Octicon stays at right of header in course and Sandbox on desktop a
 
 test('About contacts are localized and keyboard accessible without changing Markdown',async({page})=>{
  await page.goto('/');
- const source='# Source unchanged';
- await page.locator('#markdown-input').fill(source);
  for(const [lang,heading] of [['en','Contact'],['cs','Kontakt'],['uk','Контакти'],['ro','Contact'],['ru','Контакты']]){
   await setAppLanguage(page,lang);
+  // Locale switching legitimately loads translated course content; About must
+  // leave the document untouched *after* the language has been selected.
+  const source='## Contact test '+lang;
+  await page.locator('#markdown-input').fill(source);
   await choose(page,'about');
   const content=page.locator('#help-info-content');
   await expect(content.locator('h3')).toHaveText(heading);
