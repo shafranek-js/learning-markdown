@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 
 async function revealFigureDialog(page){
@@ -30,9 +31,9 @@ test('figure modal preserves a partially selected Markdown link and supports one
  expect(result).toContain(source+'\n\n<figure');
  expect(result).toContain('<figcaption>Source-safe example</figcaption>');
  await expect(page.locator('#markdown-preview a[href="https://example.org"]')).toHaveText('important');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(result);
 });
 
@@ -46,7 +47,7 @@ test('portable figure modal insertion preserves selected source and existing Mar
  const result=await input.inputValue();
  expect(result).toContain(source+'\n\n![Diagram](https://example.org/diagram.png)');
  await expect(page.locator('#markdown-preview em')).toHaveText('selected');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
 });
 
@@ -66,9 +67,9 @@ test('multi-cursor figure modal inserts after every selected line atomically',as
  const result=await input.inputValue();
  expect((result.match(/Alpha/g)||[]).length).toBe(2);
  expect((result.match(/<figure\b/g)||[]).length).toBe(2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(result);
 });
 
@@ -93,6 +94,6 @@ test('figure modal protects fenced source and retains Russian mobile editing',as
  await page.locator('#figure-markdown').click();
  const changed=await input.inputValue();
  expect(changed).toContain('Начало **выделение** конец\n\n![Diagram]');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Начало **выделение** конец');
 });
