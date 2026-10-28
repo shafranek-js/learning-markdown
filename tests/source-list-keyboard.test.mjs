@@ -29,6 +29,25 @@ assert.equal(enter(fenced).text,'~~~markdown\n- code\n~~~\n- real\n- ');
 const backtick='\x60\x60\x60md\n- code\n\x60\x60\x60\n';
 assert.equal(edit(backtick,8,8,'Enter'),null);
 
+// Quoted lists continue inside the original quote depth instead of breaking
+// out into a separate top-level list. Checked tasks always restart unchecked.
+assert.equal(enter('> - Quoted bullet').text,'> - Quoted bullet\n> - ');
+assert.equal(enter('> 9. Numbered').text,'> 9. Numbered\n> 10. ');
+assert.equal(enter('> > 3) Nested').text,'> > 3) Nested\n> > 4) ');
+assert.equal(enter('> - [x] Checked').text,'> - [x] Checked\n> - [ ] ');
+assert.equal(enter('> > + [X] Nested task').text,'> > + [X] Nested task\n> > + [ ] ');
+assert.deepEqual(enter('> - '),{text:'> ',start:2,end:2});
+assert.deepEqual(enter('Outside\n> - '),{text:'Outside\n> ',start:10,end:10});
+assert.deepEqual(enter('> > - '),{text:'> > ',start:4,end:4});
+assert.equal(enter('> ~~~markdown\n> - literal'),null,
+ 'quoted fenced code must not become a list');
+assert.equal(enter('> > \x60\x60\x60md\n> > - literal'),null,
+ 'nested quote fences must protect source');
+assert.equal(enter('> ~~~\n> ~~~\n> - real').text,'> ~~~\n> ~~~\n> - real\n> - ');
+assert.deepEqual(markdownListEnterChange('> - ',4),{from:0,to:4,insert:'> ',caret:2});
+assert.deepEqual(markdownListEnterChange('> 2. Next',9),
+ {from:9,to:9,insert:'\n> 3. ',caret:15});
+
 // Tab/Shift+Tab alter list nesting without changing item text.
 const nested=key('- One',2,'Tab');
 assert.deepEqual(nested,{text:'  - One',start:4,end:4});
