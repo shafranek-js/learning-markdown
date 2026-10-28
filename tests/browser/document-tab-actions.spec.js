@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 const tabButtons=page=>page.locator('#document-tab-list [data-document-id]');
 const tabItems=page=>page.locator('.document-tab-item');
 const menu=page=>page.locator('#document-tab-actions');
-async function start(page){await page.goto('/');await page.locator('#sandbox-mode-btn').click();}
+async function start(page){await page.goto('/');await page.locator('#help-menu-trigger').click();await page.locator('#sandbox-mode-btn').click();}
 async function actions(page,index=0){await tabItems(page).nth(index).locator('.document-tab-more').click();await expect(menu(page)).toBeVisible();}
 async function choose(page,action){await menu(page).locator('[data-tab-action="'+action+'"]').click();}
 

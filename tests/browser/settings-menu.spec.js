@@ -64,6 +64,8 @@ test('Settings menu supports keyboard focus and mobile viewport without obscurin
  await page.keyboard.press('Escape');
  await expect(page.locator('#settings-panel')).toBeHidden();
  await expect(trigger).toBeFocused();
- await page.locator('#sandbox-mode-btn').scrollIntoViewIfNeeded();
+ await page.locator('#help-menu-trigger').scrollIntoViewIfNeeded();
+ await page.locator('#help-menu-trigger').click();
  await expect(page.locator('#sandbox-mode-btn')).toBeVisible();
+ await expect(page.locator('#prompt-library-trigger')).toBeVisible();
 });

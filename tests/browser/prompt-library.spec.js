@@ -3,6 +3,7 @@ import {setAppLanguage} from './support/settings.js';
 
 const modal=page=>page.locator('#prompt-library-dialog');
 async function openLibrary(page){
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#prompt-library-trigger').click();
  await expect(modal(page)).toBeVisible();
 }
@@ -11,6 +12,7 @@ async function chooseTemplate(page,id){
 }
 test('Template variable filling, Markdown export, safe append and Undo',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const editor=page.locator('#markdown-input');
  await editor.fill('# Existing work');
@@ -38,9 +40,11 @@ test('Template variable filling, Markdown export, safe append and Undo',async({p
 
 test('Replacement can be cancelled without switching course or damaging Sandbox draft',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const editor=page.locator('#markdown-input');
  await editor.fill('Sandbox data to keep');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  await editor.fill('# Lesson draft');
  await openLibrary(page);
@@ -116,7 +120,7 @@ test('Search, locale and accessible mobile dialog',async({page})=>{
  expect(box.x+box.width).toBeLessThanOrEqual(391);
  await page.keyboard.press('Escape');
  await expect(modal(page)).toBeHidden();
- await expect(page.locator('#prompt-library-trigger')).toBeFocused();
+ await expect(page.locator('#help-menu-trigger')).toBeFocused();
 });
 
 test('Prompt preview sanitizes user-controlled HTML while preserving raw Markdown',async({page})=>{

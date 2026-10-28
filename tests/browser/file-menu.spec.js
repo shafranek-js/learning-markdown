@@ -25,6 +25,7 @@ test('File menu imports UTF-8 Markdown into Sandbox and preserves course draft',
 
 test('New Markdown opens another tab without overwriting existing Sandbox text',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const source=page.locator('#markdown-input');
  await source.fill('Keep this **draft**');
@@ -40,6 +41,7 @@ test('New Markdown opens another tab without overwriting existing Sandbox text',
 
 test('File downloads Markdown via existing export handler and supports a new filename',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const source=page.locator('#markdown-input');
  await source.fill('# Download\n\nUnicode čeština, українська.');
@@ -64,6 +66,7 @@ test('File downloads Markdown via existing export handler and supports a new fil
 
 test('File Open rejects invalid type and oversized files without replacing Markdown',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const source=page.locator('#markdown-input');
  await source.fill('Unchanged content');

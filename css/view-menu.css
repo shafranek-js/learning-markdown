@@ -239,3 +239,52 @@
  font-size:11px;
  line-height:1.45;
 }
+
+
+/* Illustrator-style menu bar: commands read as a single row of text,
+   not as a strip of outlined action buttons. */
+.app-header-left .app-menubar-trigger{
+ appearance:none;
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ min-height:30px;
+ padding:5px 9px;
+ border:0;
+ border-radius:4px;
+ background:transparent;
+ box-shadow:none;
+ color:var(--text-ui);
+ font-size:12px;
+ font-weight:500;
+ line-height:1.35;
+ font-family:inherit;
+ letter-spacing:0;
+ white-space:nowrap;
+ cursor:pointer;
+ transition:background-color 120ms ease;
+}
+.app-header-left .app-menubar-trigger:hover,
+.app-header-left .app-menubar-trigger[aria-expanded="true"]{
+ background:var(--accent-soft);
+}
+.app-header-left .app-menubar-trigger:focus-visible{
+ outline:2px solid var(--accent);
+ outline-offset:-2px;
+}
+.app-header-left #contents-toggle-btn{margin-right:5px}
+@media (max-width:767px){
+ .app-header-left .app-menubar-trigger{padding-inline:8px}
+}
+
+
+/* With the Lesson Guide hidden, the right header contains only hidden
+   course controls. Give the text menu the full width instead of reserving
+   an empty scroll lane (especially important on phones). */
+.app-header-actions:has(> #advanced-course-btn[hidden]){display:none}
+@media(min-width:768px){
+ .app-header:has(.app-header-actions > #advanced-course-btn[hidden]) .app-header-left{
+  width:auto;
+  flex:1 1 auto;
+ }
+}
