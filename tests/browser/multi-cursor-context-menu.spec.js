@@ -175,11 +175,14 @@ test('context menu labels follow all five languages, fit mobile viewport and clo
   expect(rect.y+rect.height).toBeLessThanOrEqual(781);
   await page.keyboard.press('Escape');
  }
+ // Each course language has its own draft. Compare the active-language
+ // document rather than the English text used before changing locale.
+ const currentSource=await input(page).inputValue();
  await editor(page).press('Shift+F10');
  await expect(menu(page)).toBeVisible();
  await page.locator('#multi-cursor-toggle').click();
  await expect(menu(page)).toBeHidden();
- await expect(input(page)).toHaveValue(Array.from({length:35},(_,i)=>'Line '+(i+1)).join('\n'));
+ await expect(input(page)).toHaveValue(currentSource);
 });
 
 test('closing context menu by an outside click never changes the Markdown or cursor count',async({page})=>{
