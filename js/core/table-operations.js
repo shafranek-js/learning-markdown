@@ -277,6 +277,9 @@ function unmodeledRichMetadata(entry){
  if(!table)return true;
  for(const cell of table.querySelectorAll('td,th')){
   for(const element of cell.querySelectorAll('*')){
+   // For newly editable definition lists / dividers, do not normalize or
+   // accidentally drop attributes that have no representation in Blocks mode.
+   if(['DL','DT','DD','HR'].includes(element.tagName)&&element.attributes.length)return true;
    if([...element.attributes].some(attr=>
      /^(?:title|style|role|lang|dir|tabindex|translate)$/i.test(attr.name)||
      /^(?:data-|aria-)/i.test(attr.name)))return true;
@@ -631,7 +634,7 @@ export function setTableCellHTML(source,index,row,col,value){
 
 // Block cell editing is a separate explicit mode: inline-only operations must
 // never flatten paragraphs, lists, quotations or preformatted text.
-const CELL_BLOCK_TAGS=new Set('p div ul ol li blockquote pre h1 h2 h3 h4 h5 h6'.split(' '));
+const CELL_BLOCK_TAGS=new Set('p div ul ol li blockquote pre h1 h2 h3 h4 h5 h6 dl dt dd hr'.split(' '));
 const CELL_SAFE_TAGS=new Set([...CELL_INLINE_TAGS,...CELL_BLOCK_TAGS]);
 export function sanitizeBlockCellHTML(value){
  if(typeof value!=='string'||value.length>20000)return null;
@@ -644,6 +647,27 @@ export function sanitizeBlockCellHTML(value){
   const type=el.tagName.toLowerCase(),parent=el.parentElement?.tagName.toLowerCase();
   if(type==='li'&&parent!=='ul'&&parent!=='ol')return null;
   if((type==='ul'||type==='ol')&&[...el.children].some(child=>child.tagName!=='LI'))return null;
+ }
+ // HTML definition lists and separators are legitimate block content, but
+ // unsupported metadata, orphan terms and malformed groups must not be silently
+ // repaired by DOMParser and written back over the author's source.
+ for(const el of parsed.body.querySelectorAll('dl,dt,dd,hr')){
+  const tag=el.tagName;
+  if(el.attributes.length)return null;
+  if((tag==='DT'||tag==='DD')&&el.parentElement?.tagName!=='DL')return null;
+  if(tag!=='DL')continue;
+  let hasTerm=false,hasDefinition=false;
+  for(const node of el.childNodes){
+   if(node.nodeType===3){
+    if(node.textContent.trim())return null;
+    continue;
+   }
+   if(node.nodeType!==1||!['DT','DD'].includes(node.tagName))return null;
+   if(node.tagName==='DT')hasTerm=true;
+   else if(!hasTerm)return null;
+   else hasDefinition=true;
+  }
+  if(!hasTerm||!hasDefinition)return null;
  }
  const clean=sanitizeHTML(value);
  const doc=new DOMParser().parseFromString(clean,'text/html');
@@ -807,7 +831,7 @@ export function insertTableCellImage(source,index,row,col,options={}){
   if(w!=='')image.setAttribute('width',String(w));
   if(h!=='')image.setAttribute('height',String(h));
   const hasContent=Boolean(owner.html.trim());
-  const hasBlocks=Boolean(parsed.body.querySelector('p,div,ul,ol,blockquote,pre,h1,h2,h3,h4,h5,h6,figure'));
+  const hasBlocks=Boolean(parsed.body.querySelector('p,div,ul,ol,blockquote,pre,h1,h2,h3,h4,h5,h6,dl,dt,dd,hr,figure'));
   if(hasBlocks){
    const container=parsed.createElement('p');container.append(image);parsed.body.append(container);
   }else{

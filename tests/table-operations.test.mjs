@@ -554,6 +554,48 @@ assert(headingImage.text.includes('<p><img'));
 assert(!headingImage.text.includes('<h5>Product</h5><br>'));
 assert.equal(getTableCellImage(headingImage.text,0,0,0).alt,'Product image');
 
+// #57: Definition lists and separators are editable rich table-cell blocks.
+// Preserve untouched source and refuse orphan terms / malformed lists / metadata.
+const defSource='Before\n\n<table><tr><td><p>Introduction</p>' +
+ '<dl><dt>API</dt><dd>Application <strong>interface</strong></dd>' +
+ '<dt>UAT</dt><dd><p>User acceptance testing</p></dd></dl><hr>' +
+ '</td><td>Neighbor</td></tr></table>\n\nAfter';
+const defBlocks=getTableCellBlocks(defSource,0,0,0);
+assert(defBlocks?.includes('<dt>API</dt>'));
+assert(defBlocks.includes('<dd>Application <strong>interface</strong></dd>'));
+assert(defBlocks.includes('<hr>'));
+assert.equal(getTableCellHTML(defSource,0,0,0),null);
+const defUpdated=setTableCellBlocks(defSource,0,0,0,
+ defBlocks.replace('User acceptance testing','Functional acceptance testing'));
+assert(defUpdated?.text.includes('<dd><p>Functional acceptance testing</p></dd>'));
+assert(defUpdated.text.includes('<td>Neighbor</td>'));
+assert(defUpdated.text.startsWith('Before\n\n'));
+assert(defUpdated.text.endsWith('\n\nAfter'));
+assert.equal(getTableCellBlocks(defUpdated.text,0,0,0).includes('Functional acceptance testing'),true);
+assert.equal(sanitizeBlockCellHTML('<dl><dt>Term</dt><dd>Definition</dd></dl><hr>'),
+ '<dl><dt>Term</dt><dd>Definition</dd></dl><hr>');
+for(const invalid of [
+ '<dt>Orphan</dt>','<dd>Orphan</dd>',
+ '<dl><dd>Missing term</dd></dl>',
+ '<dl><dt>Missing definition</dt></dl>',
+ '<dl><dt>Term</dt><p>Orphan paragraph</p><dd>Definition</dd></dl>',
+ '<dl class="custom"><dt>Term</dt><dd>Definition</dd></dl>',
+ '<hr data-note="keep">','<dl><dt>Term</dt><dd>Safe</dd></dl><script>alert(1)</script>'
+])assert.equal(sanitizeBlockCellHTML(invalid),null,'refuse unsafe definition list source');
+const defMetadata='<table><tr><td><dl class="custom"><dt>Term</dt>' +
+ '<dd>Definition</dd></dl></td><td>Neighbor</td></tr></table>';
+assert.equal(getTableReadOnlyReason(defMetadata,0),'unsupported',
+ 'unmodeled attributes must prevent all visual table rewriting');
+assert.equal(setTableCellBlocks(defMetadata,0,0,1,'New neighbor'),null);
+const defImage=insertTableCellImage(defSource,0,0,0,{
+ url:'https://example.org/illustration.png',alt:'API diagram',
+ decorative:false,width:'',height:''
+});
+assert(defImage?.text.includes('<dl><dt>API</dt>'));
+assert(defImage.text.includes('<hr><p><img'));
+assert(defImage.text.includes('Neighbor'));
+assert(!defImage.text.includes('<hr><br>'));
+
 // #6: Image properties are edited in place without flattening mixed content.
 const pictureSrc='Before\n\n<table class="af-table-outline"><tr><td rowspan="2">'+
  '<p>Caption <strong>bold</strong> <a href="https://example.org/guide">guide</a>.</p>'+
