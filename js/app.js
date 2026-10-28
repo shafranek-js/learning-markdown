@@ -110,7 +110,8 @@ function selectLesson(index,{route=true,scroll=true}={}){
  state.currentLessonIndex=index;
  if(isAdvanced(index))state.advancedToolsOpen=true;
  save();if(route)syncRoute(state,{push:true});
- if(index===-1){$('active-tab-title').textContent='00_00 AI Prompt Sandbox';$('editor-mode-status').textContent='Sandbox';showGuide(false);}
+ $('lesson-context-badge').hidden=index===-1;
+ if(index===-1){$('active-tab-title').textContent='';$('editor-mode-status').textContent='Sandbox';showGuide(false);}
  else {const l=getLesson(index),strings=ui(state.lang);
   $('active-tab-title').textContent=l.tab;$('editor-mode-status').textContent=l.tab;
   $('lesson-badge').textContent=isAdvanced(index)?TRACK_TEXT[state.lang].module+' '+(index-7)+' / 7':strings.moduleOf(index+1,8);
