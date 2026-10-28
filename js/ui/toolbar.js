@@ -1,6 +1,6 @@
 import {area,applyEdit,multiWrap,multiInsert,multiStandaloneSnippet,multiFencedBlock,multiImage,multiBlockToolbar,multiHeading,multiLineFormat,multiPreset,multiRich,registerEditorShortcut} from './editor.js';
 import {presetClass} from '../core/advanced-presets.js';
-import {makeRichSnippet} from '../data/rich-content.js';
+import {makeRichSnippet,richTemplateIgnoresSelection} from '../data/rich-content.js';
 import {formatSourceLineSelection} from '../core/source-line-format.js';
 import {formatSourceInlineSelection} from '../core/source-inline-format.js';
 import {formatSourceFencedBlockSelection} from '../core/source-fenced-block.js';
@@ -52,7 +52,10 @@ export function insertRichContent(group,id){
  const a=area(),selected=a.value.slice(a.selectionStart,a.selectionEnd);
  const html=makeRichSnippet(group,id,selected,a.value);
  if(!html)return false;
- insertSnippet('\n\n'+html+'\n\n');
+ const padded='\n\n'+html+'\n\n';
+ if(selected.length&&richTemplateIgnoresSelection(group,id,selected))
+  insertStandaloneSnippet(padded);
+ else insertSnippet(padded);
  return true;
 }
 export function insertAdvancedPageBreak(){

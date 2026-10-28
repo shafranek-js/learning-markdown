@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {marked} from 'marked';
-import {RICH_CONTENT,RICH_GROUPS,RICH_LABELS,makeRichSnippet} from '../js/data/rich-content.js';
+import {RICH_CONTENT,RICH_GROUPS,RICH_LABELS,makeRichSnippet,richTemplateIgnoresSelection} from '../js/data/rich-content.js';
 import {sanitizeHTML} from '../js/core/sanitize.js';
 const env=new JSDOM('<!DOCTYPE html><html><body></body></html>',{url:'https://example.com/'});
 globalThis.document=env.window.document;globalThis.Node=env.window.Node;
@@ -22,6 +22,18 @@ for(const group of RICH_GROUPS){
   assert(!/<script|onerror=|onclick=|<style/i.test(output),'unexpected unsafe template');
  }
 }
+for(const [group,id,selection,ignored] of [
+ ['tables','colspan','**selected Markdown**',true],
+ ['tables','rowspan','[link](https://example.org)',true],
+ ['blocks','details','**important**',true],
+ ['blocks','warning','  ',true],
+ ['numbering','i','  ',true],
+ ['blocks','warning','actual content',false],
+ ['numbering','a','First\nSecond',false],
+ ['blocks','anchor','',false],
+ ['blocks','anchor','selected',false]
+])assert.equal(richTemplateIgnoresSelection(group,id,selection),ignored,
+ group+'/'+id+' selection contract');
 let output=safe(makeRichSnippet('tables','colspan'));
 assert.match(output,/<th colspan="2">Merged heading<\/th>/);
 output=safe(makeRichSnippet('tables','rowspan'));
