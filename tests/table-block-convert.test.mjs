@@ -288,6 +288,39 @@ function select(selection,a,ao,b,bo){
  assert.equal(editor.innerHTML,html);
 }
 {
+ // The HTML sanitizer adds a redundant class to each OL with a type.
+ // That auto-generated class must not disable existing list conversions.
+ const html='<p>Before</p><ol type="i" class="af-list-lower-roman">'+
+  '<li>One</li><li>Two</li></ol><p>After</p>';
+ const {editor,selection}=setup(html),items=editor.querySelectorAll('ol > li');
+ select(selection,items[0].firstChild,0,items[1].firstChild,3);
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),{ok:true,blocks:2});
+ assert.equal(editor.innerHTML,'<p>Before</p><p>One</p><p>Two</p><p>After</p>');
+}
+{
+ const html='<ol><li>Root<ol type="i" start="5" class="af-list-lower-roman">'+
+  '<li>One</li><li>Two</li><li>Three</li></ol></li></ol>';
+ const {editor,selection}=setup(html),items=editor.querySelectorAll('ol > li > ol > li');
+ select(selection,items[1].firstChild,0,items[1].firstChild,3);
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),{ok:true,blocks:1});
+ const segments=editor.querySelectorAll(':scope > ol > li > ol, :scope > ol > li > ul');
+ assert.deepEqual([...segments].map(el=>el.tagName),['OL','UL','OL']);
+ assert.equal(segments[0].getAttribute('class'),'af-list-lower-roman');
+ assert.equal(segments[2].getAttribute('start'),'7');
+}
+{
+ // Class identity must be derived from the OL type, never an arbitrary
+ // class that conversion would erase without warning.
+ for(const cls of ['custom','af-list-upper-roman','af-list-lower-roman extra']){
+  const html='<ol type="i" class="'+cls+'"><li>Alpha</li></ol>';
+  const {editor,selection}=setup(html),text=editor.querySelector('li').firstChild;
+  select(selection,text,0,text,5);
+  assert.deepEqual(convertBlockSelection(editor,'p',selection),
+   {ok:false,reason:'protected-metadata'});
+  assert.equal(editor.innerHTML,html);
+ }
+}
+{
  // Merging an already ordered list with a neighboring paragraph would drop
  // start/type metadata even if the result is also an OL; refuse that too.
  const html='<p>Intro</p><ol type="i" start="5"><li>Five</li></ol>';
