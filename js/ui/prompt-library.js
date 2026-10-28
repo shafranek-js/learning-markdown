@@ -183,7 +183,9 @@ export function initPromptLibrary({usePrompt}){
  try{data=parsePromptLibrary(localStorage.getItem(LIBRARY_STORAGE_KEY));}catch{data=parsePromptLibrary(null);}
  const dialog=$('prompt-library-dialog');
  $('prompt-library-trigger').addEventListener('click',()=>{
-  lastFocus=document.activeElement;
+  // The launcher now lives in Help: return to the visible Help trigger,
+  // not to a menuitem hidden when the dialog closes.
+  lastFocus=document.activeElement?.closest('#help-menu')?$('help-menu-trigger'):document.activeElement;
   renderPromptLibraryLanguage();refresh();dialog.hidden=false;
   $('prompt-library-search').focus();
  });
