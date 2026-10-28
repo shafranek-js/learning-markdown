@@ -27,8 +27,9 @@ export function renderFigureLanguage(){
  'figure-dialog-trigger':w.trigger
  }))$(id).textContent=label;
 }
-export function initFigureDialog({insertSnippet}){
- insert=insertSnippet;
+export function initFigureDialog({insertStandaloneSnippet}){
+ // Add a standalone image/figure without replacing selected Markdown source.
+ insert=insertStandaloneSnippet;
  const dialog=$('figure-dialog'),trigger=$('figure-dialog-trigger');
  const preset=$('figure-width-preset'),custom=$('figure-width-custom');
  const natural=$('figure-natural'),height=$('figure-height');
