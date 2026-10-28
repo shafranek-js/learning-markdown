@@ -158,19 +158,52 @@ function select(selection,a,ao,b,bo){
   {ok:false,reason:'partial-or-nested-list'});
  assert.equal(editor.innerHTML,html);
 }
-// A nested list cannot be turned into direct paragraphs inside an outer LI.
-// Such a transformation requires a separate explicit UX/numbering policy.
+// A caret in a simple nested list converts ALL its items to paragraphs
+// inside the parent LI while preserving outside siblings.
 {
- const html='<ul><li>Parent<ul><li>One</li><li>Two</li></ul></li></ul>';
+ const html='<ul><li>Parent<ul><li>One</li><li><em>Two</em></li>'+
+  '</ul>Tail</li><li>Neighbor</li></ul>';
  const {editor,selection}=setup(html);
  const text=editor.querySelector('ul > li > ul > li').firstChild;
  select(selection,text,2,text,2);
- assert.deepEqual(convertBlockSelection(editor,'p',selection),
-  {ok:false,reason:'nested-to-paragraph'});
- assert.equal(editor.innerHTML,html);
- assert.deepEqual(convertBlockSelection(editor,'ul',selection),
-  {ok:false,reason:'already-formatted'});
- assert.equal(editor.innerHTML,html);
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),{ok:true,blocks:2});
+ assert.equal(editor.innerHTML,
+  '<ul><li>Parent<p>One</p><p><em>Two</em></p>Tail</li><li>Neighbor</li></ul>');
+ assert.equal(selection.anchorNode.isConnected,true);
+}
+// Never flatten deeper nested lists or discard attributes on a selected LI.
+{
+ for(const html of [
+  '<ul><li>Parent<ul><li>One<ul><li>Deep</li></ul></li></ul></li></ul>',
+  '<ul><li>Parent<ul><li title="Keep">One</li></ul></li></ul>'
+ ]){
+  const {editor,selection}=setup(html),li=editor.querySelector('ul > li > ul > li');
+  const text=li.firstChild;
+  select(selection,text,1,text,1);
+  assert.deepEqual(convertBlockSelection(editor,'p',selection),
+   {ok:false,reason:'nested-to-paragraph'});
+  assert.equal(editor.innerHTML,html);
+ }
+}
+// Partial Roman nested list to paragraphs retains before/suffix numbering,
+// markup, the outer list and the untouched text order.
+{
+ const html='<ol type="A"><li>Parent<ol type="i" start="5">'+
+  '<li>Alpha</li><li><strong>Bravo</strong></li><li>Charlie</li>'+
+  '<li>Delta</li></ol>Tail</li><li>Neighbor</li></ol>';
+ const {editor,selection}=setup(html),items=editor.querySelectorAll('ol > li > ol > li');
+ select(selection,items[1].querySelector('strong').firstChild,0,
+  items[2].firstChild,7);
+ const original=editor.textContent;
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),{ok:true,blocks:2});
+ const parent=editor.querySelector(':scope > ol > li');
+ assert.deepEqual([...parent.children].map(el=>el.tagName),['OL','P','P','OL']);
+ assert.equal(parent.children[0].getAttribute('start'),'5');
+ assert.equal(parent.children[3].getAttribute('start'),'8');
+ assert.equal(parent.children[3].getAttribute('type'),'i');
+ assert.equal(parent.children[1].innerHTML,'<strong>Bravo</strong>');
+ assert.equal(editor.textContent,original);
+ assert.equal(selection.anchorNode.isConnected,true);
 }
 // Partial nested range: split an ordered Roman list into three sibling lists,
 // carrying ordinal continuity in a bounded 'start' on its remaining suffix.

@@ -161,12 +161,12 @@ test('issue #6 nested list conversion changes only selected depth and keeps oute
  await expect(page.locator('#markdown-preview td').first().locator('ol > li > ol > li')).toHaveCount(2);
 });
 
-test('issue #6 Russian mobile prevents partial nested conversions and explains paragraph limitation',async({page})=>{
+test('issue #57 Russian mobile refuses unsafe nested paragraphs and cross-depth ranges',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
  await setAppLanguage(page,'ru');
  const source='<table><tr><td><ol type="i"><li>Родитель<ul>'+
-  '<li>Первый</li><li>Второй</li><li>Третий</li></ul></li>'+
+  '<li>Первый</li><li>Второй<ul><li>Глубже</li></ul></li><li>Третий</li></ul></li>'+
   '<li>Сосед</li></ol></td></tr></table>';
  const input=page.locator('#markdown-input');
  await input.fill(source);
@@ -194,7 +194,7 @@ test('issue #6 Russian mobile prevents partial nested conversions and explains p
   selection.removeAllRanges();selection.addRange(range);
  });
  await page.locator('#table-edit-convert-p').click();
- await expect(page.locator('#table-edit-message')).toContainText('Вложенные списки можно переключать');
+ await expect(page.locator('#table-edit-message')).toContainText('Вложенные пункты можно преобразовать');
  expect(await rich.innerHTML()).toBe(before);
  await expect(page.locator('#table-edit-bar')).toBeInViewport();
  await page.locator('#table-edit-convert-ol').click();
@@ -203,6 +203,42 @@ test('issue #6 Russian mobile prevents partial nested conversions and explains p
  await expect(input).toHaveValue(source);
 });
 
+
+test('issue #57 converts selected nested Roman items to paragraphs without losing neighbors',async({page})=>{
+ await page.goto('/');
+ const source='Before\n\n<table><tr><td><ol type="A"><li>Parent<ol type="i" start="5">'+
+  '<li>Alpha</li><li><strong>Bravo</strong></li><li>Charlie</li><li>Delta</li>'+
+  '</ol>Tail</li><li>Neighbor</li></ol></td><td>Other</td></tr></table>\n\nAfter';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ await rich.locator(':scope > ol > li > ol > li').nth(1).evaluate(li=>{
+  const next=li.nextElementSibling,range=document.createRange(),selection=window.getSelection();
+  li.closest('[contenteditable]').focus();
+  range.setStart(li.querySelector('strong').firstChild,0);
+  range.setEnd(next.firstChild,next.firstChild.length);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-p').click();
+ const parent=rich.locator(':scope > ol > li').first();
+ await expect(parent.locator(':scope > p')).toHaveText(['Bravo','Charlie']);
+ await expect(parent.locator(':scope > p > strong')).toHaveText('Bravo');
+ await expect(parent.locator(':scope > ol')).toHaveCount(2);
+ await expect(parent.locator(':scope > ol').last()).toHaveAttribute('start','8');
+ await expect(parent.locator(':scope > ol').last()).toHaveAttribute('type','i');
+ await expect(input).toHaveValue(source);
+ await page.locator('#table-edit-content-save').click();
+ const updated=await input.inputValue();
+ for(const token of ['<p><strong>Bravo</strong></p>','<p>Charlie</p>',
+  'start="8"','Neighbor','Other','Before','After'])
+  expect(updated).toContain(token);
+ await undo(page);
+ await expect(input).toHaveValue(source);
+ await redo(page);
+ await expect(page.locator('#markdown-preview td').first().locator('ol > li > p'))
+  .toHaveText(['Bravo','Charlie']);
+});
 
 test('issue #6 partial nested roman list converts only middle items and preserves ordinal suffix',async({page})=>{
  await page.goto('/');

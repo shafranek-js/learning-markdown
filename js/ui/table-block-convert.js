@@ -62,7 +62,6 @@ function convertNestedList(editor,target,selection,range){
     [...list.childNodes].some(node=>node.nodeType!==1&&
       (node.nodeType!==3||node.textContent.trim())))
   return {ok:false,reason:'partial-or-nested-list'};
- if(target==='p')return {ok:false,reason:'nested-to-paragraph'};
  if(list.tagName.toLowerCase()===target)
   return {ok:false,reason:'already-formatted'};
  if(hasProtectedWrapperAttributes(list,target))
@@ -73,11 +72,27 @@ function convertNestedList(editor,target,selection,range){
  // A noncollapsed selection converts the inclusive contiguous LI range.
  const first=selection.isCollapsed?0:Math.min(aIndex,bIndex);
  const last=selection.isCollapsed?items.length-1:Math.max(aIndex,bIndex);
+ const selected=items.slice(first,last+1);
+ // A nested item can become a paragraph only when its LI wrapper contains
+ // inline markup. Never discard per-item attributes or flatten deeper lists,
+ // media, headings or other block containers during the conversion.
+ if(target==='p'&&selected.some(item=>item.attributes.length||
+    [...item.querySelectorAll('*')].some(el=>!SAFE_INLINE.has(el.tagName.toLowerCase()))))
+  return {ok:false,reason:'nested-to-paragraph'};
  const doc=editor.ownerDocument;
- const changed=doc.createElement(target);
+ const changed=target==='p'?doc.createDocumentFragment():doc.createElement(target);
+ const inserted=[];
+ const appendConverted=item=>{
+  if(target==='p'){
+   const paragraph=doc.createElement('p');
+   while(item.firstChild)paragraph.append(item.firstChild);
+   changed.append(paragraph);inserted.push(paragraph);
+  }else changed.append(item);
+ };
  const partial=first>0||last<items.length-1;
  if(!partial){
-  while(list.firstChild)changed.append(list.firstChild);
+  if(target==='p')items.forEach(appendConverted);
+  else while(list.firstChild)changed.append(list.firstChild);
   list.replaceWith(changed);
  }else{
   // For ordered lists, preserve the suffix's ordinal after splitting.
@@ -92,7 +107,7 @@ function convertNestedList(editor,target,selection,range){
   if(after?.tagName==='OL')after.setAttribute('start',String(suffixStart));
   items.forEach((item,index)=>{
    if(index<first)before.append(item);
-   else if(index<=last)changed.append(item);
+   else if(index<=last)appendConverted(item);
    else after.append(item);
   });
   const fragment=doc.createDocumentFragment();
@@ -101,12 +116,17 @@ function convertNestedList(editor,target,selection,range){
   if(after)fragment.append(after);
   list.replaceWith(fragment);
  }
- // Keep the selection in its original depth for subsequent conversions.
+ // Keep the selection at its original depth for subsequent conversions.
  const replacement=doc.createRange();
- replacement.setStart(changed.firstElementChild,0);
- replacement.setEnd(changed.lastElementChild,changed.lastElementChild.childNodes.length);
+ if(target==='p'){
+  replacement.setStartBefore(inserted[0]);
+  replacement.setEndAfter(inserted.at(-1));
+ }else{
+  replacement.setStart(changed.firstElementChild,0);
+  replacement.setEnd(changed.lastElementChild,changed.lastElementChild.childNodes.length);
+ }
  selection.removeAllRanges();selection.addRange(replacement);
- return {ok:true,blocks:1};
+ return {ok:true,blocks:target==='p'?inserted.length:1};
 }
 export function convertBlockSelection(editor,target,selection=window.getSelection()){
  if(!editor||!TARGETS.has(target)||!selection?.rangeCount||
