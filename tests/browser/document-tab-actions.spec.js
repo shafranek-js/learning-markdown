@@ -24,6 +24,9 @@ test('Duplicate tab copies source and compatibility options, then diverges safel
  await expect(input).toHaveValue('First line\nSecond line');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
  await input.fill('Updated new document');
+ // Switching documents closes the floating Compatibility panel by design.
+ if(!(await page.locator('#compatibility-panel').evaluate(panel=>panel.open)))
+  await page.locator('#compatibility-trigger').click();
  await page.locator('#extension-softbreaks-toggle').selectOption('off');
  await page.locator('#document-tab-list [data-document-id="'+first+'"]').click();
  await expect(input).toHaveValue('First line\nSecond line');
