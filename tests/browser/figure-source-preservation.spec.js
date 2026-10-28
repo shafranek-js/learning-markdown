@@ -1,5 +1,6 @@
 import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
+import {setAppLanguage} from './support/settings.js';
 
 async function revealFigureDialog(page){
  const toggle=page.locator('#advanced-tools-toggle');
@@ -76,7 +77,7 @@ test('multi-cursor figure modal inserts after every selected line atomically',as
 test('figure modal protects fenced source and retains Russian mobile editing',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#lang-selector').selectOption('ru');
+ await setAppLanguage(page,'ru');
  const input=page.locator('#markdown-input');
  const source='Вступление\n~~~md\n# literal\n~~~\nКонец';
  await input.fill(source);await selectSource(input,'literal');
