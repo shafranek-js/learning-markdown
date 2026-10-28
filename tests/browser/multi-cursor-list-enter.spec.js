@@ -119,3 +119,18 @@ test('CodeMirror Tab in ordinary prose still inserts two spaces at the caret',as
  await undo(page);
  await expect(input).toHaveValue('Plain');
 });
+
+
+test('Multi-cursor Enter continues quoted bullets, numbers and tasks in one undo transaction',async({page})=>{
+ await page.goto('/');
+ const original='> - First\n> 3. Second\n> - [x] Third';
+ const input=await activateWithCursorsAtLineEnds(page,original,3);
+ await page.keyboard.press('Enter');
+ const expected='> - First\n> - \n> 3. Second\n> 4. \n> - [x] Third\n> - [ ] ';
+ await expect(input).toHaveValue(expected);
+ await expect(page.locator('#multi-cursor-count')).toContainText('3');
+ await undo(page);
+ await expect(input).toHaveValue(original);
+ await redo(page);
+ await expect(input).toHaveValue(expected);
+});
