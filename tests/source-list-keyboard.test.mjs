@@ -39,6 +39,8 @@ assert.equal(enter('> > + [X] Nested task').text,'> > + [X] Nested task\n> > + [
 assert.deepEqual(enter('> - '),{text:'> ',start:2,end:2});
 assert.deepEqual(enter('Outside\n> - '),{text:'Outside\n> ',start:10,end:10});
 assert.deepEqual(enter('> > - '),{text:'> > ',start:4,end:4});
+assert.equal(enter('~~~markdown\n> - literal'),null,
+ 'unquoted fenced code protects quote-looking source');
 assert.equal(enter('> ~~~markdown\n> - literal'),null,
  'quoted fenced code must not become a list');
 assert.equal(enter('> > \x60\x60\x60md\n> > - literal'),null,
