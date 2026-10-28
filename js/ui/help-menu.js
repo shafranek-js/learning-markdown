@@ -62,9 +62,10 @@ function openDialog(kind){
 }
 let openCourseContents=()=>{};
 function run(command){
- if(command==='cheats')$('cheatsheet-btn').click();
- else if(command==='guide')openCourseContents();
- else openDialog(command);
+ if(command==='guide')openCourseContents();
+ else if(command==='shortcuts'||command==='about')openDialog(command);
+ // Sandbox, Prompt Library and Cheat Sheet are their original controls
+ // relocated into this menu. Their own click handlers open the feature.
 }
 export function renderHelpMenuLanguage(){
  const labels=w();
@@ -86,7 +87,11 @@ export function initHelpMenu({onOpenCourseContents}={}){
  menu.addEventListener('click',event=>{
   const item=event.target.closest('[data-help-action]');
   if(!item)return;
-  closeMenu({focus:true});run(item.dataset.helpAction);
+  const command=item.dataset.helpAction;
+  const direct=['sandbox','library','cheats'].includes(command);
+  // Do not steal focus from a dialog opened by the button's own handler.
+  closeMenu({focus:!direct});
+  if(!direct)run(command);
  });
  menu.addEventListener('keydown',event=>{
   const items=actions(),i=items.indexOf(document.activeElement);let next=null;
@@ -95,7 +100,7 @@ export function initHelpMenu({onOpenCourseContents}={}){
   if(event.key==='Home')next=items[0];
   if(event.key==='End')next=items.at(-1);
   if(next){event.preventDefault();next.focus();}
-  if(event.key==='Tab'){event.preventDefault();closeMenu();(event.shiftKey?$('settings-menu-trigger'):$('sandbox-mode-btn')).focus();}
+  if(event.key==='Tab'){event.preventDefault();closeMenu({focus:true});}
  });
  $('help-info-close').addEventListener('click',closeDialog);
  dialog.addEventListener('pointerdown',event=>{if(event.target===dialog)closeDialog();});
