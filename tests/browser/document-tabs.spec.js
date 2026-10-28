@@ -261,6 +261,11 @@ test('Sandbox places menu and document tabs in one compact header row',async({pa
  expect(Math.abs(menuRect.y+menuRect.height/2-(tabsRect.y+tabsRect.height/2))).toBeLessThan(12);
  expect(headerRect.height).toBeLessThanOrEqual(45);
  expect(tabsRect.x).toBeGreaterThan(menuRect.x+menuRect.width);
+ // No empty reserved menu space after Help: the first tab should follow immediately.
+ const helpRect=await page.locator('#help-menu-trigger').boundingBox();
+ const gapAfterHelp=tabsRect.x-(helpRect.x+helpRect.width);
+ expect(gapAfterHelp).toBeGreaterThanOrEqual(-1);
+ expect(gapAfterHelp).toBeLessThanOrEqual(20);
  expect(tabsRect.x+tabsRect.width).toBeLessThanOrEqual(1440);
  expect(toolbarRect.y).toBeGreaterThanOrEqual(headerRect.y+headerRect.height);
  expect(toolbarRect.y).toBeLessThan(headerRect.y+headerRect.height+48);
