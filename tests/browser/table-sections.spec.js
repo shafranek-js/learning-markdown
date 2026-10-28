@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -22,9 +23,9 @@ test('semantic table sections survive visual cell save, body row insertion and U
  expect(updated).toContain('<tbody>');
  expect(updated).toContain('<tfoot>');
  expect(updated).toContain('<caption><strong>Yearly report</strong>');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await table.locator('tbody tr').first().locator('td').first().click();
  await page.locator('#table-edit-rows').selectOption('row-below');
  await expect(table.locator('thead tr')).toHaveCount(1);
@@ -32,7 +33,7 @@ test('semantic table sections survive visual cell save, body row insertion and U
  await expect(table.locator('tfoot tr')).toHaveCount(1);
  updated=await input.inputValue();
  expect(updated).toContain('<tfoot>');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(table.locator('tbody tr')).toHaveCount(2);
 });
 

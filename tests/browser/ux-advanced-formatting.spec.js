@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -14,7 +15,7 @@ test('advanced HTML toolbar is separate, persists and supports undoable underlin
  await page.locator('[data-action="adv-underline"]').click();
  await expect(editor).toHaveValue('<u>Demo</u>');
  await expect(page.locator('#markdown-preview u')).toHaveText('Demo');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue('Demo');
  await page.reload();
  await expect(page.locator('#advanced-toolbar')).toBeVisible();
@@ -55,9 +56,9 @@ test('Advanced presets apply foreground and highlight colors through safe classe
  await expect(page.locator('#markdown-preview span.af-color-blue')).toHaveText('Sample');
  const foreground=await page.locator('#markdown-preview span.af-color-blue').evaluate(el=>getComputedStyle(el).color);
  expect(foreground).toBe('rgb(23, 85, 165)');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue('Sample');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(editor).toHaveValue('<span class="af-color-blue">Sample</span>');
  await editor.fill('Marked');
  await editor.selectText();
@@ -164,7 +165,7 @@ test('rich HTML table templates render merged cells and preset decorations',asyn
  await page.locator('#rich-tables').selectOption('colspan');
  await page.locator('[data-rich-apply="tables"]').click();
  await expect(page.locator('#markdown-preview th[colspan="2"]')).toHaveText('Merged heading');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('');
  await page.locator('#rich-tables').selectOption('rowspan');
  await page.locator('[data-rich-apply="tables"]').click();

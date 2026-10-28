@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -17,9 +18,9 @@ test('GFM checklist shows checked state and Preview clicks edit source with Undo
  await expect(boxes.nth(1)).toBeChecked();
  await boxes.first().uncheck();
  await expect(editor).toHaveValue('- [ ] Completed task\n- [x] Open task');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(boxes.first()).toBeChecked();
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(boxes.first()).not.toBeChecked();
  await page.reload();
  await expect(boxes.first()).not.toBeChecked();
@@ -78,9 +79,9 @@ test('Word-like picker selects a 5 by 4 grid and generates an undoable GFM table
  await expect(page.locator('#markdown-preview table th')).toHaveCount(5);
  await expect(page.locator('#markdown-preview table tbody tr')).toHaveCount(3);
  await expect(input).toHaveValue(/\| Column 5 \|/);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview table th')).toHaveCount(5);
 });
 
@@ -137,7 +138,7 @@ test('Preview table context menu inserts/deletes GFM rows and columns with Undo'
  await page.locator('#table-edit-rows').selectOption('row-below');
  await expect(page.locator('#markdown-preview tbody tr')).toHaveCount(2);
  await expect(editor).toHaveValue(/\| Alpha \| Beta \|/);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(page.locator('#markdown-preview tbody tr')).toHaveCount(1);
  await page.locator('#markdown-preview tbody td').first().click();
  await page.locator('#table-edit-cols').selectOption('column-right');
@@ -157,9 +158,9 @@ test('Shift-selection merges GFM cells as safe HTML, supports split and Undo',as
  await page.locator('#table-edit-merge').selectOption('merge');
  await expect(page.locator('#markdown-preview td[colspan="2"]')).toHaveText('AlphaBeta');
  await expect(editor).toHaveValue(/<table/);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).not.toHaveValue(/<table/);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td[colspan="2"]')).toHaveCount(1);
  await page.locator('#markdown-preview td[colspan="2"]').click();
  await page.locator('#table-edit-merge').selectOption('split');
@@ -215,9 +216,9 @@ test('editing an existing GFM table cell remains GFM, supports Undo/Redo and exp
  expect(updated).toContain('Before');
  expect(updated).toContain('After');
  await expect(page.locator('#markdown-preview tbody td').first()).toHaveText('Changed | value <script>');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(page.locator('#markdown-preview tbody td').first()).toHaveText('Alpha');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview tbody td').first()).toHaveText('Changed | value <script>');
  const pending=page.waitForEvent('download');
  await closeCompatibility(page);

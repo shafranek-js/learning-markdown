@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 
@@ -19,9 +20,9 @@ test('snippet Insert action is explicit, localized and edits the source',async({
  const previous=await input.inputValue();
  await button.click();
  expect(await input.inputValue()).not.toBe(previous);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(previous);
- await page.locator('#redo-btn').click();
+ await redo(page);
  expect(await input.inputValue()).not.toBe(previous);
 });
 

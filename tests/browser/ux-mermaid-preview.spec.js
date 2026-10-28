@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {mermaidSnippet} from '../../js/data/mermaid-templates.js';
@@ -18,7 +19,7 @@ test('Mermaid Advanced insertion creates editable source and safe live image',as
  expect(await img.evaluate(el=>el.naturalWidth)).toBeGreaterThan(0);
  await figure.locator('summary').click();
  await expect(figure.locator('pre code')).toContainText('flowchart LR');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).not.toHaveValue(/```mermaid/);
 });
 

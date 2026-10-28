@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -22,9 +23,9 @@ test('table header scope remains accessible through cell editing and row inserti
  await expect(table.locator('tbody tr')).toHaveCount(3);
  await expect(table.locator('thead th[scope="col"]')).toHaveCount(2);
  await expect(table.locator('tbody th[scope="row"]')).toHaveCount(2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(table.locator('tbody tr')).toHaveCount(2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
 });
 
