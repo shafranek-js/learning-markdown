@@ -376,3 +376,72 @@ function select(selection,a,ao,b,bo){
 }
 
 console.log('PASS: #6 selected paragraph/list structural conversion preserves order and rejects ambiguous sources');
+
+// Issue #57: list items containing ONE plain paragraph can be unwrapped
+// losslessly, without creating nested paragraphs or losing emphasis.
+{
+ const html='<p>Before</p><ol type="i"><li><p>First <em>rich</em></p></li>'+
+  '<li>Second</li></ol><p>After</p>';
+ const {editor,selection}=setup(html),first=editor.querySelector('li p').firstChild;
+ const last=editor.querySelectorAll('li')[1].firstChild;
+ select(selection,first,0,last,last.length);
+ const original=editor.textContent;
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),{ok:true,blocks:2});
+ assert.equal(editor.innerHTML,
+  '<p>Before</p><p>First <em>rich</em></p><p>Second</p><p>After</p>');
+ assert.equal(editor.textContent,original);
+ assert.equal(editor.querySelector('p p'),null);
+ assert.equal(selection.anchorNode.isConnected,true);
+}
+// Partial Roman nested list: reuse a single inner P, preserve ordered suffix
+// and never modify the parent LI's trailing content or neighbor.
+{
+ const html='<ol><li>Parent<ol type="i" start="5"><li>A</li>'+
+  '<li><p><strong>B</strong></p></li><li><p>C</p></li>'+
+  '<li>D</li></ol>Tail</li><li>Neighbor</li></ol>';
+ const {editor,selection}=setup(html),ps=editor.querySelectorAll('li > p');
+ select(selection,ps[0].querySelector('strong').firstChild,0,
+  ps[1].firstChild,1);
+ const original=editor.textContent;
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),{ok:true,blocks:2});
+ const parent=editor.querySelector(':scope > ol > li');
+ assert.deepEqual([...parent.children].map(el=>el.tagName),['OL','P','P','OL']);
+ assert.equal(parent.children[0].getAttribute('start'),'5');
+ assert.equal(parent.children[3].getAttribute('start'),'8');
+ assert.equal(parent.children[3].getAttribute('type'),'i');
+ assert.equal(parent.querySelector(':scope > p > strong').textContent,'B');
+ assert.equal(editor.textContent,original);
+ assert.equal(editor.querySelector('p p'),null);
+}
+// Reject ineligible list items BEFORE touching any sibling: paragraph
+// metadata, multiple P blocks, mixed text/P and nested media are unsafe.
+{
+ const unsafe=[
+  '<li><p title="Do not discard">A</p></li>',
+  '<li><p>A</p><p>B</p></li>',
+  '<li>prefix<p>A</p></li>',
+  '<li><p>A<img src="https://example.org/photo.png"></p></li>'
+ ];
+ for(const item of unsafe){
+  const html='<ul>'+item+'<li>Safe</li></ul><p>Neighbor</p>';
+  const {editor,selection}=setup(html),first=editor.querySelector('li');
+  const last=editor.querySelectorAll('li')[1];
+  const a=first.querySelector('p')?.firstChild||first.firstChild;
+  select(selection,a,0,last.firstChild,4);
+  const before=editor.innerHTML;
+  assert.deepEqual(convertBlockSelection(editor,'p',selection),
+   {ok:false,reason:'partial-or-nested-list'});
+  assert.equal(editor.innerHTML,before);
+ }
+}
+// The nested version rejects malformed/multi-block wrappers atomically too.
+{
+ const html='<ul><li>Parent<ul><li><p>Good</p></li>'+
+  '<li><p>Bad</p><p>Extra</p></li></ul></li></ul>';
+ const {editor,selection}=setup(html),good=editor.querySelector('li > ul > li > p').firstChild;
+ select(selection,good,1,good,1);
+ const before=editor.innerHTML;
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),
+  {ok:false,reason:'nested-to-paragraph'});
+ assert.equal(editor.innerHTML,before);
+}
