@@ -323,3 +323,105 @@ for(const [language,notice] of Object.entries(metadataNotices)){
   await expect(input).toHaveValue(source);
  });
 }
+
+test('issue #57 converts paragraph-wrapped list items without nested paragraphs or source loss',async({page})=>{
+ await page.goto('/');
+ const source='Before\n\n<table><tr><td><p>Intro</p><ol type="i">'+
+  '<li><p>First <em>rich</em></p></li><li>Second</li></ol>'+
+  '<p>Outro</p></td><td>Neighbor</td></tr></table>\n\nAfter';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ await expect(page.locator('#table-edit-block-choice')).toHaveAttribute('aria-pressed','true');
+ await rich.locator(':scope > ol > li > p').evaluate(p=>{
+  const last=p.closest('ol').lastElementChild.firstChild;
+  const range=document.createRange(),selection=window.getSelection();
+  p.closest('[contenteditable]').focus();
+  range.setStart(p.firstChild,0);
+  range.setEnd(last,last.length);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-p').click();
+ await expect(rich.locator(':scope > ol')).toHaveCount(0);
+ await expect(rich.locator(':scope > p')).toHaveCount(4);
+ await expect(rich.locator(':scope > p > em')).toHaveText('rich');
+ await expect(rich.locator('p p')).toHaveCount(0);
+ await expect(input).toHaveValue(source);
+ await page.locator('#table-edit-content-save').click();
+ const updated=await input.inputValue();
+ expect(updated).toContain('<p>First <em>rich</em></p><p>Second</p>');
+ expect(updated).toContain('Neighbor');
+ expect(updated).toContain('Before');
+ expect(updated).toContain('After');
+ await undo(page);
+ await expect(input).toHaveValue(source);
+ await redo(page);
+ await expect(page.locator('#markdown-preview td').first().locator(':scope p > em')).toHaveText('rich');
+});
+
+test('issue #57 partially unwraps nested paragraph items while retaining Roman suffix',async({page})=>{
+ await page.goto('/');
+ const source='<table><tr><td><ol type="A"><li>Parent<ol type="i" start="5">'+
+  '<li>Alpha</li><li><p><strong>Bravo</strong></p></li>'+
+  '<li><p>Charlie</p></li><li>Delta</li></ol>Tail</li>'+
+  '<li>Other</li></ol></td><td>Adjacent</td></tr></table>';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ await rich.locator(':scope > ol > li > ol > li > p').first().evaluate(p=>{
+  const next=p.closest('li').nextElementSibling.querySelector('p');
+  const range=document.createRange(),selection=window.getSelection();
+  p.closest('[contenteditable]').focus();
+  range.setStart(p.querySelector('strong').firstChild,0);
+  range.setEnd(next.firstChild,next.firstChild.length);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-p').click();
+ const parent=rich.locator(':scope > ol > li').first();
+ await expect(parent.locator(':scope > p')).toHaveText(['Bravo','Charlie']);
+ await expect(parent.locator(':scope > p > strong')).toHaveText('Bravo');
+ await expect(parent.locator(':scope > ol')).toHaveCount(2);
+ await expect(parent.locator(':scope > ol').last()).toHaveAttribute('start','8');
+ await expect(parent.locator(':scope > ol').last()).toHaveAttribute('type','i');
+ await expect(rich.locator('p p')).toHaveCount(0);
+ await expect(input).toHaveValue(source);
+ await page.locator('#table-edit-content-save').click();
+ const updated=await input.inputValue();
+ for(const token of ['<p><strong>Bravo</strong></p><p>Charlie</p>',
+  'start="5"','start="8"','Adjacent','Other','Tail'])
+  expect(updated).toContain(token);
+ await undo(page);
+ await expect(input).toHaveValue(source);
+ await redo(page);
+ await expect(page.locator('#markdown-preview td').first().locator('ol > li > p'))
+  .toHaveText(['Bravo','Charlie']);
+});
+
+test('issue #57 Russian mobile refuses mixed paragraph/list item structures atomically',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await setAppLanguage(page,'ru');
+ const source='<table><tr><td><ul><li>Родитель<ul>'+
+  '<li><p>Первый</p></li><li><p>Второй</p><p>Третий</p></li>'+
+  '</ul></li></ul></td><td>Сосед</td></tr></table>';
+ const input=page.locator('#markdown-input');
+ await input.fill(source);
+ await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+ await page.locator('#markdown-preview td').first().click();
+ const rich=page.locator('#table-edit-rich-content');
+ const original=await rich.innerHTML();
+ await rich.locator(':scope > ul > li > ul > li > p').first().evaluate(p=>{
+  const range=document.createRange(),selection=window.getSelection();
+  p.closest('[contenteditable]').focus();
+  range.setStart(p.firstChild,2);range.collapse(true);
+  selection.removeAllRanges();selection.addRange(range);
+ });
+ await page.locator('#table-edit-convert-p').click();
+ await expect(page.locator('#table-edit-message'))
+  .toContainText('Вложенные пункты можно преобразовать');
+ expect(await rich.innerHTML()).toBe(original);
+ await expect(input).toHaveValue(source);
+ await expect(page.locator('#table-edit-bar')).toBeInViewport();
+});
