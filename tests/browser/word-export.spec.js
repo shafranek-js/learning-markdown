@@ -94,3 +94,18 @@ test('Word export does not silently omit blocked remote images or execute unsafe
  expect(result.documentXml).not.toContain('unsafe');
  await expect(editor).toHaveValue(markdown);
 });
+
+test('Word export preserves checked and unchecked GFM task meaning as editable text',async({page})=>{
+ await page.goto('/');
+ const editor=page.locator('#markdown-input');
+ const markdown='## Tasks\n\n- [x] Approved\n- [ ] Pending\n';
+ await editor.fill(markdown);
+ await expect(page.locator('#markdown-preview input[type="checkbox"]')).toHaveCount(2);
+ const {documentXml}=await exportWord(page);
+ expect(documentXml).toContain('Approved');
+ expect(documentXml).toContain('Pending');
+ // Explicit Word text marks, not HTML inputs or lost checked state.
+ expect(documentXml).toMatch(/(?:☑|&#(?:x2611|9745);)/i);
+ expect(documentXml).toMatch(/(?:☐|&#(?:x2610|9744);)/i);
+ await expect(editor).toHaveValue(markdown);
+});

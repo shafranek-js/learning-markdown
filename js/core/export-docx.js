@@ -41,6 +41,13 @@ async function embedImage(url,fetchImage){
 export async function createWordDocument(previewHtml,{title='Markdown document',fetchImage=fetch}={}){
  const root=document.createElement('div');
  root.innerHTML=sanitizeHTML(String(previewHtml||''));
+ // Word has no HTML form controls in document flow. Convert GFM task-list
+ // checkboxes into visible Unicode marks so checked and unchecked states are
+ // retained as editable text in the native Word document.
+ for(const input of root.querySelectorAll('input[type="checkbox"]')){
+  const checked=input.hasAttribute('checked');
+  input.replaceWith(document.createTextNode(checked?'☑ ':'☐ '));
+ }
  const images=Object.create(null),warnings=[];
  const imageElements=[...root.querySelectorAll('img[src]')];
  for(const image of imageElements){
