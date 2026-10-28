@@ -282,12 +282,12 @@
 }
 
 
-/* With the Lesson Guide hidden, the right header contains only hidden
-   course controls. Give the text menu the full width instead of reserving
-   an empty scroll lane (especially important on phones). */
+/* When course controls are hidden and no document tabs are present,
+   the menu may use the free header space. In Sandbox the adjacent tab
+   strip occupies that space; do not stretch the menu beyond Help. */
 .app-header-actions:has(> #advanced-course-btn[hidden]){display:none}
 @media(min-width:768px){
- .app-header:has(.app-header-actions > #advanced-course-btn[hidden]) .app-header-left{
+ .app-header:has(.app-header-actions > #advanced-course-btn[hidden]):not(:has(.document-tabs-strip:not([hidden]))) .app-header-left{
   width:auto;
   flex:1 1 auto;
  }
