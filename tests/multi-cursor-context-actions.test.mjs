@@ -44,10 +44,10 @@ function editorFor(source,selection){
  assert.equal(editor.state.doc.toString(),source);
 }
 {
- const editor=editorFor('red\nblue\ngreen',{anchor:5});
+ const editor=editorFor('red\nblue\ngreen',{anchor:4});
  const before=editor.state.doc.toString();
  // A right-click on the same line still forms one ordinary selection.
- selectColumnToPosition(editor,8);
+ selectColumnToPosition(editor,7);
  assert.equal(editor.state.selection.ranges.length,1);
  assert.equal(editor.state.sliceDoc(editor.state.selection.main.from,editor.state.selection.main.to),'blu');
  assert.equal(editor.state.doc.toString(),before);
