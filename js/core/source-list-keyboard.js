@@ -2,11 +2,23 @@
 // Return null when the command is not applicable; do not touch CodeMirror.
 const LIST=/^( *)([-+*]|\d{1,9}[.)])([ \t]+)(\[[ xX]\][ \t]+)?(.*)$/;
 const FENCE=/^ {0,3}(\x60{3,}|~{3,})(.*)$/;
+const QUOTED_LIST=/^( {0,3}(?:>[ \t]?)+)( *)([-+*]|\d{1,9}[.)])([ \t]+)(\[[ xX]\][ \t]+)?(.*)$/;
+const QUOTE_PREFIX=/^ {0,3}(?:>[ \t]?)+/;
 
-function fenceBefore(text,offset){
+// Fences inside a blockquote belong to its quote depth. Do not interpret
+// list-looking source within those fences as an editable Markdown list.
+function fenceBefore(text,offset,quoteDepth=0){
  let open=null;
- for(const line of text.slice(0,offset).split('\n')){
-  const match=line.match(FENCE);
+ const preceding=text.slice(0,offset);
+ const lines=(preceding.endsWith('\n')?preceding.slice(0,-1):preceding).split('\n');
+ for(const line of lines){
+  const prefix=line.match(QUOTE_PREFIX)?.[0]||'';
+  const depth=(prefix.match(/>/g)||[]).length;
+  if(depth!==quoteDepth){
+   if(quoteDepth>0)open=null;
+   continue;
+  }
+  const match=(prefix?line.slice(prefix.length):line).match(FENCE);
   if(!match)continue;
   const token=match[1],symbol=token[0],size=token.length;
   if(!open){open={symbol,size};continue;}
@@ -57,13 +69,18 @@ function tabOnList(text,start,end,shiftKey){
 export function markdownListEnterChange(text,pos){
  if(typeof text!=='string'||!Number.isInteger(pos)||pos<0||pos>text.length)return null;
  const lineStart=startOfLine(text,pos),lineEnd=endOfLine(text,pos);
- if(pos!==lineEnd||fenceBefore(text,lineStart))return null;
- const match=text.slice(lineStart,lineEnd).match(LIST);
+ if(pos!==lineEnd)return null;
+ const line=text.slice(lineStart,lineEnd);
+ const quoted=line.match(QUOTED_LIST);
+ const match=quoted||line.match(LIST);
  if(!match)return null;
- const [,indent,marker,space,task,content]=match;
+ const quotePrefix=quoted?quoted[1]:'';
+ if(fenceBefore(text,lineStart,(quotePrefix.match(/>/g)||[]).length))return null;
+ const [indent,marker,space,task,content]=quoted?quoted.slice(2):match.slice(1);
  if(!content.trim()){
   // Enter on an empty list item exits that item; preserve adjacent lines.
-  return {from:lineStart,to:lineEnd,insert:'',caret:lineStart};
+  const insert=quotePrefix?(/[ \t]$/.test(quotePrefix)?quotePrefix:quotePrefix+' '):'';
+  return {from:lineStart,to:lineEnd,insert,caret:lineStart+insert.length};
  }
  let next=marker;
  if(/^\d/.test(marker)){
@@ -71,7 +88,7 @@ export function markdownListEnterChange(text,pos){
   if(!Number.isSafeInteger(num)||num>=999999999)return null;
   next=String(num+1)+marker.at(-1);
  }
- const insert='\n'+indent+next+space+(task?'[ ] ':'');
+ const insert='\n'+quotePrefix+indent+next+space+(task?'[ ] ':'');
  return {from:pos,to:pos,insert,caret:pos+insert.length};
 }
 
