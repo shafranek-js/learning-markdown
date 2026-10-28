@@ -136,7 +136,7 @@ Use the mouse or keyboard: focus **View**, press **Arrow Down** to open, navigat
 
 ## Edit menu
 
-**Edit** provides **Undo**, **Redo**, **Find…** (`Ctrl/Cmd+F` in the editor), **Replace…** (`Ctrl/Cmd+H` in the editor), **Select All**, and the current **Multi-cursor** switch.
+**Edit** provides **Undo**, **Redo**, **Find…** (`Ctrl/Cmd+F` in the editor), **Replace…** (`Ctrl/Cmd+H` in the editor), **Select All**, and the current **Multi-cursor** switch. Undo/Redo are intentionally absent from the formatting toolbar: use **Ctrl/Cmd+Z** to undo and **Ctrl+Y**, **Ctrl+Shift+Z** or **Cmd+Shift+Z** to redo, or choose the commands under Edit. The separate history status remains in the footer.
 
 - Find/Replace searches the literal **Markdown source**, not the rendered Preview; punctuation (such as `[link]` and `a+b`) is not interpreted as regular expressions.
 - Search is case-insensitive by default; **Match case** is optional. Next and Previous wrap around the document.
