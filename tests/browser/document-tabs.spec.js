@@ -57,7 +57,7 @@ test('Closing a nonempty document warns, cancel preserves text, last tab stays a
  await expect(tabs(page).first()).toHaveAttribute('aria-selected','true');
 });
 
-test('Rename active document and File Save As update only its filename',async({page})=>{
+test('Renaming a document persists across tab switches and reload',async({page})=>{
  await page.goto('/');
  await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
@@ -111,7 +111,7 @@ test('Tabs work with Multi-cursor editor and maintain per-document Undo history'
  await expect(page.locator('#multi-cursor-toggle')).toHaveAttribute('aria-pressed','false');
 });
 
-test('Mobile tab bar scrolls without clipping other app controls',async({page})=>{
+test('Mobile top-row tabs retain keyboard Home and End navigation',async({page})=>{
  await page.setViewportSize({width:360,height:780});
  await page.goto('/');
  await page.locator('#help-menu-trigger').click();
