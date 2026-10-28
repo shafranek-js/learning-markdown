@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -17,9 +18,9 @@ test('textarea Image turns single-line selection into alt text and Undo restores
  const expected='Before ![selected image]('+url+') After';
  await expect(input).toHaveValue(expected);
  expect(await input.evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd))).toBe('selected image');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(expected);
 });
 
@@ -39,7 +40,7 @@ test('Image with empty caret retains the previous placeholder template in both e
   }
   await imageButton(page).click();
   await expect(input).toHaveValue(expected);
-  await page.locator('#undo-btn').click();
+  await undo(page);
   await expect(input).toHaveValue('Before');
  }
 });
@@ -60,9 +61,9 @@ test('CodeMirror Image converts all selected occurrences in one undoable transac
  await imageButton(page).click();
  const expected=Array(3).fill('![Photo]('+url+')').join('\n');
  await expect(input).toHaveValue(expected);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(expected);
 });
 

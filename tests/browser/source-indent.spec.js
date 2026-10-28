@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 
 test('textarea Tab/Shift+Tab indent mixed multi-line selections as one Undo step',async({page})=>{
@@ -20,11 +21,11 @@ test('textarea Tab/Shift+Tab indent mixed multi-line selections as one Undo step
  await editor.press('Shift+Tab');
  await expect(editor).toHaveValue(source);
  expect(await editor.evaluate(el=>[el.selectionStart,el.selectionEnd])).toEqual([start,end]);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(updated);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(editor).toHaveValue(updated);
 });
 
@@ -81,9 +82,9 @@ test('CodeMirror overlapping line cursors are deduped and undo restores source',
  await expect(page.locator('#multi-cursor-count')).toContainText('3');
  await editor.press('Tab');
  await expect(input).toHaveValue('  One\n  Two\n  Three');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('  One\n  Two\n  Three');
 });
 
@@ -132,9 +133,9 @@ test('Shift+Tab with one caret outdents ordinary text without moving focus',asyn
  await expect(input).toHaveValue('Before\nOrdinary text\nAfter');
  await expect(input).toBeFocused();
  expect(await input.evaluate(el=>el.selectionStart)).toBe(originalCaret-2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue('Before\nOrdinary text\nAfter');
 });
 
@@ -174,7 +175,7 @@ test('CodeMirror already supports single-caret Shift+Tab on indented prose',asyn
  await editor.press('Shift+Tab');
  await expect(input).toHaveValue('Prose');
  await expect(editor).toBeFocused();
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
 });
 

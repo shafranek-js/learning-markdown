@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -22,9 +23,9 @@ test('native toolbar Horizontal Rule inserts after selected words without deleti
  await button(page,'hr').click();
  const expected='Before Alpha\n\n---\n\n After';
  await expect(input).toHaveValue(expected);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(expected);
 });
 
@@ -38,9 +39,9 @@ test('native Details wraps selected lines, keeps source selection and Undo/Redo'
  const expected='Before \n\n<details>\n<summary>More information</summary>\n\nAlpha\n</details>\n\n After';
  await expect(input).toHaveValue(expected);
  expect(await input.evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd))).toBe('Alpha');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(expected);
 });
 
@@ -63,7 +64,7 @@ test('both editors preserve legacy examples for empty caret HR and Details',asyn
    const ending=kind==='hr'?'\n\n---\n\n':
     '\n\n<details>\n<summary>More information</summary>\n\nHidden content\n</details>\n';
    await expect(input).toHaveValue('Prefix'+ending);
-   await page.locator('#undo-btn').click();
+   await undo(page);
    await expect(input).toHaveValue('Prefix');
   }
  }
@@ -89,9 +90,9 @@ test('CodeMirror multi-cursor HR and Details are atomic and reversible',async({p
   const output=await input.inputValue();
   expect((output.match(/Alpha/g)||[]).length).toBe(3);
   expect((output.match(kind==='hr'?/\n---\n/g:/<details>/g)||[]).length).toBe(3);
-  await page.locator('#undo-btn').click();
+  await undo(page);
   await expect(input).toHaveValue(source);
-  await page.locator('#redo-btn').click();
+  await redo(page);
   await expect(input).toHaveValue(output);
  }
 });

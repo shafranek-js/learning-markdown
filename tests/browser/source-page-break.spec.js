@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -23,9 +24,9 @@ test('Page break inserts after textarea selection and Undo restores source',asyn
  await page.locator('#advanced-page-break').click();
  const expected='Before Alpha\n\n<div class="af-page-break"></div>\n\n After';
  await expect(input).toHaveValue(expected);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(expected);
 });
 
@@ -43,7 +44,7 @@ test('Page break empty caret retains original example in both source engines',as
   await reveal(page);
   await page.locator('#advanced-page-break').click();
   await expect(input).toHaveValue('Prefix\n\n<div class="af-page-break"></div>\n');
-  await page.locator('#undo-btn').click();
+  await undo(page);
   await expect(input).toHaveValue('Prefix');
  }
 });
@@ -66,9 +67,9 @@ test('Page break preserves all CodeMirror selections as one undoable operation',
  const changed=await input.inputValue();
  expect((changed.match(/Alpha/g)||[]).length).toBe(3);
  expect((changed.match(/af-page-break/g)||[]).length).toBe(3);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(changed);
 });
 
@@ -108,6 +109,6 @@ test('Russian narrow view keeps selected prose when inserting Page break',async(
  await reveal(page);
  await page.locator('#advanced-page-break').click();
  await expect(input).toHaveValue('Начало\nСодержимое\n\n<div class="af-page-break"></div>\n\n\nКонец');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue('Начало\nСодержимое\nКонец');
 });
