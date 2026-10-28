@@ -13,8 +13,8 @@ const sources=await Promise.all([
 const [file,edit,toolbar,editor,multi,tabs,tableKeys,tableUI,help,markup]=sources;
 const sections=helpShortcutSections('en');
 assert.deepEqual(sections.map(section=>section.id),
- ['files','editing','source','multi','tabs','search','tables','menus']);
-assert.equal(sections.reduce((n,section)=>n+section.rows.length,0),43,
+ ['files','editing','source','multi','tabs','search','tables','unicode','menus']);
+assert.equal(sections.reduce((n,section)=>n+section.rows.length,0),47,
  'every app-specific shortcut / keyboard gesture should have its own row');
 const ids=sections.flatMap(section=>section.rows.map(row=>row.id));
 assert.equal(new Set(ids).size,ids.length,'help shortcut ids are unique');
@@ -98,6 +98,13 @@ hasKey('search','previous','Shift+Enter');
 for(const key of ['Tab','Enter','Backspace'])assert(tableKeys.includes("event.key==='"+key+"'"));
 assert(tableUI.includes("e.key==='Enter'||e.key===' '"));
 hasKey('tables','backspace','Backspace');
+const unicode=await read('js/ui/unicode-picker.js');
+assert(unicode.includes("event.key==='ArrowDown'"));
+assert(unicode.includes("event.target===search&&event.key==='Enter'"));
+assert(unicode.includes("['ArrowLeft','ArrowRight','ArrowUp','ArrowDown']"));
+for(const [action,key] of [
+ ['results','↓'],['insert','Enter'],['navigate','← / → / ↑ / ↓'],['close','Esc']
+])hasKey('unicode',action,key);
 assert(help.includes('helpShortcutSections(state.lang)'));
 assert(!help.includes('const shortcuts=['),'Help must not retain the obsolete 10-row list');
-console.log('PASS: 43 actual keyboard bindings/gestures, 8 groups, 5 locales, implementation evidence');
+console.log('PASS: 47 actual keyboard bindings/gestures, 9 groups, 5 locales, implementation evidence');
