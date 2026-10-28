@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -31,9 +32,9 @@ test('release UAT: keyboard table edit round-trips semantic sections and both ex
  await expect(table.locator('thead th[scope="col"]')).toHaveCount(2);
  await expect(table.locator('tfoot th[scope="row"]')).toHaveCount(1);
 
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 
  const mdPromise=page.waitForEvent('download');

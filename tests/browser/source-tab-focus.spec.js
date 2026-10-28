@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -77,7 +78,7 @@ test('CodeMirror Ctrl+M enables native keyboard focus traversal without altering
  await editor.press('Control+a');
  await editor.press('Tab');
  await expect(input).toHaveValue('  One\n  Two');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
 });
 

@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {readFile} from 'node:fs/promises';
@@ -33,9 +34,9 @@ test('issue #6 Blocks list Tab/Shift+Tab preserve inline formatting, source and 
  expect(changed).toContain('<ul><li>Beta <em>italic</em></li></ul>');
  for(const token of ['Alpha','<strong>bold</strong>','Gamma','Neighbor','Before','After'])
   expect(changed).toContain(token);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td ul > li > ul > li')).toContainText('Beta italic');
  const downloading=page.waitForEvent('download');
  await closeCompatibility(page);
@@ -134,7 +135,7 @@ test('issue #6 Blocks Russian mobile help and Backspace at first list item',asyn
  const modified=await input.inputValue();
  expect(modified).toContain('<p><strong>Первый</strong></p>');
  expect(modified).toContain('<ol><li>Второй</li></ol>');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
 });
 
@@ -171,9 +172,9 @@ test('issue #6 multi-item outdent preserves trailing nested list order, formatti
  expect(updated).toContain('<em>rich</em>');
  expect(updated).toContain('type="i"');
  await expect(page.locator('#markdown-preview td').first()).toContainText('RootOneTwo richThreeFourEnd');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td').first()).toContainText('RootOneTwo richThreeFourEnd');
 });
 

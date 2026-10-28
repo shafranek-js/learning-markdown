@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -24,9 +25,9 @@ test('nested HTML leaf edits preserve untouched outer raw markup and Undo/Redo',
  expect(after.endsWith(before.slice(leafStart+leaf.length))).toBe(true);
  expect(after).toContain('<td>Revised</td>');
  expect(after).toContain('title="unchanged source attribute"');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(before);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(after);
 });
 

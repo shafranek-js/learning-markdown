@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 
 test('Native Markdown list Enter handles bullets, tasks and numbers with Undo/Redo',async({page})=>{
@@ -11,9 +12,9 @@ test('Native Markdown list Enter handles bullets, tasks and numbers with Undo/Re
  await page.keyboard.insertText('Two');
  await editor.press('Enter');
  await expect(editor).toHaveValue('- One\n- Two\n- ');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(editor).toHaveValue('- One\n- Two');
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(editor).toHaveValue('- One\n- Two\n- ');
  await editor.press('Enter');
  await expect(editor).toHaveValue('- One\n- Two\n');

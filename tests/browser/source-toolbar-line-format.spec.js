@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 
 const selectSource=(input,startText,endText)=>input.evaluate((el,{startText,endText})=>{
@@ -17,9 +18,9 @@ test('native textarea transforms selected lists without losing Markdown, with Un
  await page.locator('.toolbar-btn[data-action="ul"]').click();
  const updated='Before\n\n- Alpha\n- Beta\n\nAfter';
  await expect(input).toHaveValue(updated);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 });
 
@@ -38,9 +39,9 @@ test('CodeMirror list toolbar uses the same source formatter for overlapping cur
  await page.locator('.toolbar-btn[data-action="ol"]').click();
  const updated='1. Alpha\n2. Beta\n3. Gamma';
  await expect(input).toHaveValue(updated);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(updated);
 });
 

@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -106,6 +107,6 @@ test('existing unsupported raw-text elements are guarded, unrelated plain HTML t
  const updated=await input.inputValue();
  expect(updated.startsWith(first+'\n\n')).toBe(true);
  await expect(page.locator('#markdown-preview table').last().locator('tr')).toHaveCount(2);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
 });

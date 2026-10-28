@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -18,9 +19,9 @@ test('textarea Code Block wraps the selected Markdown without deleting it, in on
  const expected='Before\n'+fence+'\nconst value = 42;\n'+fence+'\nAfter';
  await expect(input).toHaveValue(expected);
  expect(await input.evaluate(el=>el.value.slice(el.selectionStart,el.selectionEnd))).toBe('const value = 42;');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(expected);
 });
 
@@ -37,7 +38,7 @@ test('Code Block preserves previous empty-caret code sample in both editor modes
   }
   await codeBlock(page).click();
   await expect(input).toHaveValue('Before\n'+snippet);
-  await page.locator('#undo-btn').click();
+  await undo(page);
   await expect(input).toHaveValue('Before');
  }
 });
@@ -58,9 +59,9 @@ test('CodeMirror Code Block wraps every multi-selection atomically and Undo rest
  await codeBlock(page).click();
  const expected=Array(3).fill(fence+'\nOne\n'+fence).join('\n');
  await expect(input).toHaveValue(expected);
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(input).toHaveValue(expected);
 });
 

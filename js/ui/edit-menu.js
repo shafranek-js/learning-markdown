@@ -1,5 +1,5 @@
 import {state,subscribe} from '../core/state.js';
-import {area,sourceSelection,selectSourceRange,selectAllSource,replaceSourceRange,replaceAllSource} from './editor.js';
+import {area,sourceSelection,selectSourceRange,selectAllSource,replaceSourceRange,replaceAllSource,historyStatus,undoOrRedo} from './editor.js';
 import {nextSourceMatch,sourceMatches,selectedSourceMatches,replaceAllSourceMatches} from '../core/source-find-replace.js';
 
 const $=id=>document.getElementById(id);
@@ -27,9 +27,10 @@ function closeMenu({focus=false}={}){
 function syncMenu(){
  const menu=$('edit-menu');
  if(!menu)return;
- for(const [name,id] of [['undo','undo-btn'],['redo','redo-btn']]){
+ const h=historyStatus();
+ for(const [name,enabled] of [['undo',h.canUndo],['redo',h.canRedo]]){
   const item=menu.querySelector('[data-edit-action="'+name+'"]');
-  item.disabled=$(id).disabled;
+  item.disabled=!enabled;
   item.setAttribute('aria-disabled',String(item.disabled));
  }
  menu.querySelector('[data-edit-action="multi-cursor"]')
@@ -89,8 +90,8 @@ function replaceAll(){
 }
 function run(name){
  const actions={
-  undo:()=>{$('undo-btn').click();syncMenu();},
-  redo:()=>{$('redo-btn').click();syncMenu();},
+  undo:()=>{undoOrRedo(-1);syncMenu();},
+  redo:()=>{undoOrRedo(1);syncMenu();},
   find:()=>openFind(),
   replace:()=>openFind(true),
   'select-all':selectAllSource,

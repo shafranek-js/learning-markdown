@@ -13,7 +13,9 @@ test('File menu imports UTF-8 Markdown into Sandbox and preserves course draft',
  await select(page,'open');
  const upload=page.locator('#file-menu-open-input');
  await upload.setInputFiles({name:'My notes.markdown',mimeType:'text/plain',buffer:Buffer.from('# Imported\n\n**Strong**','utf8')});
- await expect(page.locator('#active-tab-title')).toContainText('Sandbox');
+ await expect(page.locator('#lesson-context-badge')).toBeHidden();
+ await expect(page.locator('#document-tabs')).toBeVisible();
+ await expect(page.locator('#document-tab-list [role="tab"][aria-selected="true"]')).toContainText('My notes.md');
  await expect(source).toHaveValue('# Imported\n\n**Strong**');
  await fileTrigger(page).click();
  await expect(page.locator('#file-menu-current')).toContainText('My notes.md');

@@ -102,3 +102,34 @@ test('Edit keyboard menu and localized labels are accessible on mobile',async({p
  await page.keyboard.press('Escape');
  await expect(page.locator('#edit-find-panel')).toBeHidden();
 });
+
+
+test('Undo and Redo need no toolbar buttons: shortcuts and Edit commands still work',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('#undo-btn')).toHaveCount(0);
+ await expect(page.locator('#redo-btn')).toHaveCount(0);
+ const source=page.locator('#markdown-input');
+ await source.fill('History stays available');
+ await source.focus();
+ await page.keyboard.press('Control+1');
+ await expect(source).toHaveValue('# History stays available');
+ await page.keyboard.press('Control+z');
+ await expect(source).toHaveValue('History stays available');
+ await page.keyboard.press('Control+y');
+ await expect(source).toHaveValue('# History stays available');
+ await choose(page,'undo');
+ await expect(source).toHaveValue('History stays available');
+ await choose(page,'redo');
+ await expect(source).toHaveValue('# History stays available');
+
+ await page.locator('#multi-cursor-toggle').click();
+ const cm=page.locator('#codemirror-mount .cm-content');
+ await cm.click();
+ await page.keyboard.press('Control+End');
+ await page.keyboard.insertText('!');
+ await expect(source).toHaveValue('# History stays available!');
+ await page.keyboard.press('Control+z');
+ await expect(source).toHaveValue('# History stays available');
+ await page.keyboard.press('Control+Shift+z');
+ await expect(source).toHaveValue('# History stays available!');
+});

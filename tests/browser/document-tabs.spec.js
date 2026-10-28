@@ -224,7 +224,7 @@ test('Sandbox places menu and document tabs in one compact header row',async({pa
   page.locator('#file-menu-trigger').boundingBox(),
   tabsBar.boundingBox(),
   header.boundingBox(),
-  page.locator('#undo-btn').boundingBox()
+  page.locator('#unicode-picker-trigger').boundingBox()
  ]);
  expect(Math.abs(menuRect.y+menuRect.height/2-(tabsRect.y+tabsRect.height/2))).toBeLessThan(12);
  expect(headerRect.height).toBeLessThanOrEqual(45);
