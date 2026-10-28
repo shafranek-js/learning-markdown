@@ -228,4 +228,74 @@ function select(selection,a,ao,b,bo){
   {ok:false,reason:'partial-or-nested-list'});
  assert.equal(editor.innerHTML,html);
 }
+// Issue #57: metadata on any wrapper that would be rebuilt must never
+// disappear silently, even if the draft has received rich HTML before Save.
+{
+ const html='<p title="Keep original paragraph label">Alpha</p><p>Beta</p>';
+ const {editor,selection}=setup(html),p=editor.querySelectorAll('p');
+ select(selection,p[0].firstChild,0,p[1].firstChild,4);
+ const original=selection.toString();
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),
+  {ok:false,reason:'protected-metadata'});
+ assert.equal(editor.innerHTML,html);
+ assert.equal(selection.toString(),original);
+}
+{
+ const html='<ul aria-label="Steps"><li>One</li><li>Two</li></ul>';
+ const {editor,selection}=setup(html),li=editor.querySelectorAll('li');
+ select(selection,li[0].firstChild,0,li[1].firstChild,3);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),
+  {ok:false,reason:'protected-metadata'});
+ assert.equal(editor.innerHTML,html);
+}
+{
+ // A mixed selection must be rejected as one operation, not partially
+ // rewritten before encountering a protected paragraph.
+ const html='<p>First</p><p data-source="original">Second</p><p>Third</p>';
+ const {editor,selection}=setup(html),p=editor.querySelectorAll('p');
+ select(selection,p[0].firstChild,0,p[2].firstChild,5);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),
+  {ok:false,reason:'protected-metadata'});
+ assert.equal(editor.innerHTML,html);
+}
+{
+ const html='<ul><li>Parent<ol data-review="keep"><li>A</li><li>B</li></ol>'+
+  '</li><li>Neighbor</li></ul>';
+ const {editor,selection}=setup(html),nested=editor.querySelector('ol > li').firstChild;
+ select(selection,nested,1,nested,1);
+ assert.deepEqual(convertBlockSelection(editor,'ul',selection),
+  {ok:false,reason:'protected-metadata'});
+ assert.equal(editor.innerHTML,html);
+}
+{
+ // start/type are deliberately modeled numbering parameters and may change
+ // with the list type; they do not block otherwise safe operations.
+ const html='<ol type="i" start="3"><li>Three</li><li>Four</li></ol>';
+ const {editor,selection}=setup(html),items=editor.querySelectorAll('li');
+ select(selection,items[0].firstChild,0,items[1].firstChild,4);
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),{ok:true,blocks:2});
+ assert.equal(editor.innerHTML,'<p>Three</p><p>Four</p>');
+}
+{
+ // Converting the remaining list in a mixed selection must not drop a label,
+ // even when that list already has the requested tag.
+ const html='<ol aria-label="Preserve numbering label"><li>First</li></ol><p>Second</p>';
+ const {editor,selection}=setup(html);
+ select(selection,editor.querySelector('li').firstChild,0,
+  editor.querySelector('p').firstChild,6);
+ assert.deepEqual(convertBlockSelection(editor,'ol',selection),
+  {ok:false,reason:'protected-metadata'});
+ assert.equal(editor.innerHTML,html);
+}
+{
+ // No-op conversion should report already-formatted without modifying the
+ // metadata-bearing block.
+ const html='<p aria-label="Original paragraph">One</p>';
+ const {editor,selection}=setup(html),txt=editor.querySelector('p').firstChild;
+ select(selection,txt,1,txt,1);
+ assert.deepEqual(convertBlockSelection(editor,'p',selection),
+  {ok:false,reason:'already-formatted'});
+ assert.equal(editor.innerHTML,html);
+}
+
 console.log('PASS: #6 selected paragraph/list structural conversion preserves order and rejects ambiguous sources');
