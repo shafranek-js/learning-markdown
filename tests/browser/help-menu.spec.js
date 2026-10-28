@@ -107,6 +107,7 @@ test('Workspace tools in Help open their original functions and restore focus',a
  await choose(page,'cheats');
  await expect(page.locator('#cheatsheet-modal')).toBeVisible();
  await page.locator('#close-cheatsheet-btn').click();
+ await expect(help(page)).toBeFocused();
  await choose(page,'sandbox');
  await expect(page.locator('#document-tabs')).toBeVisible();
  await choose(page,'sandbox');
