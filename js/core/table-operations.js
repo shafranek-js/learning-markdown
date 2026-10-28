@@ -656,18 +656,24 @@ export function sanitizeBlockCellHTML(value){
   if(el.attributes.length)return null;
   if((tag==='DT'||tag==='DD')&&el.parentElement?.tagName!=='DL')return null;
   if(tag!=='DL')continue;
-  let hasTerm=false,hasDefinition=false;
+  // A definition group may have multiple terms and multiple definitions,
+  // but every group must end in at least one definition.
+  let termCount=0,hasDefinition=false;
   for(const node of el.childNodes){
    if(node.nodeType===3){
     if(node.textContent.trim())return null;
     continue;
    }
    if(node.nodeType!==1||!['DT','DD'].includes(node.tagName))return null;
-   if(node.tagName==='DT')hasTerm=true;
-   else if(!hasTerm)return null;
-   else hasDefinition=true;
+   if(node.tagName==='DT'){
+    if(hasDefinition){termCount=0;hasDefinition=false;}
+    termCount++;
+   }else{
+    if(!termCount)return null;
+    hasDefinition=true;
+   }
   }
-  if(!hasTerm||!hasDefinition)return null;
+  if(!termCount||!hasDefinition)return null;
  }
  const clean=sanitizeHTML(value);
  const doc=new DOMParser().parseFromString(clean,'text/html');

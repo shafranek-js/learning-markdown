@@ -578,6 +578,7 @@ for(const invalid of [
  '<dt>Orphan</dt>','<dd>Orphan</dd>',
  '<dl><dd>Missing term</dd></dl>',
  '<dl><dt>Missing definition</dt></dl>',
+ '<dl><dt>Term</dt><dd>Definition</dd><dt>Trailing term</dt></dl>',
  '<dl><dt>Term</dt><p>Orphan paragraph</p><dd>Definition</dd></dl>',
  '<dl class="custom"><dt>Term</dt><dd>Definition</dd></dl>',
  '<hr data-note="keep">','<dl><dt>Term</dt><dd>Safe</dd></dl><script>alert(1)</script>'
