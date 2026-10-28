@@ -449,7 +449,7 @@ function chooseCell(event){
   const html=getTableCellHTML(area().value,index,coords.row,coords.col);
   const blocks=getTableCellBlocks(area().value,index,coords.row,coords.col);
   const image=getTableCellImage(area().value,index,coords.row,coords.col);
-  const blockMode=blocks!==null&&/<(?:p|div|ul|ol|li|blockquote|pre|h[1-6])\b/i.test(blocks);
+  const blockMode=blocks!==null&&/<(?:p|div|ul|ol|li|blockquote|pre|h[1-6]|dl|dt|dd|hr)\b/i.test(blocks);
   selected={tableIndex:index,doc:docKey(),row:coords.row,col:coords.col,other:null,
    raw:sourceTables[index].raw,imageMode:image!==null,insertingImage:false,blockMode,richMode:blockMode||
     (html!==null&&/<(?:strong|b|em|i|u|s|del|sup|sub|mark|code|span|a|br)\b/i.test(html))};

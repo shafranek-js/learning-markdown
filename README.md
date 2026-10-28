@@ -250,6 +250,8 @@ On macOS, corresponding shortcuts use Command/Option where available. Some combi
 
 **Rich HTML table cell headings:** visual Blocks editing now supports all semantic heading levels H1–H6 inside table cells, preserving surrounding paragraphs, sibling cells and source when saving. Mixed heading/media cells keep appended images in their own block rather than inserting a line break inside a heading. Unsupported metadata, elements or unsafe media remain subject to existing read-only validation.
 
+**Definition lists and dividers inside HTML tables:** visual Blocks mode can now safely edit ordinary `<dl><dt>…</dt><dd>…</dd></dl>` lists and `<hr>` separators within a table cell, including localized mobile editing and one-step Undo/Redo. Orphan definitions, malformed list structure, unsafe scripts and unmodeled attributes remain read-only to prevent losing source information. Images inserted next to such blocks are placed in a separate paragraph rather than inside a definition or divider.
+
 **Cross-section merged table cells:** when a `rowspan` crosses `<thead>`, `<tbody>` or `<tfoot>` boundaries, the visual table editor remains read-only to avoid breaking semantic row groups. It now explains the specific limitation in all five interface languages and directs the author to edit the original HTML source; within-section row spans remain editable. No unsafe table rewrite is enabled.
 
 **Page break (print/PDF):** the Advanced Page break button keeps selected Markdown and inserts the print-only separator after it. An empty caret still inserts the original page-break element; both source engines share the same fenced-code guard and Multi-cursor applies every insertion in one Undo step. Browsers may paginate differently in print/PDF export.
