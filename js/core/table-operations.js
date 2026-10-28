@@ -280,7 +280,7 @@ function modeledRichClass(element,value){
  const tag=element.tagName;
  if(tag==='SPAN'||tag==='DIV')return filterAdvancedClasses(value)===value.trim();
  if(tag==='OL')return value===RICH_ORDERED_CLASSES[element.getAttribute('type')];
- if(tag==='CODE')return /^language-[\\w-]{1,30}$/.test(value);
+ if(tag==='CODE')return /^language-[\w-]{1,30}$/.test(value);
  if(tag==='A')return value==='fn-ref'||value==='fn-backref';
  if(tag==='H2')return value==='fn-visually-hidden';
  if(tag==='SECTION')return value==='md-footnotes';
