@@ -94,7 +94,7 @@ function renderLocalization(){const strings=ui(state.lang);renderBuildVersion();
  uk:['Скасувати','Повторити','Заголовок 1','Заголовок 2','Заголовок 3','Заголовок 4','Заголовок 5','Заголовок 6','Жирний','Курсив','Закреслення','Цитата','Маркований список','Нумерований список','Завдання','Рядковий код','Блок коду','Посилання','Зображення','Таблиця','Роздільник'],
  ro:['Anulare','Refacere','Titlu 1','Titlu 2','Titlu 3','Titlu 4','Titlu 5','Titlu 6','Aldin','Cursiv','Tăiat','Citat','Marcatori','Listă numerotată','Sarcini','Cod inline','Bloc de cod','Legătură','Imagine','Tabel','Separator'],
  ru:['Отменить','Повторить','Заголовок 1','Заголовок 2','Заголовок 3','Заголовок 4','Заголовок 5','Заголовок 6','Жирный','Курсив','Зачёркнутый','Цитата','Маркеры','Нумерованный список','Список задач','Строчный код','Блок кода','Ссылка','Изображение','Таблица','Разделитель']};
- [$('undo-btn'),$('redo-btn'),...document.querySelectorAll('.toolbar-btn')].forEach((e,i)=>{const shortcut=e.title.match(/(Ctrl\+[^)]*|Cmd\+[^)]*)/i)?.[1];e.title=(tip[state.lang]?.[i]??tip.en[i])+(shortcut?` (${shortcut})`:'');});
+ document.querySelectorAll('.toolbar-btn').forEach((e,i)=>{const shortcut=e.title.match(/(Ctrl\+[^)]*|Cmd\+[^)]*)/i)?.[1];e.title=(tip[state.lang]?.[i+2]??tip.en[i+2])+(shortcut?` (${shortcut})`:'');});
  const titles={
  en:['Toggle course contents','Drag to resize lesson guide','Drag to resize editor and preview; double-click for equal widths','Reset current lesson','Decrease font size','Increase font size'],
  cs:['Zobrazit obsah kurzu','Tažením změnit velikost průvodce','Tažením změnit šířky; dvojklik obnoví 50:50','Resetovat lekci','Zmenšit písmo','Zvětšit písmo'],
