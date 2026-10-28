@@ -75,7 +75,8 @@ export function markdownListEnterChange(text,pos){
  const match=quoted||line.match(LIST);
  if(!match)return null;
  const quotePrefix=quoted?quoted[1]:'';
- if(fenceBefore(text,lineStart,(quotePrefix.match(/>/g)||[]).length))return null;
+ const quoteDepth=(quotePrefix.match(/>/g)||[]).length;
+ if(fenceBefore(text,lineStart)||(quoteDepth>0&&fenceBefore(text,lineStart,quoteDepth)))return null;
  const [indent,marker,space,task,content]=quoted?quoted.slice(2):match.slice(1);
  if(!content.trim()){
   // Enter on an empty list item exits that item; preserve adjacent lines.
