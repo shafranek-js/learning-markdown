@@ -70,17 +70,17 @@ test('Help menu fits on narrow screens and supports standard keyboard navigation
  expect(rect.x+rect.width).toBeLessThanOrEqual(390);
 });
 
-test('Mobile header retains access to all four menus and right-side actions',async({page})=>{
+test('Mobile header keeps all five menus and course actions accessible',async({page})=>{
  await page.setViewportSize({width:360,height:780});
  await page.goto('/');
- for(const type of ['file','edit','view','help']){
+ for(const type of ['file','edit','view','settings','help']){
   const trigger=page.locator('#'+type+'-menu-trigger');
   await trigger.scrollIntoViewIfNeeded();
   const rect=await trigger.boundingBox();
   expect(rect.x).toBeGreaterThanOrEqual(-1);
   expect(rect.x+rect.width).toBeLessThanOrEqual(361);
   await trigger.click();
-  await expect(page.locator('#'+type+'-menu')).toBeVisible();
+  await expect(page.locator(type==='settings'?'#settings-panel':'#'+type+'-menu')).toBeVisible();
   await page.keyboard.press('Escape');
  }
  const actions=await page.locator('.app-header-actions').boundingBox();
