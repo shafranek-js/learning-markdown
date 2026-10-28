@@ -167,15 +167,15 @@ The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewpor
 
 ## Multi-document Sandbox tabs
 
-Open **Help → AI Prompt Sandbox** to use multiple independent Markdown documents in Notepad-style tabs above the formatting toolbar. This is a writing workspace, not a second form of lesson navigation. The Lesson Guide and its exercises remain separate.
+Open **Help → AI Prompt Sandbox** to use multiple independent Markdown documents in Notepad-style tabs **in the same top row as File, Edit, View, Settings and Help**. The separate tab strip is gone, leaving more vertical room for the editor. This is a writing workspace, not a second form of lesson navigation. The Lesson Guide and its exercises remain separate.
 
-- Choose **File → New Markdown**, the **+** button on the tab strip, or **Ctrl/Cmd+N** to create a blank document. **File → Open Markdown** opens an imported Markdown or text file in a new tab instead of overwriting the current draft.
+- Choose **File → New Markdown**, the **+** button beside the tabs in the top menu row, or **Ctrl/Cmd+N** to create a blank document. **File → Open Markdown** opens an imported Markdown or text file in a new tab instead of overwriting the current draft.
 - Click a tab to switch documents. **Double-click the tab title** or press **F2** while its title has focus to rename it; **File → Download As…** also renames the active tab after successfully downloading a copy.
 - Select the **⋯** menu on any tab (or right-click its title / press **Shift+F10** when focused) for **Rename**, **Duplicate**, and **Close**. Duplication creates a separate copy next to the original, including its Markdown formatting options but with its own editing history. Use Escape to dismiss the menu; the tab regains focus.
 - Use the **×** on a tab to close it. A nonempty browser-local draft requires explicit confirmation before deletion; cancel keeps it intact. Closing the last document creates a fresh blank document.
 - Documents and the active tab are restored after a refresh in the current browser and language. Existing single-document Sandbox drafts are migrated automatically the first time tabs are opened.
 - Each document has its own Markdown text, Undo/Redo history and CodeMirror multi-cursor session. Prompt Library inserts into the **active Sandbox tab**. Switching back to a lesson leaves all open Sandbox documents intact.
-- The tab strip scrolls horizontally on narrow screens. Navigate with Left/Right Arrow, Home and End when a document tab has focus.
+- On narrow screens, the top-row menu and document tabs scroll independently, while **+** remains visible. Navigate between tabs with Left/Right Arrow, Home and End when a document tab has focus.
 
 Tabs autosave **in browser storage**, not to your computer's filesystem. Use **Download Markdown** to save an independent copy to disk. Closing a tab deliberately removes its local draft; clearing site storage or changing devices can also remove drafts. Up to 20 Sandbox document tabs are supported per language. **Reset Course** resets lesson progress only; it does not delete Sandbox documents.
 

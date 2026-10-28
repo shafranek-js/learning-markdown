@@ -171,6 +171,12 @@
             </div>
         </div>
 
+        <!-- Sandbox tabs occupy the same header row as the application menu. -->
+        <section id="document-tabs" class="document-tabs-strip" aria-label="Open Markdown documents" hidden>
+            <div id="document-tab-list" class="document-tabs-list" role="tablist" aria-label="Sandbox documents"></div>
+            <button id="document-new-tab" type="button" class="document-new-tab" aria-label="New Markdown tab" title="New Markdown tab">+</button>
+        </section>
+
         <!-- Center: Progress Indicator Pill -->
         <div class="hidden xl:flex items-center gap-3 theme-panel px-3.5 py-1.5 rounded-xl border theme-border shrink-0" data-course-ui>
             <div class="w-36">
@@ -200,12 +206,6 @@
 
         </div>
     </header>
-
-    <!-- Notepad-style document tabs are independent of course lesson navigation. -->
-    <section id="document-tabs" class="document-tabs-strip theme-panel border-b theme-border" aria-label="Open Markdown documents" hidden>
-        <div id="document-tab-list" class="document-tabs-list" role="tablist" aria-label="Sandbox documents"></div>
-        <button id="document-new-tab" type="button" class="document-new-tab" aria-label="New Markdown tab" title="New Markdown tab">+</button>
-    </section>
 
     <div id="document-tab-actions" class="document-tab-actions theme-panel" role="menu" aria-label="Document tab actions" hidden>
         <button type="button" role="menuitem" data-tab-action="rename" tabindex="-1">Rename</button>
