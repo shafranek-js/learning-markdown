@@ -31,6 +31,27 @@ function selectedTopBlocks(editor,range){
  const children=[...editor.children];
  return children.filter(block=>range.intersectsNode(block));
 }
+// A list item may wrap its entire inline content in one plain paragraph.
+// Reuse that paragraph instead of creating <p><p>...</p></p>. Refuse any
+// additional children or paragraph metadata: unwrapping them would be lossy.
+function solePlainParagraph(item){
+ const child=item.firstChild;
+ return item.childNodes.length===1&&child?.nodeType===1&&
+  child.tagName==='P'&&child.attributes.length===0?child:null;
+}
+function safeParagraphItem(item){
+ if(item.attributes.length)return false;
+ const content=solePlainParagraph(item)||item;
+ return [...content.querySelectorAll('*')].every(el=>
+  SAFE_INLINE.has(el.tagName.toLowerCase()));
+}
+function paragraphFromItem(item,doc){
+ const original=solePlainParagraph(item);
+ if(original)return original;
+ const paragraph=doc.createElement('p');
+ while(item.firstChild)paragraph.append(item.firstChild);
+ return paragraph;
+}
 function safeList(list,target,range){
  if(![...list.childNodes].every(node=>node.nodeType===1&&node.tagName==='LI'||
      node.nodeType===3&&!node.textContent.trim()))return false;
@@ -38,8 +59,7 @@ function safeList(list,target,range){
  // When converting a list, all items must be selected. Partial list
  // conversions can renumber the remaining ordered items unexpectedly.
  if(!items.length||items.some(item=>!range.intersectsNode(item)))return false;
- if(target==='p'&&items.some(item=>item.attributes.length||[...item.querySelectorAll('*')].some(el=>
-    el.tagName==='UL'||el.tagName==='OL'||!SAFE_INLINE.has(el.tagName.toLowerCase()))))return false;
+ if(target==='p'&&items.some(item=>!safeParagraphItem(item)))return false;
  return true;
 }
 function nestedItem(editor,node){
@@ -76,16 +96,14 @@ function convertNestedList(editor,target,selection,range){
  // A nested item can become a paragraph only when its LI wrapper contains
  // inline markup. Never discard per-item attributes or flatten deeper lists,
  // media, headings or other block containers during the conversion.
- if(target==='p'&&selected.some(item=>item.attributes.length||
-    [...item.querySelectorAll('*')].some(el=>!SAFE_INLINE.has(el.tagName.toLowerCase()))))
+ if(target==='p'&&selected.some(item=>!safeParagraphItem(item)))
   return {ok:false,reason:'nested-to-paragraph'};
  const doc=editor.ownerDocument;
  const changed=target==='p'?doc.createDocumentFragment():doc.createElement(target);
  const inserted=[];
  const appendConverted=item=>{
   if(target==='p'){
-   const paragraph=doc.createElement('p');
-   while(item.firstChild)paragraph.append(item.firstChild);
+   const paragraph=paragraphFromItem(item,doc);
    changed.append(paragraph);inserted.push(paragraph);
   }else changed.append(item);
  };
@@ -161,9 +179,8 @@ export function convertBlockSelection(editor,target,selection=window.getSelectio
   for(const block of blocks){
    if(block.tagName==='P'){fragment.append(block);inserted.push(block);continue;}
    for(const item of [...block.children]){
-    const p=doc.createElement('p');
-    while(item.firstChild)p.append(item.firstChild);
-    fragment.append(p);inserted.push(p);
+    const paragraph=paragraphFromItem(item,doc);
+    fragment.append(paragraph);inserted.push(paragraph);
    }
   }
  }else{
