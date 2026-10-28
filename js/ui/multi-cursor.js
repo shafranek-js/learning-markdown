@@ -7,7 +7,7 @@ import {HighlightStyle,syntaxHighlighting} from '@codemirror/language';
 import {tags as t} from '@lezer/highlight';
 import {state,save,docKey} from '../core/state.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
-import {makeRichSnippet} from '../data/rich-content.js';
+import {makeRichSnippet,richTemplateIgnoresSelection} from '../data/rich-content.js';
 import {markdownListEnterChange,editMarkdownListKey} from '../core/source-list-keyboard.js';
 import {sourceLineFormatEdits} from '../core/source-line-format.js';
 import {sourceIndentEdits} from '../core/source-indent.js';
@@ -406,6 +406,16 @@ export function multiCursorRichContent(group,id){
  // selected user content. Include earlier generated snippets when assigning IDs
  // so that multiple anchor selections receive distinct destinations.
  const source=view.state.doc.toString();
+ const ranges=view.state.selection.ranges;
+ // A fixed example (such as a table or <details>) never consumes selected
+ // text. Preserve every selected range via the shared atomic standalone
+ // insertion, including CodeMirror's multiple selections and fenced guards.
+ if(ranges.some(r=>!r.empty)&&
+    ranges.every(r=>richTemplateIgnoresSelection(group,id,source.slice(r.from,r.to)))){
+  const staticSnippet=makeRichSnippet(group,id,'',source);
+  if(staticSnippet===null)return false;
+  return multiCursorStandaloneSnippet('\n\n'+staticSnippet+'\n\n');
+ }
  let reserved=source;
  let rejected=false;
  const transaction=view.state.changeByRange(r=>{
