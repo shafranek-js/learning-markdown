@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -38,6 +39,6 @@ test('nested leaf is editable although untouched parent cell has metadata',async
  const changed=await input.inputValue();
  expect(changed).toContain('title="Preserved parent"');
  expect(changed).toContain('Updated inner');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(original);
 });

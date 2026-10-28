@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -32,9 +33,9 @@ test('issue #6 multi-block Bold preserves paragraphs, lists, rich markup, source
  for(const token of ['<p>','<ul>','<li>','<blockquote>','<em><strong>soft</strong></em>','Neighbor','Before','After'])
   expect(modified).toContain(token);
  await expect(page.locator('#markdown-preview td').first()).toContainText('Intro soft closingFirstSecondQuoted');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(page.locator('#markdown-preview td').first().locator('ul > li > strong')).toHaveCount(2);
 });
 
@@ -88,6 +89,6 @@ test('issue #6 mobile Russian mixed-block Underline preserves list geometry',asy
  const modified=await input.inputValue();
  expect(modified).toContain('<ol>');
  expect(modified).toContain('<em><u>Второй</u></em>');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
 });

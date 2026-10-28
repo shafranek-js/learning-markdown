@@ -1,3 +1,4 @@
+import {undo,redo} from './support/history-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -22,9 +23,9 @@ test('issue #6 table caption survives visual cell Save, row insertion, Undo and 
  expect(updated).toContain('Before');
  expect(updated).toContain('After');
  await expect(table.locator(':scope > caption')).toContainText('Quarterly results report');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(input).toHaveValue(source);
- await page.locator('#redo-btn').click();
+ await redo(page);
  await expect(table.locator('td').first()).toHaveText('Changed');
  await table.locator('td').first().click();
  await page.locator('#table-edit-rows').selectOption('row-below');
@@ -32,7 +33,7 @@ test('issue #6 table caption survives visual cell Save, row insertion, Undo and 
  await expect(table.locator(':scope > caption')).toContainText('Quarterly results report');
  updated=await input.inputValue();
  expect(updated).toContain('<caption><strong>Quarterly results</strong>');
- await page.locator('#undo-btn').click();
+ await undo(page);
  await expect(table.locator('tr')).toHaveCount(2);
  await expect(table.locator(':scope > caption')).toContainText('Quarterly results report');
 });
