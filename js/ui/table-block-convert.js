@@ -3,6 +3,23 @@
 // Never split a list or silently reinterpret a nested list as a paragraph.
 const TARGETS=new Set(['p','ul','ol']);
 const SAFE_INLINE=new Set('a strong b em i u del s strike sup sub mark code span br'.split(' '));
+// Changing a block wrapper discards its attributes. When an ordered list
+// changes to bullets or paragraphs, losing numbering is deliberate. The HTML
+// sanitizer also generates one redundant af-list-* class from the OL type.
+// Allow only that exact derived class, never an author's arbitrary class,
+// accessibility attribute, or metadata on an otherwise unchanged list.
+const ORDERED_NUMBERING=new Set(['type','start']);
+const ORDERED_TYPE_CLASS={
+ '1':'af-list-decimal',a:'af-list-lower-alpha',A:'af-list-upper-alpha',
+ i:'af-list-lower-roman',I:'af-list-upper-roman'
+};
+function hasProtectedWrapperAttributes(element,target){
+ if(element.tagName!=='OL'||target==='ol')return element.attributes.length>0;
+ const generatedClass=ORDERED_TYPE_CLASS[element.getAttribute('type')];
+ return [...element.attributes].some(attribute=>
+  !ORDERED_NUMBERING.has(attribute.name)&&
+  !(attribute.name==='class'&&generatedClass&&attribute.value===generatedClass));
+}
 function topBlock(editor,node){
  const element=node?.nodeType===1?node:node?.parentElement;
  if(!element||!editor.contains(element))return null;
@@ -48,6 +65,8 @@ function convertNestedList(editor,target,selection,range){
  if(target==='p')return {ok:false,reason:'nested-to-paragraph'};
  if(list.tagName.toLowerCase()===target)
   return {ok:false,reason:'already-formatted'};
+ if(hasProtectedWrapperAttributes(list,target))
+  return {ok:false,reason:'protected-metadata'};
  const aIndex=items.indexOf(a),bIndex=items.indexOf(b);
  if(aIndex<0||bIndex<0)return {ok:false,reason:'partial-or-nested-list'};
  // A caret retains the previous whole-list conversion behavior.
@@ -108,6 +127,11 @@ export function convertBlockSelection(editor,target,selection=window.getSelectio
  }
  if(blocks.every(block=>block.tagName.toLowerCase()===target))
   return {ok:false,reason:'already-formatted'};
+ // Paragraphs keep their own wrapper when converting to paragraphs. Every
+ // other selected wrapper is reconstructed and would lose its attributes.
+ if(blocks.some(block=>(block.tagName!=='P'||target!=='p')&&
+   hasProtectedWrapperAttributes(block,target)))
+  return {ok:false,reason:'protected-metadata'};
  // Remember the insertion boundary BEFORE any selected paragraph is moved.
  // Otherwise a trailing paragraph would become detached and lose nextSibling.
  const after=blocks.at(-1).nextSibling;

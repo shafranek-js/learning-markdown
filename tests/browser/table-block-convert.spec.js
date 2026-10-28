@@ -249,3 +249,41 @@ test('issue #6 partial nested roman list converts only middle items and preserve
  await expect(page.locator('#markdown-preview td').first().locator('ol[start="8"] > li'))
   .toHaveText(['Delta','Echo']);
 });
+
+const metadataNotices={
+ en:'These blocks have attributes that would be lost during conversion. The source remains unchanged.',
+ cs:'Tyto bloky obsahují atributy, které by se při převodu ztratily. Zdroj zůstal beze změny.',
+ uk:'Ці блоки мають атрибути, які було б втрачено під час перетворення. Вихідний текст не змінено.',
+ ro:'Aceste blocuri au atribute care s-ar pierde la conversie. Sursa nu a fost modificată.',
+ ru:'Эти блоки содержат атрибуты, которые потеряются при преобразовании. Исходный текст не изменён.'
+};
+for(const [language,notice] of Object.entries(metadataNotices)){
+ test('issue #57 Blocks conversion refuses disappearing metadata in '+language,async({page})=>{
+  if(language==='ru')await page.setViewportSize({width:390,height:844});
+  await page.goto('/');
+  await setAppLanguage(page,language);
+  const source='<table><tr><td><p>First</p><p>Second</p></td><td>Other</td></tr></table>';
+  const input=page.locator('#markdown-input');
+  await input.fill(source);
+  if(language==='ru')
+   await page.locator('#mobile-tabs button[data-mobile-tab="preview"]').click();
+  await page.locator('#markdown-preview td').first().click();
+  const rich=page.locator('#table-edit-rich-content');
+  await expect(page.locator('#table-edit-block-choice')).toHaveAttribute('aria-pressed','true');
+  const before=await rich.evaluate(editor=>{
+   const paragraphs=editor.querySelectorAll(':scope > p');
+   paragraphs[1].setAttribute('title','Author metadata');
+   const range=document.createRange(),selection=window.getSelection();
+   editor.focus();
+   range.setStart(paragraphs[0].firstChild,0);
+   range.setEnd(paragraphs[1].firstChild,6);
+   selection.removeAllRanges();
+   selection.addRange(range);
+   return editor.innerHTML;
+  });
+  await page.locator('#table-edit-convert-ul').click();
+  await expect(page.locator('#table-edit-message')).toHaveText(notice);
+  expect(await rich.innerHTML()).toBe(before);
+  await expect(input).toHaveValue(source);
+ });
+}
