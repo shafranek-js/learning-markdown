@@ -33,6 +33,10 @@ export const HELP_SHORTCUT_SECTIONS=[
   ['indent',['Tab']],['outdent',['Shift+Tab']],
   ['exit',['Enter']],['backspace',['Backspace']]
  ]},
+ {id:'unicode',rows:[
+  ['results',['↓']],['insert',['Enter']],
+  ['navigate',['← / → / ↑ / ↓']],['close',['Esc']]
+ ]},
  {id:'menus',rows:[
   ['open',['↓ / ↑']],['navigate',['↑ / ↓']],
   ['edges',['Home / End']],['dismiss',['Esc']],
@@ -51,6 +55,7 @@ export const HELP_SHORTCUT_TEXT={
   tabs:{title:'Document tabs',hint:'Focus an open document tab',rows:['Rename tab','Open tab actions','Switch to previous / next tab','Go to first / last tab']},
   search:{title:'Find / Replace panel',hint:'Focus a search or replacement field',rows:['Find next match','Find previous match','Close the search panel']},
   tables:{title:'Visual table editor',hint:'Select a table in Preview; list commands apply inside a cell in Blocks mode',rows:['Extend selection to a rectangular cell region','Open selected cell for editing','Indent list item(s)','Outdent list item(s)','Exit an empty list item','Outdent an item from its start']},
+  unicode:{title:'Unicode picker',hint:'In the Unicode search field or results grid',rows:['Move from search to the first result','Insert the first matching character','Navigate character results','Close the picker']},
   menus:{title:'Menus and dialogs',hint:'Focus a menu trigger or an open menu; dialog focus stays inside until closed',rows:['Open a focused menu','Move between menu items','Jump to first / last menu item','Close menu or dialog','Move keyboard focus']}
  },
  cs:{
@@ -63,6 +68,7 @@ export const HELP_SHORTCUT_TEXT={
   tabs:{title:'Karty dokumentů',hint:'Fokus na otevřené kartě dokumentu',rows:['Přejmenovat kartu','Otevřít akce karty','Předchozí / další karta','První / poslední karta']},
   search:{title:'Panel Najít / Nahradit',hint:'Fokus na poli hledání nebo nahrazení',rows:['Další shoda','Předchozí shoda','Zavřít panel hledání']},
   tables:{title:'Vizuální editor tabulek',hint:'Vyberte tabulku v náhledu; seznamové klávesy platí uvnitř buňky v režimu Bloky',rows:['Rozšířit výběr na obdélníkovou oblast buněk','Otevřít vybranou buňku','Odsadit položky seznamu','Zmenšit odsazení položek','Opustit prázdnou položku seznamu','Zmenšit odsazení na začátku položky']},
+  unicode:{title:'Výběr Unicode',hint:'V poli hledání Unicode nebo v mřížce výsledků',rows:['Přejít z hledání na první výsledek','Vložit první odpovídající znak','Procházet znaky ve výsledcích','Zavřít výběr']},
   menus:{title:'Nabídky a dialogy',hint:'Fokus na spouštěči nabídky nebo v otevřené nabídce; dialog drží fokus do zavření',rows:['Otevřít nabídku','Přecházet mezi položkami','První / poslední položka','Zavřít nabídku nebo dialog','Přesunout fokus']}
  },
  uk:{
@@ -75,6 +81,7 @@ export const HELP_SHORTCUT_TEXT={
   tabs:{title:'Вкладки документів',hint:'Фокус на вкладці документа',rows:['Перейменувати вкладку','Відкрити дії вкладки','Попередня / наступна вкладка','Перша / остання вкладка']},
   search:{title:'Панель пошуку й заміни',hint:'Фокус у полі пошуку або заміни',rows:['Наступний збіг','Попередній збіг','Закрити панель пошуку']},
   tables:{title:'Візуальний редактор таблиць',hint:'Виберіть таблицю в перегляді; команди списків працюють у клітинці в режимі Блоки',rows:['Виділити прямокутну область клітинок','Відкрити клітинку для редагування','Збільшити відступ пунктів списку','Зменшити відступ пунктів','Вийти з порожнього пункту','Зменшити відступ на початку пункту']},
+  unicode:{title:'Вибір Unicode',hint:'У полі пошуку Unicode або сітці результатів',rows:['Перейти від пошуку до першого результату','Вставити перший знайдений символ','Переміщатися результатами','Закрити вікно символів']},
   menus:{title:'Меню й діалоги',hint:'Фокус на кнопці меню або в меню; діалог зберігає фокус до закриття',rows:['Відкрити меню','Переміщатися пунктами','Перший / останній пункт','Закрити меню або діалог','Перемістити фокус']}
  },
  ro:{
@@ -87,6 +94,7 @@ export const HELP_SHORTCUT_TEXT={
   tabs:{title:'Filele documentelor',hint:'Focalizează o filă de document',rows:['Redenumește fila','Deschide acțiunile filei','Fila precedentă / următoare','Prima / ultima filă']},
   search:{title:'Panoul Căutare / Înlocuire',hint:'Focalizare în câmpul de căutare sau înlocuire',rows:['Următoarea potrivire','Potrivirea anterioară','Închide panoul']},
   tables:{title:'Editor vizual de tabele',hint:'Selectează un tabel în previzualizare; tastele listelor se aplică în celulă, modul Blocuri',rows:['Extinde selecția la o regiune dreptunghiulară','Deschide celula selectată','Indentează elementele listei','Micșorează indentarea elementelor','Ieși din elementul gol al listei','Micșorează indentarea de la începutul elementului']},
+  unicode:{title:'Selector Unicode',hint:'În câmpul de căutare Unicode sau grila de rezultate',rows:['Din căutare la primul rezultat','Inserează primul caracter găsit','Navighează printre caractere','Închide selectorul']},
   menus:{title:'Meniuri și dialoguri',hint:'Focalizare pe butonul meniului sau în meniu; dialogul reține focalizarea',rows:['Deschide meniul','Navighează între opțiuni','Prima / ultima opțiune','Închide meniul sau dialogul','Mută focalizarea']}
  },
  ru:{
@@ -99,6 +107,7 @@ export const HELP_SHORTCUT_TEXT={
   tabs:{title:'Вкладки документов',hint:'Сначала установите фокус на вкладку',rows:['Переименовать вкладку','Открыть действия вкладки','Переключить на соседнюю вкладку','Перейти к первой / последней вкладке']},
   search:{title:'Панель поиска и замены',hint:'Когда фокус находится в поле поиска или замены',rows:['Следующее совпадение','Предыдущее совпадение','Закрыть панель поиска']},
   tables:{title:'Визуальный редактор таблиц',hint:'Выберите таблицу в Preview; команды списков работают внутри ячейки в режиме Blocks',rows:['Выделить прямоугольную область ячеек','Открыть выбранную ячейку для редактирования','Увеличить отступ пунктов списка','Уменьшить отступ пунктов списка','Выйти из пустого пункта списка','Уменьшить отступ с начала пункта']},
+  unicode:{title:'Палитра Unicode',hint:'Когда фокус в поиске символов или сетке результатов',rows:['Перейти от поиска к первому результату','Вставить первый найденный символ','Перемещаться по символам','Закрыть палитру']},
   menus:{title:'Меню и диалоги',hint:'Когда фокус на кнопке меню или внутри меню; диалог удерживает фокус до закрытия',rows:['Открыть меню','Перемещаться по пунктам','Первый / последний пункт','Закрыть меню или диалог','Переместить фокус']}
  }
 };
