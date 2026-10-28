@@ -90,7 +90,7 @@ export function initHelpMenu({onOpenCourseContents}={}){
   const command=item.dataset.helpAction;
   const direct=['sandbox','library','cheats'].includes(command);
   // Do not steal focus from a dialog opened by the button's own handler.
-  closeMenu({focus:!direct});
+  closeMenu({focus:command==='sandbox'||!direct});
   if(!direct)run(command);
  });
  menu.addEventListener('keydown',event=>{
