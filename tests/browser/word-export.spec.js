@@ -98,7 +98,7 @@ test('Word export does not silently omit blocked remote images or execute unsafe
 test('Word export preserves checked and unchecked GFM task meaning as editable text',async({page})=>{
  await page.goto('/');
  const editor=page.locator('#markdown-input');
- const markdown='## Tasks\\n\\n- [x] Approved\\n- [ ] Pending\\n';
+ const markdown='## Tasks\n\n- [x] Approved\n- [ ] Pending\n';
  await editor.fill(markdown);
  await expect(page.locator('#markdown-preview input[type="checkbox"]')).toHaveCount(2);
  const {documentXml}=await exportWord(page);
