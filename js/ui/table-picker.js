@@ -1,5 +1,6 @@
 import {state} from '../core/state.js';
-import {insertSnippet} from './toolbar.js';
+import {insertStandaloneSnippet} from './toolbar.js';
+import {multiActive} from './editor.js';
 import {GRID_COLUMNS,GRID_ROWS,MAX_COLUMNS,MAX_ROWS,makeMarkdownTable,validateTableDimensions} from '../core/table-generator.js';
 const L={
  en:['Insert Table','Columns','Rows','Insert','Cancel','Hover or use arrow keys to select.','Markdown tables render in GFM mode.','Column'],
@@ -35,9 +36,11 @@ function open(){
 }
 function insert(){
  if(!validateTableDimensions(size.columns,size.rows))return;
- const editor=$('markdown-input');if(selection?.lesson===state.currentLessonIndex)editor.setSelectionRange(selection.start,selection.end);
+ // Restore native selection after popup focus; CodeMirror retains its own ranges.
+ if(!multiActive()&&selection?.lesson===state.currentLessonIndex)
+  $('markdown-input').setSelectionRange(selection.start,selection.end);
  const text=makeMarkdownTable(size.columns,size.rows,words()[7]);
- close();insertSnippet('\n'+text+'\n');
+ close();insertStandaloneSnippet('\n'+text+'\n');
 }
 export function renderTablePickerLanguage(){
  const w=words(),names=['title','columns-label','rows-label','insert','cancel','hint','mode-hint'];
