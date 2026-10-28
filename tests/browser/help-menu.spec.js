@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
+import {helpShortcutSections,HELP_SHORTCUT_TEXT} from '../../js/ui/help-shortcuts.js';
 const help=page=>page.locator('#help-menu-trigger');
 const action=(page,name)=>page.locator('#help-menu [data-help-action="'+name+'"]');
 async function choose(page,name){await help(page).click();await action(page,name).click();}
@@ -221,4 +222,75 @@ test('About contacts are localized and keyboard accessible without changing Mark
   await expect(page.locator('#help-info-dialog')).toBeHidden();
   await expect(page.locator('#markdown-input')).toHaveValue(source);
  }
+});
+
+
+test('Help documents every audited keyboard binding with its localized context',async({page})=>{
+ await page.goto('/');
+ for(const lang of ['en','cs','uk','ro','ru']){
+  await setAppLanguage(page,lang);
+  await choose(page,'shortcuts');
+  const body=page.locator('#help-info-content');
+  await expect(body.locator('table.workspace-shortcuts-table')).toHaveCount(8);
+  await expect(body.locator('tr[data-shortcut-id]')).toHaveCount(43);
+  const displayed=await body.locator('tr[data-shortcut-id]').evaluateAll(rows=>rows.map(row=>({
+   id:row.dataset.shortcutId,
+   label:row.querySelector('th[scope="row"]')?.textContent,
+   keys:[...row.querySelectorAll('kbd')].map(key=>key.textContent)
+  })));
+  const expected=helpShortcutSections(lang).flatMap(group=>group.rows);
+  expect(displayed).toEqual(expected);
+  for(const group of helpShortcutSections(lang)){
+   await expect(body.locator('table[aria-label="'+group.title+'"]')).toHaveCount(1);
+  }
+  await expect(body).toContainText(HELP_SHORTCUT_TEXT[lang].note);
+  await expect(body).toContainText(HELP_SHORTCUT_TEXT[lang].os);
+  await page.locator('#help-info-close').click();
+ }
+});
+
+test('full Russian mobile shortcuts remain scrollable, readable and closable',async({page})=>{
+ await page.setViewportSize({width:360,height:780});
+ await page.goto('/');
+ await setAppLanguage(page,'ru');
+ const source='# Existing Markdown';
+ await page.locator('#markdown-input').fill(source);
+ await choose(page,'shortcuts');
+ const surface=page.locator('#help-info-dialog .workspace-help-surface');
+ await expect(surface).toBeVisible();
+ const geometry=await page.locator('#help-info-content').evaluate(el=>({
+  contentWidth:el.clientWidth,scrollWidth:el.scrollWidth,
+  surfaceWidth:el.closest('.workspace-help-surface').getBoundingClientRect().width
+ }));
+ expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.contentWidth+1);
+ expect(geometry.surfaceWidth).toBeLessThanOrEqual(360);
+ await surface.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+ await expect(page.locator('#help-info-close')).toBeInViewport();
+ await expect(page.locator('#help-info-content [data-shortcut-id="multi-line-ends"]'))
+  .toContainText('Shift+Alt+I');
+ await expect(page.locator('#help-info-content [data-shortcut-id="tabs-rename"]'))
+  .toContainText('F2');
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#help-info-dialog')).toBeHidden();
+ await expect(page.locator('#markdown-input')).toHaveValue(source);
+});
+
+test('Help-listed link, heading and tab rename shortcuts perform their documented actions',async({page})=>{
+ await page.goto('/');
+ const input=page.locator('#markdown-input');
+ await input.fill('Example');
+ await input.selectText();
+ await input.press('Control+k');
+ await expect(input).toHaveValue('[Example](https://example.com)');
+ await input.fill('Heading');
+ await input.press('Control+2');
+ await expect(input).toHaveValue('## Heading');
+ await page.locator('#help-menu-trigger').click();
+ await page.locator('#sandbox-mode-btn').click();
+ const first=page.locator('#document-tab-list [data-document-id]').first();
+ await expect(first).toBeVisible();
+ page.once('dialog',dialog=>dialog.accept('Help shortcut.md'));
+ await first.focus();
+ await first.press('F2');
+ await expect(first).toContainText('Help shortcut.md');
 });
