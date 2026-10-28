@@ -7,6 +7,8 @@ import {HighlightStyle,syntaxHighlighting} from '@codemirror/language';
 import {tags as t} from '@lezer/highlight';
 import {state,save,docKey} from '../core/state.js';
 import {getMultiCursorLabels} from './multi-cursor-i18n.js';
+import {createMultiCursorContextMenu} from './multi-cursor-context-menu.js';
+import {addCursorAtPosition,selectColumnToPosition} from './multi-cursor-context-actions.js';
 import {makeRichSnippet,richTemplateIgnoresSelection} from '../data/rich-content.js';
 import {markdownListEnterChange,editMarkdownListKey} from '../core/source-list-keyboard.js';
 import {sourceLineFormatEdits} from '../core/source-line-format.js';
@@ -36,7 +38,7 @@ export const markdownSourceHighlightStyle=HighlightStyle.define([
 // Optional CodeMirror engine. The existing textarea stays as a live shadow
 // document for the course, table tools and exports; this is a reversible
 // migration, not a separate unsaved document.
-let view=null,active=false,input=null,updateUI=()=>{},shortcutAction=()=>{},toggleTabFocus=()=>{},sessionKey='';
+let view=null,contextMenu=null,active=false,input=null,updateUI=()=>{},shortcutAction=()=>{},toggleTabFocus=()=>{},sessionKey='';
 const sessions=new Map();
 const wrapping=new Compartment();
 const $=id=>document.getElementById(id);
@@ -84,6 +86,22 @@ export function collapseToSingleCursor(editor){
  if(selection.ranges.length===1&&selection.main.empty)return false;
  editor.dispatch({selection:EditorSelection.cursor(selection.main.head),scrollIntoView:true});
  return true;
+}
+
+const SELECT_COMMANDS={
+ next:selectNextOccurrence,all:selectSelectionMatches,
+ 'line-ends':insertCursorsAtLineEnds,
+ above:addCursorAbove,below:addCursorBelow,
+ collapse:collapseToSingleCursor
+};
+// A single dispatcher guarantees identical CodeMirror behavior for keyboard
+// bindings and context-menu commands (including multi-range selection state).
+function runSelectionAction(editor,action,position){
+ if(action==='add-click'&&Number.isInteger(position))
+  return addCursorAtPosition(editor,position);
+ if(action==='column'&&Number.isInteger(position))
+  return selectColumnToPosition(editor,position);
+ return SELECT_COMMANDS[action]?.(editor)??false;
 }
 
 // Indent the union of selected lines once, preserving multiple carets.
@@ -150,12 +168,12 @@ function extensions(){
    {key:'Shift-Tab',run:editor=>state.tabFocusMode?false:multiCursorIndent(editor,true)}
   ])),
   keymap.of([
-   {key:'Mod-d',run:selectNextOccurrence,preventDefault:true},
-   {key:'Mod-Shift-l',run:selectSelectionMatches,preventDefault:true},
-   {key:'Escape',run:collapseToSingleCursor,preventDefault:true},
-   {key:'Shift-Alt-i',run:insertCursorsAtLineEnds,preventDefault:true},
-   {key:'Mod-Alt-ArrowDown',run:addCursorBelow,preventDefault:true},
-   {key:'Mod-Alt-ArrowUp',run:addCursorAbove,preventDefault:true},
+   {key:'Mod-d',run:editor=>runSelectionAction(editor,'next'),preventDefault:true},
+   {key:'Mod-Shift-l',run:editor=>runSelectionAction(editor,'all'),preventDefault:true},
+   {key:'Escape',run:editor=>runSelectionAction(editor,'collapse'),preventDefault:true},
+   {key:'Shift-Alt-i',run:editor=>runSelectionAction(editor,'line-ends'),preventDefault:true},
+   {key:'Mod-Alt-ArrowDown',run:editor=>runSelectionAction(editor,'below'),preventDefault:true},
+   {key:'Mod-Alt-ArrowUp',run:editor=>runSelectionAction(editor,'above'),preventDefault:true},
    ...['b','i','k','1','2','3','4','5','6'].map(key=>({
      key:'Mod-'+key,run:()=>{shortcutAction(({b:'bold',i:'italic',k:'link'})[key]||'h'+key);return true;},
      preventDefault:true
@@ -187,10 +205,15 @@ function createState(doc,selection){
 function ensureView(){
  if(view)return;
  view=new EditorView({state:createState(input.value,{anchor:input.selectionStart,head:input.selectionEnd}),parent:$('codemirror-mount')});
+ contextMenu=createMultiCursorContextMenu(view,{
+  enabled:()=>active,
+  run:(action,position)=>runSelectionAction(view,action,position)
+ });
  sessionKey=docKey();
 }
 function activate(enabled,{focus=true}={}){
  if(enabled===active)return;
+ contextMenu?.hide();
  // Switching between two scroll containers must not reset the user's
  // viewport position, even when the document has hundreds of lines.
  const priorScroll=active?view.scrollDOM:input;
@@ -278,6 +301,7 @@ export function multiCursorUndoOrRedo(direction){
 }
 export function loadMultiCursorDocument(text,resetSelection=true){
  if(!active)return;
+ contextMenu?.hide();
  const key=docKey();
  if(sessionKey!==key){
   sessions.set(sessionKey,view.state);
