@@ -15,7 +15,10 @@ function fenceBefore(text,offset,quoteDepth=0){
   const prefix=line.match(QUOTE_PREFIX)?.[0]||'';
   const depth=(prefix.match(/>/g)||[]).length;
   if(depth!==quoteDepth){
-   if(quoteDepth>0)open=null;
+   // Within a quoted fence, extra > characters are literal code content,
+   // not a nested quote that closes the fence. Only a shallower nonmatching
+   // quote prefix ends this block. Never auto-continue a fenced list line.
+   if(quoteDepth>0&&depth<quoteDepth)open=null;
    continue;
   }
   const match=(prefix?line.slice(prefix.length):line).match(FENCE);

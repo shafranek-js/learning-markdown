@@ -46,6 +46,13 @@ assert.equal(enter('> ~~~markdown\n> - literal'),null,
 assert.equal(enter('> > \x60\x60\x60md\n> > - literal'),null,
  'nested quote fences must protect source');
 assert.equal(enter('> ~~~\n> ~~~\n> - real').text,'> ~~~\n> ~~~\n> - real\n> - ');
+assert.equal(enter('> ~~~md\n> > nested-looking text\n> - literal'),null,
+ 'an extra quote marker inside fenced code is text and must not close the fence');
+assert.equal(enter('> ~~~md\n> > ~~~\n> - literal'),null,
+ 'a deeper-looking fence is not a matching close fence');
+assert.equal(enter('> ~~~md\n> > nested-looking text\n> ~~~\n> - real').text,
+ '> ~~~md\n> > nested-looking text\n> ~~~\n> - real\n> - ',
+ 'a true matching close fence restores quoted list continuation');
 assert.deepEqual(markdownListEnterChange('> - ',4),{from:0,to:4,insert:'> ',caret:2});
 assert.deepEqual(markdownListEnterChange('> 2. Next',9),
  {from:9,to:9,insert:'\n> 3. ',caret:15});
