@@ -207,6 +207,12 @@
         <button id="document-new-tab" type="button" class="document-new-tab" aria-label="New Markdown tab" title="New Markdown tab">+</button>
     </section>
 
+    <div id="document-tab-actions" class="document-tab-actions theme-panel" role="menu" aria-label="Document tab actions" hidden>
+        <button type="button" role="menuitem" data-tab-action="rename" tabindex="-1">Rename</button>
+        <button type="button" role="menuitem" data-tab-action="duplicate" tabindex="-1">Duplicate</button>
+        <button type="button" role="menuitem" data-tab-action="close" tabindex="-1">Close tab</button>
+    </div>
+
     <!-- ==================== SUB-BAR: LESSON TAB & RICH FORMATTING TOOLBAR ==================== -->
     <div class="h-10 w-full shrink-0 border-b theme-panel px-3 flex items-center justify-between gap-2 overflow-x-auto z-20">
         <!-- Left: Active Lesson Tab Badge (CodePen Tab style) -->

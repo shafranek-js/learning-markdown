@@ -168,7 +168,8 @@ The dialog uses the current theme, language (EN, CS, UK, RO, RU), mobile viewpor
 **AI Prompt Sandbox** supports multiple independent Markdown documents in Notepad-style tabs above the formatting toolbar. This is a writing workspace, not a second form of lesson navigation. The Lesson Guide and its exercises remain separate.
 
 - Choose **File → New Markdown**, the **+** button on the tab strip, or **Ctrl/Cmd+N** to create a blank document. **File → Open Markdown** opens an imported Markdown or text file in a new tab instead of overwriting the current draft.
-- Click a tab to switch documents. **Double-click the tab title** to rename it; **File → Download As…** also renames the active tab after successfully downloading a copy.
+- Click a tab to switch documents. **Double-click the tab title** or press **F2** while its title has focus to rename it; **File → Download As…** also renames the active tab after successfully downloading a copy.
+- Select the **⋯** menu on any tab (or right-click its title / press **Shift+F10** when focused) for **Rename**, **Duplicate**, and **Close**. Duplication creates a separate copy next to the original, including its Markdown formatting options but with its own editing history. Use Escape to dismiss the menu; the tab regains focus.
 - Use the **×** on a tab to close it. A nonempty browser-local draft requires explicit confirmation before deletion; cancel keeps it intact. Closing the last document creates a fresh blank document.
 - Documents and the active tab are restored after a refresh in the current browser and language. Existing single-document Sandbox drafts are migrated automatically the first time tabs are opened.
 - Each document has its own Markdown text, Undo/Redo history and CodeMirror multi-cursor session. Prompt Library inserts into the **active Sandbox tab**. Switching back to a lesson leaves all open Sandbox documents intact.
