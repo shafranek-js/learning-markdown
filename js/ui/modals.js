@@ -52,9 +52,22 @@ export function updateCertificate(){const done=state.completedLessons.length===8
 export function initModals(){
  $('contents-toggle-btn').addEventListener('click',()=>toggleContents(true));$('close-contents-btn').addEventListener('click',()=>toggleContents(false));$('contents-backdrop').addEventListener('click',()=>toggleContents(false));
  for(const [button,modal] of [['cheatsheet-btn','cheatsheet-modal'],['certificate-btn','certificate-modal']])$(button).addEventListener('click',()=>{if(modal==='certificate-modal')updateCertificate();else renderCheats();toggleModal(modal,true);});
- for(const [button,modal] of [['close-cheatsheet-btn','cheatsheet-modal'],['close-certificate-btn','certificate-modal']])$(button).addEventListener('click',()=>toggleModal(modal,false));
- for(const id of ['cheatsheet-modal','certificate-modal'])$(id).addEventListener('click',e=>{if(e.target===$(id))toggleModal(id,false);});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){for(const id of ['cheatsheet-modal','certificate-modal'])toggleModal(id,false);toggleContents(false);}});
+ const closeCheatSheet=()=>{
+  toggleModal('cheatsheet-modal',false);
+  // Cheat Sheet is opened from Help now; return focus to its visible launcher.
+  $('help-menu-trigger').focus();
+ };
+ for(const [button,modal] of [['close-cheatsheet-btn','cheatsheet-modal'],['close-certificate-btn','certificate-modal']])
+  $(button).addEventListener('click',()=>modal==='cheatsheet-modal'?closeCheatSheet():toggleModal(modal,false));
+ for(const id of ['cheatsheet-modal','certificate-modal'])$(id).addEventListener('click',e=>{
+  if(e.target!==$(id))return;
+  if(id==='cheatsheet-modal')closeCheatSheet();
+  else toggleModal(id,false);
+ });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){
+  if(!$('cheatsheet-modal').classList.contains('hidden'))closeCheatSheet();
+  toggleModal('certificate-modal',false);toggleContents(false);
+ }});
  $('student-name-input').addEventListener('input',e=>{state.name=e.target.value;save();});
  $('print-cert-btn').addEventListener('click',()=>{if(state.completedLessons.length===8)window.print();});
  $('copy-cert-md-btn').addEventListener('click',async()=>{if(state.completedLessons.length!==8)return;
