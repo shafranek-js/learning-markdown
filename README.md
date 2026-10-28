@@ -110,12 +110,12 @@ renders as a formatted heading, quotation, checklist and link without changing t
 | Course title, subtitle and progress indicator | Shown (where screen width permits) | Hidden |
 | **Beyond Markdown** and the two certificate buttons | Shown | Hidden |
 | **Contents** (course navigation) | Available | Hidden |
-| **Lesson Guide**, **View**, **AI Prompt Sandbox** and **Cheat Sheet** | Available | Available |
+| **View**, **Help** (Sandbox, Prompt Library, Cheat Sheet and course reference) | Available | Available |
 | **Settings** (theme, language), Markdown toolbar, editor, Preview and export tools | Available | Available |
 
 - Closing the guide also closes the guide panel and its resize handle; the editor/Preview can use the freed space. Reopen it with **View → Lesson Guide**. There is no duplicate Guide button in the header.
 - Your guide visibility preference survives a page reload. Course navigation, saved drafts and progress remain intact.
-- **AI Prompt Sandbox** is a dedicated free-form writing view. It hides the lesson-specific header and guide; **View → Lesson Guide** returns to the course.
+- **Help → AI Prompt Sandbox** opens or leaves the dedicated free-form writing view. It hides the lesson-specific header and guide; **View → Lesson Guide** returns to the course.
 - **Contents** is hidden while Lesson Guide is off. Re-enable Lesson Guide to restore course navigation; the **View** menu offers that switch even on small screens.
 
 ## View menu
@@ -128,7 +128,7 @@ Use the mouse or keyboard: focus **View**, press **Arrow Down** to open, navigat
 
 **File** offers browser-safe document commands: **New Markdown** (`Ctrl/Cmd+N`), **Open Markdown…** (`Ctrl/Cmd+O`), **Download Markdown** (`Ctrl/Cmd+S`), **Download As…**, **Export HTML** and **Print / PDF** (`Ctrl/Cmd+P`). Use Arrow keys, Home/End and Escape to navigate the dropdown by keyboard.
 
-- **New/Open** enter the free-form **AI Prompt Sandbox**. Existing lesson drafts stay untouched. Replacing an existing nonempty Sandbox draft requires confirmation and cancellation leaves the content unchanged.
+- **New/Open** create independent tabs inside **AI Prompt Sandbox**. Existing lesson drafts and other Sandbox documents stay untouched.
 - **Open** accepts local UTF-8 `.md`, `.markdown` or `.txt` files up to 5 MB. Files are read in the browser and never uploaded to a server.
 - **Download** generates a new `.md` download using the existing portability warnings. **Download As…** asks for a filename and updates the remembered Sandbox filename after a successful download.
 - **Export HTML** and **Print / PDF** reuse their established Preview export functions, including Mermaid rendering safety.
@@ -154,10 +154,12 @@ Frequently used commands stay close to their work: **View** controls the layout,
 
 ## Help menu
 
-**Help** groups existing course navigation and reference tools without adding permanent toolbar controls:
+**Help** provides course navigation and the three workspace actions formerly displayed in the right side of the header:
 
 - **Course Contents** reopens Lesson Guide (if needed) and the lesson list. Returning from Sandbox keeps the saved Sandbox draft.
-- **Markdown Cheat Sheet** opens the same existing syntax reference as the header button.
+- **AI Prompt Sandbox** toggles between the writing workspace and the course, preserving drafts.
+- **Prompt Library** opens the existing offline template picker and builder.
+- **Markdown Cheat Sheet** opens the existing syntax reference.
 - **Keyboard Shortcuts** shows a keyboard-accessible quick reference covering common File/Edit actions, text formatting and multi-cursor.
 - **About Learning Markdown** shows the actual running build string (package version and commit revision) plus the project repository.
 
@@ -195,7 +197,7 @@ The original 20 templates and their IDs remain unchanged. The catalog now includ
 | Marketing | 4 | Positioning, segmentation, landing page, launch plan |
 | Productivity | 4 | Weekly planning, breakdown, prioritization, retrospective |
 
-1. Open **Prompt Library** next to **AI Prompt Sandbox**. Search by multiple words (all terms must match), with the most relevant title and description matches first. Filter by category; the options show the number of templates in the current collection.
+1. Open **Help → Prompt Library**. Search by multiple words (all terms must match), with the most relevant title and description matches first. Filter by category; the options show the number of templates in the current collection.
 2. Choose a template. Fill in fields generated from placeholders such as `{{topic}}` or `{{context}}`. The **Prepared Markdown prompt** updates immediately; empty fields remain visible as placeholders.
 3. Choose **Add to Sandbox** to append the prepared prompt to any existing Sandbox draft, or **Replace Sandbox** (explicit confirmation if there is existing text). Course lesson drafts are not overwritten. Undo works with the editor history.
 4. **Copy** the prepared Markdown or **Download .md**. You remain responsible for pasting it into an AI service of your choice, if needed.
