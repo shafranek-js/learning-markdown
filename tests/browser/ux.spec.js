@@ -1,3 +1,4 @@
+import {toggleSandbox,openCheatSheet} from './support/help-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage,setAppTheme} from './support/settings.js';
 import {mermaidSnippet} from '../../js/data/mermaid-templates.js';
@@ -75,7 +76,7 @@ test('optional practice shows two exercises without altering certificate progres
 
 test('Cheat Sheet insert is labeled and modal closes after insertion',async({page})=>{
  await page.goto('/');
- await page.locator('#cheatsheet-btn').click();
+ await openCheatSheet(page);
  const button=page.locator('#cheatsheet-grid button').first();
  await expect(button).toContainText('Insert');
  await expect(button).toHaveAttribute('aria-label',/Insert:/);
@@ -1607,13 +1608,13 @@ test('issue #10 opt-in line breaks persist by document and preserve standard dia
  await page.locator('#dialect-selector').selectOption('gfm');
  await expect(toggle).toBeEnabled();
  await expect(toggle).toHaveValue('on');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await expect(toggle).toHaveValue('off');
  await input.fill(source);
  await openCompatibility(page);
  await toggle.selectOption('on');
  await expect(page.locator('#markdown-preview p br')).toHaveCount(1);
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await expect(toggle).toHaveValue('on');
  await setAppLanguage(page,'ru');
  await expect(toggle).toHaveValue('off');
@@ -2145,7 +2146,7 @@ test('issue #15 opt-in shortcodes expand only in selected GFM documents',async({
  await page.locator('#dialect-selector').selectOption('gfm');
  await expect(toggle).toHaveValue('on');
  await expect(page.locator('#markdown-preview p').first()).toContainText('😂');
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await expect(toggle).toHaveValue('off');
  await setAppLanguage(page,'ru');
  await expect(page.locator('#extension-emoji-label')).toContainText('shortcodes');
@@ -2210,7 +2211,7 @@ test('issue #16 Practical Hacks are labeled, localized and undoable',async({page
  await page.goto('/');
  const editor=page.locator('#markdown-input');
  await editor.fill('Existing content');
- await page.locator('#cheatsheet-btn').click();
+ await openCheatSheet(page);
  await expect(page.locator('#cheatsheet-grid [data-hack-id]')).toHaveCount(10);
  await expect(page.locator('[data-hack-id="table-pipe"] [data-portability]')).toContainText('GFM only');
  await expect(page.locator('[data-hack-id="author-html-comment"] [data-portability]')).toContainText('HTML');
@@ -2222,7 +2223,7 @@ test('issue #16 Practical Hacks are labeled, localized and undoable',async({page
  await page.locator('#undo-btn').click();
  await expect(editor).toHaveValue(before);
  await setAppLanguage(page,'ru');
- await page.locator('#cheatsheet-btn').click();
+ await openCheatSheet(page);
  await expect(page.locator('[data-hack-id="portable-callout"] h5')).toHaveText('Переносимое примечание');
  await expect(page.locator('[data-hack-id="table-pipe"] [data-portability]')).toHaveText('Только GFM');
  await expect(page.locator('[data-hack-id="video-thumbnail"] p').last()).toContainText('интернет');
@@ -2231,7 +2232,7 @@ test('issue #16 Practical Hacks are labeled, localized and undoable',async({page
 test('issue #16 GFM table tricks render safely and retain dialect semantics',async({page})=>{
  await page.goto('/');
  await page.locator('#markdown-input').fill('');
- await page.locator('#cheatsheet-btn').click();
+ await openCheatSheet(page);
  await page.locator('[data-hack-id="table-pipe"] button').click();
  await expect(page.locator('#markdown-preview table')).toHaveCount(1);
  await expect(page.locator('#markdown-preview tbody td')).toHaveCount(4);
@@ -2271,7 +2272,7 @@ test('issue #16 author notes stay in Markdown but not in safe HTML export; video
 test('issue #16 practical hacks can be reached on a narrow viewport',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('#cheatsheet-btn').click();
+ await openCheatSheet(page);
  await expect(page.locator('[data-hack-id="entities-and-unicode"] button')).toBeAttached();
  await page.locator('[data-hack-id="entities-and-unicode"] button').click();
  await expect(page.locator('#markdown-input')).toHaveValue(/Unicode: © ® ™ € π ° →/);
