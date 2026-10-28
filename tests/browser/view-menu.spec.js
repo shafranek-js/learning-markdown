@@ -1,3 +1,4 @@
+import {toggleSandbox} from './support/help-actions.js';
 import {test,expect} from '@playwright/test';
 import {setAppLanguage} from './support/settings.js';
 
@@ -46,7 +47,7 @@ test('View menu follows Lesson Guide and Sandbox state',async({page})=>{
  await expect(item(page,'guide')).toHaveAttribute('aria-checked','false');
  await item(page,'guide').click();
  await expect(page.locator('#theory-panel')).toBeVisible();
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await open(page);
  await expect(item(page,'guide')).toHaveAttribute('aria-checked','false');
  await item(page,'guide').click();
@@ -75,7 +76,7 @@ test('View menu supports keyboard, Escape, outside click and five languages',asy
  await expect(menu(page)).toBeHidden();
  await expect(page.locator('#edit-menu-trigger')).toBeFocused();
  await open(page);
- await page.locator('#sandbox-mode-btn').click();
+ await toggleSandbox(page);
  await expect(menu(page)).toBeHidden();
  for(const [lang,label] of [['en','View'],['cs','Zobrazení'],['uk','Вигляд'],['ro','Vizualizare'],['ru','Вид']]){
   await setAppLanguage(page,lang);
