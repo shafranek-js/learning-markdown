@@ -139,7 +139,10 @@
                 <button id="help-menu-trigger" type="button" class="px-2.5 py-1.5 rounded-lg theme-panel-alt border theme-border hover:opacity-90 text-xs font-semibold transition" aria-haspopup="menu" aria-expanded="false" aria-controls="help-menu">Help</button>
                 <div id="help-menu" class="workspace-view-menu" role="menu" aria-label="Help" hidden>
                     <button type="button" role="menuitem" tabindex="-1" data-help-action="guide"><span data-help-label="guide">Course Contents</span></button>
-                    <button type="button" role="menuitem" tabindex="-1" data-help-action="cheats"><span data-help-label="cheats">Markdown Cheat Sheet</span></button>
+                    <div class="workspace-menu-separator" role="separator"></div>
+                    <button id="sandbox-mode-btn" type="button" role="menuitem" tabindex="-1" data-help-action="sandbox"><span data-i18n="sandboxBtn">AI Prompt Sandbox</span></button>
+                    <button id="prompt-library-trigger" type="button" role="menuitem" tabindex="-1" data-help-action="library" aria-haspopup="dialog" aria-controls="prompt-library-dialog">Prompt Library</button>
+                    <button id="cheatsheet-btn" type="button" role="menuitem" tabindex="-1" data-help-action="cheats"><span data-help-label="cheats">Markdown Cheat Sheet</span></button>
                     <div class="workspace-menu-separator" role="separator"></div>
                     <button type="button" role="menuitem" tabindex="-1" data-help-action="shortcuts"><span data-help-label="shortcuts">Keyboard Shortcuts</span></button>
                     <button type="button" role="menuitem" tabindex="-1" data-help-action="about"><span data-help-label="about">About Learning Markdown</span></button>
@@ -183,24 +186,6 @@
 
         <!-- Right: Primary workspace actions; appearance and language live in Settings. -->
         <div class="app-header-actions flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <!-- Prompt / Sandbox Button -->
-            <button id="sandbox-mode-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
-                <svg class="w-3.5 h-3.5" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-                <span class="hidden sm:inline" data-i18n="sandboxBtn">AI Prompt Sandbox</span>
-            </button>
-
-            <button id="prompt-library-trigger" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90" aria-haspopup="dialog" aria-controls="prompt-library-dialog">Prompt Library</button>
-
-            <!-- Cheat Sheet Button -->
-            <button id="cheatsheet-btn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90 flex items-center gap-1.5 transition">
-                <svg class="w-3.5 h-3.5" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                <span class="hidden md:inline" data-i18n="cheatsheetBtn">Cheat Sheet</span>
-            </button>
-
             <button id="advanced-course-btn" type="button" data-course-ui class="px-2.5 py-1.5 rounded-lg text-xs font-semibold theme-panel border theme-border hover:opacity-90" aria-label="Open Beyond Markdown course">
                 <span id="advanced-course-button-text">Beyond Markdown</span>
             </button>
