@@ -267,22 +267,64 @@ function tableSourceRanges(raw,expectedTables){
  return ranges;
 }
 
-// Editing a table reserializes its selected cells. Reject semantic metadata
-// on their nested content which the sanitizer deliberately does not model.
-// Check ORIGINAL elements, not the sanitized DOM where metadata is already gone.
-// For a nested leaf only inspect that leaf, never untouched outer/sibling cells.
+// Source metadata must survive *all* unrelated visual table edits. Checking
+// only title/ARIA/data attributes misses custom classes, ids and legacy HTML
+// attributes that the sanitizer strips while serializing another cell.
+// Model only attributes sanitizeHTML deliberately preserves. Event handlers
+// are the one deliberate exception: they are always stripped for safety.
+const RICH_ORDERED_CLASSES={
+ '1':'af-list-decimal',a:'af-list-lower-alpha',A:'af-list-upper-alpha',
+ i:'af-list-lower-roman',I:'af-list-upper-roman'
+};
+function modeledRichClass(element,value){
+ const tag=element.tagName;
+ if(tag==='SPAN'||tag==='DIV')return filterAdvancedClasses(value)===value.trim();
+ if(tag==='OL')return value===RICH_ORDERED_CLASSES[element.getAttribute('type')];
+ if(tag==='CODE')return /^language-[\\w-]{1,30}$/.test(value);
+ if(tag==='A')return value==='fn-ref'||value==='fn-backref';
+ if(tag==='H2')return value==='fn-visually-hidden';
+ if(tag==='SECTION')return value==='md-footnotes';
+ if(tag==='FIGURE')return value==='af-figure'||value==='af-figure af-figure-fixed';
+ return false;
+}
+function modeledRichAttribute(element,attribute){
+ const tag=element.tagName,name=attribute.name,value=attribute.value;
+ if(/^on[a-z]+$/.test(name))return true; // deliberate XSS sanitization
+ if(name==='class')return modeledRichClass(element,value);
+ // Even otherwise valid source IDs can be dropped by the sanitizer on
+ // unsupported tags or when duplicated; keep them in the original source.
+ if(name==='id')return false;
+ if(tag==='A'){
+  if(name==='href')return true;
+  if(name==='target')return value==='_blank';
+  if(name==='rel')return value==='noopener noreferrer';
+ }
+ if(tag==='OL'){
+  if(name==='type')return Object.hasOwn(RICH_ORDERED_CLASSES,value);
+  if(name==='start')return /^[1-9][0-9]{0,4}$/.test(value)&&Number(value)<=99999;
+ }
+ if(tag==='IMG'){
+  if(name==='src'||name==='alt')return true;
+  if(name==='loading')return value==='lazy';
+  if(name==='width'||name==='height')
+   return /^[1-9][0-9]{0,3}$/.test(value)&&Number(value)<=1600;
+ }
+ if(tag==='INPUT'){
+  if(name==='type')return value==='checkbox';
+  if(name==='checked'||name==='disabled')return true;
+ }
+ return false;
+}
+// Check ORIGINAL elements before sanitization; checking only the selected cell
+// would still discard unsupported attributes in untouched neighboring cells.
+// For a nested leaf, inspect only that table and leave outer source byte-exact.
 function unmodeledRichMetadata(entry){
  const original=new DOMParser().parseFromString(entry.raw,'text/html');
  const table=[...original.querySelectorAll('table')][entry.innerIndex||0];
  if(!table)return true;
  for(const cell of table.querySelectorAll('td,th')){
   for(const element of cell.querySelectorAll('*')){
-   // For newly editable definition lists / dividers, do not normalize or
-   // accidentally drop attributes that have no representation in Blocks mode.
-   if(['DL','DT','DD','HR'].includes(element.tagName)&&element.attributes.length)return true;
-   if([...element.attributes].some(attr=>
-     /^(?:title|style|role|lang|dir|tabindex|translate)$/i.test(attr.name)||
-     /^(?:data-|aria-)/i.test(attr.name)))return true;
+   if([...element.attributes].some(attr=>!modeledRichAttribute(element,attr)))return true;
   }
  }
  return false;
