@@ -9,6 +9,7 @@ test('Notepad tabs isolate documents, persist after reload, and do not affect le
  await page.goto('/');
  const source=page.locator('#markdown-input');
  await source.fill('# My lesson draft');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  await expect(page.locator('#document-tabs')).toBeVisible();
  const first=await tabs(page).first().getAttribute('data-document-id');
@@ -28,9 +29,11 @@ test('Notepad tabs isolate documents, persist after reload, and do not affect le
  await expect(source).toHaveValue('# Second document');
  await switchTo(page,first);
  await expect(source).toHaveValue('# First document\n\nKeep this');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  await expect(page.locator('#document-tabs')).toBeHidden();
  await expect(source).toHaveValue('# My lesson draft');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  await expect(tabs(page)).toHaveCount(2);
  await expect(source).toHaveValue('# First document\n\nKeep this');
@@ -38,6 +41,7 @@ test('Notepad tabs isolate documents, persist after reload, and do not affect le
 
 test('Closing a nonempty document warns, cancel preserves text, last tab stays available',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const input=page.locator('#markdown-input');
  await input.fill('Important local-only note');
@@ -55,6 +59,7 @@ test('Closing a nonempty document warns, cancel preserves text, last tab stays a
 
 test('Rename active document and File Save As update only its filename',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const first=await tabs(page).first().getAttribute('data-document-id');
  page.once('dialog',d=>d.accept('Project plan.md'));
@@ -70,6 +75,7 @@ test('Rename active document and File Save As update only its filename',async({p
 
 test('Ctrl+N and File Open create separate documents, with proper active titles',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const input=page.locator('#markdown-input');
  await input.fill('Local note');
@@ -86,6 +92,7 @@ test('Ctrl+N and File Open create separate documents, with proper active titles'
 
 test('Tabs work with Multi-cursor editor and maintain per-document Undo history',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const source=page.locator('#markdown-input');
  await source.fill('# First history');
@@ -107,6 +114,7 @@ test('Tabs work with Multi-cursor editor and maintain per-document Undo history'
 test('Mobile tab bar scrolls without clipping other app controls',async({page})=>{
  await page.setViewportSize({width:360,height:780});
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  for(let i=0;i<5;i++)await newTab(page);
  await expect(tabs(page)).toHaveCount(6);
@@ -172,11 +180,13 @@ test('Document-scoped soft breaks are migrated, isolated and persisted across ta
 });
 test('Prompt Library writes only into the active Sandbox document',async({page})=>{
  await page.goto('/');
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#sandbox-mode-btn').click();
  const source=page.locator('#markdown-input');
  await source.fill('# Existing first document');
  const first=await tabs(page).first().getAttribute('data-document-id');
  await newTab(page);
+ await page.locator('#help-menu-trigger').click();
  await page.locator('#prompt-library-trigger').click();
  await page.locator('[data-prompt-id="writing-blog"]').click();
  await page.locator('#prompt-library-append').click();
