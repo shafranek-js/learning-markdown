@@ -206,9 +206,9 @@ test('issue #57 Russian mobile refuses unsafe nested paragraphs and cross-depth 
 
 test('issue #57 converts selected nested Roman items to paragraphs without losing neighbors',async({page})=>{
  await page.goto('/');
- const source='Before\\n\\n<table><tr><td><ol type="A"><li>Parent<ol type="i" start="5">'+
+ const source='Before\n\n<table><tr><td><ol type="A"><li>Parent<ol type="i" start="5">'+
   '<li>Alpha</li><li><strong>Bravo</strong></li><li>Charlie</li><li>Delta</li>'+
-  '</ol>Tail</li><li>Neighbor</li></ol></td><td>Other</td></tr></table>\\n\\nAfter';
+  '</ol>Tail</li><li>Neighbor</li></ol></td><td>Other</td></tr></table>\n\nAfter';
  const input=page.locator('#markdown-input');
  await input.fill(source);
  await page.locator('#markdown-preview td').first().click();
