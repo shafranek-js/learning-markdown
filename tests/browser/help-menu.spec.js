@@ -231,8 +231,8 @@ test('Help documents every audited keyboard binding with its localized context',
   await setAppLanguage(page,lang);
   await choose(page,'shortcuts');
   const body=page.locator('#help-info-content');
-  await expect(body.locator('table.workspace-shortcuts-table')).toHaveCount(8);
-  await expect(body.locator('tr[data-shortcut-id]')).toHaveCount(43);
+  await expect(body.locator('table.workspace-shortcuts-table')).toHaveCount(9);
+  await expect(body.locator('tr[data-shortcut-id]')).toHaveCount(47);
   const displayed=await body.locator('tr[data-shortcut-id]').evaluateAll(rows=>rows.map(row=>({
    id:row.dataset.shortcutId,
    label:row.querySelector('th[scope="row"]')?.textContent,
@@ -270,6 +270,8 @@ test('full Russian mobile shortcuts remain scrollable, readable and closable',as
   .toContainText('Shift+Alt+I');
  await expect(page.locator('#help-info-content [data-shortcut-id="tabs-rename"]'))
   .toContainText('F2');
+ await expect(page.locator('#help-info-content [data-shortcut-id="unicode-navigate"]'))
+  .toContainText('← / → / ↑ / ↓');
  await page.keyboard.press('Escape');
  await expect(page.locator('#help-info-dialog')).toBeHidden();
  await expect(page.locator('#markdown-input')).toHaveValue(source);
