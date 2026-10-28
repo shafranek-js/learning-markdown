@@ -249,6 +249,14 @@ function nextAnchorId(source){
  while(used.has(candidate))candidate='advanced-section-'+counter++;
  return candidate;
 }
+// A static template does not use selected Markdown. The selection must stay
+// in the source and the new block should be inserted after its complete line.
+// Text-aware callouts/numbered lists and anchors retain their conversion UX.
+export function richTemplateIgnoresSelection(group,id,selection=''){
+ if(group==='tables'||(group==='blocks'&&id==='details'))return true;
+ if(group==='blocks'&&id==='anchor')return false;
+ return !String(selection).trim();
+}
 export function makeRichSnippet(group,id,selection='',documentText=''){
  const item=RICH_CONTENT[group]?.find(entry=>entry.id===id);
  if(!item)return null;
