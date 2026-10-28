@@ -241,6 +241,10 @@
 }
 
 
+/* Hide the lesson identifier entirely in Sandbox, even with a flex utility class.
+   The active document is already named by the top-row document tabs. */
+#lesson-context-badge[hidden]{display:none!important}
+
 /* Illustrator-style menu bar: commands read as a single row of text,
    not as a strip of outlined action buttons. */
 .app-header-left .app-menubar-trigger{
